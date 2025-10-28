@@ -24,11 +24,15 @@ class UserFormViewModel extends ChangeNotifier {
   }
 
   AsyncResult<Unit> _saveUser(UserModel user) async {
-    if (user.id.isEmpty) {
-      await _firestoreService.addUser(user);
-    } else {
-      await _firestoreService.updateUser(user.id, user);
+    try {
+      if (user.id.isEmpty) {
+        await _firestoreService.addUser(user);
+      } else {
+        await _firestoreService.updateUser(user.id, user);
+      }
+      return Success(unit);
+    } catch (e) {
+      return Failure(Exception(e.toString()));
     }
-    return Success(unit);
   }
 }

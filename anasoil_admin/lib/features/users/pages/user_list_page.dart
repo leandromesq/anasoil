@@ -1,5 +1,8 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_list_viewmodel.dart';
+import 'package:anasoil_admin/features/users/widgets/users_data_table.dart';
+import 'package:anasoil_admin/shared/widgets/app_layout.dart';
+import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -27,78 +30,61 @@ class _UserListPageState extends State<UserListPage> {
   @override
   Widget build(BuildContext context) {
     var viewModel = widget.viewModel;
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Gerenciamento de Usuários'),
-        actions: [
-          ListenableBuilder(
-            listenable: viewModel.fetchUsersCommand,
-            builder: (context, _) {
-              if (viewModel.fetchUsersCommand.value.isRunning) {
-                return const Padding(
-                  padding: EdgeInsets.all(16.0),
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: CircularProgressIndicator(
-                      color: Colors.white,
-                      strokeWidth: 3,
-                    ),
+
+    return AppLayout(
+      title: 'Gerenciamento de Usuários',
+      actions: [
+        // Refresh Button
+        ListenableBuilder(
+          listenable: viewModel.fetchUsersCommand,
+          builder: (context, _) {
+            if (viewModel.fetchUsersCommand.value.isRunning) {
+              return Container(
+                margin: const EdgeInsets.only(right: 8),
+                child: const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: AppTheme.baseGray600,
                   ),
-                );
-              }
-              return IconButton(
-                icon: const Icon(Icons.refresh),
-                onPressed: viewModel.fetchUsersCommand.execute,
+                ),
               );
-            },
+            }
+            return IconButton(
+              icon: const Icon(Icons.refresh_outlined),
+              onPressed: viewModel.fetchUsersCommand.execute,
+              tooltip: 'Atualizar',
+            );
+          },
+        ),
+
+        // Add User Button
+        ElevatedButton.icon(
+          onPressed: () => context.go('/user/add'),
+          icon: const Icon(Icons.add, size: 18),
+          label: const Text('Novo Usuário'),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: AppTheme.primaryGreen,
+            foregroundColor: AppTheme.baseWhite,
           ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            // Atualize o onPressed:
-            onPressed: () => context.go('/user/add'),
-          ),
-        ],
-      ),
+        ),
+      ],
       body: ListenableBuilder(
         listenable: Listenable.merge([viewModel, viewModel.deleteUserCommand]),
         builder: (context, _) {
-          if (viewModel.fetchUsersCommand.value.isRunning &&
-              viewModel.users.isEmpty) {
-            return const Center(child: CircularProgressIndicator());
-          }
+          final isLoading =
+              viewModel.fetchUsersCommand.value.isRunning &&
+              viewModel.users.isEmpty;
 
-          if (viewModel.users.isEmpty) {
-            return const Center(child: Text('Nenhum usuário encontrado.'));
-          }
-
-          return ListView.builder(
-            itemCount: viewModel.users.length,
-            itemBuilder: (context, index) {
-              final user = viewModel.users[index];
-              final isDeleting = viewModel.deleteUserCommand.value.isRunning;
-
-              return ListTile(
-                title: Text(user.name),
-                subtitle: Text('${user.email} - Role: ${user.role}'),
-                trailing: isDeleting
-                    ? const SizedBox(
-                        width: 24,
-                        height: 24,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : IconButton(
-                        icon: const Icon(Icons.delete),
-                        color: Theme.of(context).colorScheme.error,
-                        onPressed: () => _showDeleteConfirmationDialog(
-                          context,
-                          viewModel,
-                          user,
-                        ),
-                      ),
-                onTap: () => context.go('/user/edit/${user.id}'),
-              );
-            },
+          return UsersDataTable(
+            users: viewModel.users,
+            isLoading: isLoading,
+            onEdit: (user) => context.go('/user/edit/${user.id}'),
+            onDelete: (user) =>
+                _showDeleteConfirmationDialog(context, viewModel, user),
+            onManageRelations: (user) =>
+                context.go('/user/${user.id}/relations'),
           );
         },
       ),
@@ -122,9 +108,31 @@ class _UserListPageState extends State<UserListPage> {
           ),
           TextButton(
             child: const Text('Excluir'),
-            onPressed: () {
-              viewModel.deleteUserCommand.execute(user.id);
+            onPressed: () async {
               Navigator.of(dialogContext).pop();
+
+              try {
+                await viewModel.deleteUserCommand.execute(user.id);
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text('Usuário excluído com sucesso!'),
+                      backgroundColor: Colors.green,
+                    ),
+                  );
+                }
+              } catch (e) {
+                if (context.mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        'Erro: ${e.toString().replaceFirst('Exception: ', '')}',
+                      ),
+                      backgroundColor: Colors.red,
+                    ),
+                  );
+                }
+              }
             },
           ),
         ],

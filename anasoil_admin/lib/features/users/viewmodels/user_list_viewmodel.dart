@@ -25,9 +25,19 @@ class UserListViewModel extends ChangeNotifier {
   }
 
   AsyncResult<Unit> _deleteUser(String userId) async {
-    await _firestoreService.deleteUser(userId);
-    await fetchUsersCommand.execute();
-    return Success(unit);
+    try {
+      // Verifica se o usuário pode ser excluído
+      final canDelete = await _firestoreService.canDeleteUser(userId);
+      if (!canDelete) {
+        throw Exception('Não é possível excluir este usuário.');
+      }
+
+      await _firestoreService.deleteUser(userId);
+      await fetchUsersCommand.execute();
+      return Success(unit);
+    } catch (e) {
+      return Failure(Exception(e.toString()));
+    }
   }
 
   @override
