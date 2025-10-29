@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:go_router/go_router.dart';
 
 class AppLayout extends StatelessWidget {
   final Widget body;
@@ -228,8 +229,7 @@ class SidebarItem extends StatelessWidget {
         contentPadding: const EdgeInsets.symmetric(horizontal: 16),
         dense: true,
         onTap: () {
-          // TODO: Implementar navegação
-          // context.go(route);
+          context.go(route);
         },
       ),
     );

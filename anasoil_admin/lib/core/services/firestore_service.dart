@@ -18,10 +18,9 @@ class FirestoreService {
   }
 
   Stream<List<UserModel>> getUsers() {
-    return _usersRef
-        .where('active', isEqualTo: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    return _usersRef.snapshots().map(
+      (snapshot) => snapshot.docs.map((doc) => doc.data()).toList(),
+    );
   }
 
   Stream<UserModel?> getUserById(String userId) {
@@ -64,6 +63,10 @@ class FirestoreService {
     await _usersRef.doc(userId).set(user, SetOptions(merge: true));
   }
 
+  Future<void> updateUserStatus(String userId, bool active) async {
+    await _usersRef.doc(userId).update({'active': active});
+  }
+
   Future<void> deleteUser(String userId) async {
     await _usersRef.doc(userId).update({'active': false});
   }
@@ -92,7 +95,7 @@ class FirestoreService {
       final user = userDoc.data()!;
       // Se for administrador, não pode ser excluído (simulação)
       // Na implementação real, seria: return userId != currentUserId;
-      return user.role != 'administrador';
+      return user.role != 'admin';
     }
     return false;
   }

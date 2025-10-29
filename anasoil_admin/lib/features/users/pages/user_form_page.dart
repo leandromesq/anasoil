@@ -21,6 +21,7 @@ class _UserFormPageState extends State<UserFormPage> {
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
   String _selectedRole = 'agricultor';
+  bool _isActive = true;
 
   bool get isEditing => widget.userId != null;
 
@@ -43,6 +44,7 @@ class _UserFormPageState extends State<UserFormPage> {
       _emailController.text = user.email;
       setState(() {
         _selectedRole = user.role;
+        _isActive = user.active;
       });
     }
   }
@@ -63,7 +65,7 @@ class _UserFormPageState extends State<UserFormPage> {
         name: _nameController.text,
         email: _emailController.text,
         role: _selectedRole,
-        active: _viewModel.editingUser?.active ?? true,
+        active: _isActive,
         createdAt: _viewModel.editingUser?.createdAt,
       );
 
@@ -191,7 +193,7 @@ class _UserFormPageState extends State<UserFormPage> {
                           child: Text('Consultor'),
                         ),
                         DropdownMenuItem(
-                          value: 'administrador',
+                          value: 'admin',
                           child: Text('Administrador'),
                         ),
                       ],
@@ -204,7 +206,61 @@ class _UserFormPageState extends State<UserFormPage> {
                           ? 'Selecione uma função'
                           : null,
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 20),
+
+                    // Status Switch (only for editing)
+                    if (isEditing) ...[
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: AppTheme.baseGray50,
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: AppTheme.baseGray200,
+                            width: 1,
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _isActive ? Icons.check_circle : Icons.cancel,
+                              color: _isActive
+                                  ? AppTheme.primaryGreen
+                                  : AppTheme.secondaryRed,
+                              size: 20,
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Ativo?',
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.baseGray900,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: _isActive,
+                              onChanged: (value) {
+                                setState(() {
+                                  _isActive = value;
+                                });
+                              },
+                              activeThumbColor: AppTheme.primaryGreen,
+                            ),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                    ],
+
+                    const SizedBox(height: 12),
 
                     // Action Buttons
                     Row(

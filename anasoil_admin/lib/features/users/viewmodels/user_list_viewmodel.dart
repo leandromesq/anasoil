@@ -13,6 +13,7 @@ class UserListViewModel extends ChangeNotifier {
 
   late final fetchUsersCommand = Command0(_fetchUsers);
   late final deleteUserCommand = Command1(_deleteUser);
+  late final updateUserStatusCommand = Command2(_updateUserStatus);
 
   UserListViewModel(this._userRepository, this._firestoreService) {
     _userRepository.addListener(notifyListeners);
@@ -33,6 +34,16 @@ class UserListViewModel extends ChangeNotifier {
       }
 
       await _firestoreService.deleteUser(userId);
+      await fetchUsersCommand.execute();
+      return Success(unit);
+    } catch (e) {
+      return Failure(Exception(e.toString()));
+    }
+  }
+
+  AsyncResult<Unit> _updateUserStatus(String userId, bool active) async {
+    try {
+      await _firestoreService.updateUserStatus(userId, active);
       await fetchUsersCommand.execute();
       return Success(unit);
     } catch (e) {

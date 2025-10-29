@@ -408,7 +408,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
 
   Color _getRoleColor(String role) {
     switch (role.toLowerCase()) {
-      case 'administrador':
+      case 'admin':
         return Colors.red;
       case 'consultor':
         return Colors.blue;
@@ -421,7 +421,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
 
   IconData _getRoleIcon(String role) {
     switch (role.toLowerCase()) {
-      case 'administrador':
+      case 'admin':
         return Icons.admin_panel_settings;
       case 'consultor':
         return Icons.person_search;
@@ -434,7 +434,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
 
   String _getRoleDisplayName(String role) {
     switch (role.toLowerCase()) {
-      case 'administrador':
+      case 'admin':
         return 'Administrador';
       case 'consultor':
         return 'Consultor';
