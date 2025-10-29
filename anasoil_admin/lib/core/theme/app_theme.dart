@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   // Paleta de cores
@@ -54,18 +55,101 @@ class AppTheme {
       outlineVariant: baseGray200,
     ),
 
+    // Typography with Poppins font
+    textTheme: GoogleFonts.poppinsTextTheme().copyWith(
+      // Headings
+      displayLarge: GoogleFonts.poppins(
+        fontSize: 32,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      displayMedium: GoogleFonts.poppins(
+        fontSize: 28,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      displaySmall: GoogleFonts.poppins(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      headlineLarge: GoogleFonts.poppins(
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      headlineMedium: GoogleFonts.poppins(
+        fontSize: 20,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      headlineSmall: GoogleFonts.poppins(
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      // Titles
+      titleLarge: GoogleFonts.poppins(
+        fontSize: 16,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      titleMedium: GoogleFonts.poppins(
+        fontSize: 14,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      titleSmall: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w600,
+        color: baseGray900,
+      ),
+      // Body text
+      bodyLarge: GoogleFonts.poppins(
+        fontSize: 16,
+        fontWeight: FontWeight.w400,
+        color: baseGray900,
+      ),
+      bodyMedium: GoogleFonts.poppins(
+        fontSize: 14,
+        fontWeight: FontWeight.w400,
+        color: baseGray900,
+      ),
+      bodySmall: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w400,
+        color: baseGray600,
+      ),
+      // Labels
+      labelLarge: GoogleFonts.poppins(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: baseGray900,
+      ),
+      labelMedium: GoogleFonts.poppins(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: baseGray600,
+      ),
+      labelSmall: GoogleFonts.poppins(
+        fontSize: 10,
+        fontWeight: FontWeight.w500,
+        color: baseGray600,
+      ),
+    ),
+
     // AppBar Theme
-    appBarTheme: const AppBarTheme(
+    appBarTheme: AppBarTheme(
       backgroundColor: baseWhite,
       foregroundColor: baseGray900,
       elevation: 0,
       surfaceTintColor: Colors.transparent,
-      titleTextStyle: TextStyle(
+      titleTextStyle: GoogleFonts.poppins(
         color: baseGray900,
         fontSize: 20,
         fontWeight: FontWeight.w600,
       ),
-      iconTheme: IconThemeData(color: baseGray600),
+      iconTheme: const IconThemeData(color: baseGray600),
     ),
 
     // Card Theme
@@ -84,7 +168,10 @@ class AppTheme {
         elevation: 0,
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        textStyle: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
     ),
 
@@ -95,7 +182,10 @@ class AppTheme {
         side: const BorderSide(color: baseGray300),
         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        textStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        textStyle: GoogleFonts.poppins(
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
       ),
     ),
 
@@ -123,14 +213,14 @@ class AppTheme {
     ),
 
     // Data Table Theme
-    dataTableTheme: const DataTableThemeData(
-      headingRowColor: WidgetStatePropertyAll(baseGray100),
-      headingTextStyle: TextStyle(
+    dataTableTheme: DataTableThemeData(
+      headingRowColor: const WidgetStatePropertyAll(baseGray100),
+      headingTextStyle: GoogleFonts.poppins(
         color: baseGray900,
         fontWeight: FontWeight.w600,
         fontSize: 14,
       ),
-      dataTextStyle: TextStyle(color: baseGray900, fontSize: 14),
+      dataTextStyle: GoogleFonts.poppins(color: baseGray900, fontSize: 14),
       dividerThickness: 1,
       horizontalMargin: 24,
       columnSpacing: 32,

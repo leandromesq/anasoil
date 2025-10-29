@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class UsersFilters extends StatelessWidget {
   final String searchText;
@@ -47,8 +48,8 @@ class UsersFilters extends StatelessWidget {
           // Header
           Row(
             children: [
-              const Icon(
-                Icons.filter_list,
+              Icon(
+                PhosphorIcons.funnel(),
                 color: AppTheme.baseGray600,
                 size: 20,
               ),
@@ -65,7 +66,7 @@ class UsersFilters extends StatelessWidget {
               if (hasActiveFilters)
                 TextButton.icon(
                   onPressed: onClearFilters,
-                  icon: const Icon(Icons.clear_all, size: 16),
+                  icon: Icon(PhosphorIcons.x(), size: 16),
                   label: const Text('Limpar'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppTheme.secondaryRed,
@@ -83,10 +84,10 @@ class UsersFilters extends StatelessWidget {
                 flex: 3,
                 child: TextFormField(
                   initialValue: searchText,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Pesquisar por nome ou email',
-                    prefixIcon: Icon(Icons.search),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(PhosphorIcons.magnifyingGlass()),
+                    border: const OutlineInputBorder(),
                   ),
                   onChanged: onSearchChanged,
                 ),
@@ -98,24 +99,27 @@ class UsersFilters extends StatelessWidget {
                 flex: 2,
                 child: DropdownButtonFormField<String>(
                   initialValue: statusFilter,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Status',
-                    prefixIcon: Icon(Icons.toggle_on),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(PhosphorIcons.toggleLeft()),
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'todos', child: Text('Todos')),
+                  items: [
+                    const DropdownMenuItem(
+                      value: 'todos',
+                      child: Text('Todos'),
+                    ),
                     DropdownMenuItem(
                       value: 'ativo',
                       child: Row(
                         children: [
                           Icon(
-                            Icons.check_circle,
+                            PhosphorIcons.checkCircle(),
                             color: AppTheme.primaryGreen,
                             size: 16,
                           ),
-                          SizedBox(width: 8),
-                          Text('Ativos'),
+                          const SizedBox(width: 8),
+                          const Text('Ativos'),
                         ],
                       ),
                     ),
@@ -124,12 +128,12 @@ class UsersFilters extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.cancel,
+                            PhosphorIcons.xCircle(),
                             color: AppTheme.secondaryRed,
                             size: 16,
                           ),
-                          SizedBox(width: 8),
-                          Text('Inativos'),
+                          const SizedBox(width: 8),
+                          const Text('Inativos'),
                         ],
                       ),
                     ),
@@ -144,24 +148,27 @@ class UsersFilters extends StatelessWidget {
                 flex: 2,
                 child: DropdownButtonFormField<String>(
                   initialValue: roleFilter,
-                  decoration: const InputDecoration(
+                  decoration: InputDecoration(
                     labelText: 'Função',
-                    prefixIcon: Icon(Icons.work_outline),
-                    border: OutlineInputBorder(),
+                    prefixIcon: Icon(PhosphorIcons.briefcase()),
+                    border: const OutlineInputBorder(),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'todos', child: Text('Todas')),
+                  items: [
+                    const DropdownMenuItem(
+                      value: 'todos',
+                      child: Text('Todas'),
+                    ),
                     DropdownMenuItem(
                       value: 'admin',
                       child: Row(
                         children: [
                           Icon(
-                            Icons.admin_panel_settings,
+                            PhosphorIcons.shieldCheck(),
                             color: AppTheme.secondaryRed,
                             size: 16,
                           ),
-                          SizedBox(width: 8),
-                          Text('Administrador'),
+                          const SizedBox(width: 8),
+                          const Text('Administrador'),
                         ],
                       ),
                     ),
@@ -170,12 +177,12 @@ class UsersFilters extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.person_search,
-                            color: Color(0xFF3B82F6),
+                            PhosphorIcons.userCircle(),
+                            color: const Color(0xFF3B82F6),
                             size: 16,
                           ),
-                          SizedBox(width: 8),
-                          Text('Consultor'),
+                          const SizedBox(width: 8),
+                          const Text('Consultor'),
                         ],
                       ),
                     ),
@@ -184,12 +191,12 @@ class UsersFilters extends StatelessWidget {
                       child: Row(
                         children: [
                           Icon(
-                            Icons.agriculture,
+                            PhosphorIcons.plant(),
                             color: AppTheme.primaryGreen,
                             size: 16,
                           ),
-                          SizedBox(width: 8),
-                          Text('Agricultor'),
+                          const SizedBox(width: 8),
+                          const Text('Agricultor'),
                         ],
                       ),
                     ),
@@ -210,7 +217,7 @@ class UsersFilters extends StatelessWidget {
                   Chip(
                     label: Text('Nome: "$searchText"'),
                     onDeleted: () => onSearchChanged(''),
-                    deleteIcon: const Icon(Icons.close, size: 16),
+                    deleteIcon: Icon(PhosphorIcons.x(), size: 16),
                     backgroundColor: AppTheme.baseGray100,
                   ),
                 if (statusFilter != 'todos')
@@ -219,14 +226,14 @@ class UsersFilters extends StatelessWidget {
                       'Status: ${_getStatusDisplayName(statusFilter)}',
                     ),
                     onDeleted: () => onStatusFilterChanged('todos'),
-                    deleteIcon: const Icon(Icons.close, size: 16),
+                    deleteIcon: Icon(PhosphorIcons.x(), size: 16),
                     backgroundColor: AppTheme.baseGray100,
                   ),
                 if (roleFilter != 'todos')
                   Chip(
                     label: Text('Função: ${_getRoleDisplayName(roleFilter)}'),
                     onDeleted: () => onRoleFilterChanged('todos'),
-                    deleteIcon: const Icon(Icons.close, size: 16),
+                    deleteIcon: Icon(PhosphorIcons.x(), size: 16),
                     backgroundColor: AppTheme.baseGray100,
                   ),
               ],

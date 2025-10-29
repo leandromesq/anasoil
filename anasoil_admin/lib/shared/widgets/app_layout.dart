@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class AppLayout extends StatelessWidget {
   final Widget body;
@@ -73,8 +74,8 @@ class AppSidebar extends StatelessWidget {
                     color: AppTheme.primaryGreen,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: const Icon(
-                    Icons.eco,
+                  child: Icon(
+                    PhosphorIcons.leaf(),
                     color: AppTheme.baseWhite,
                     size: 24,
                   ),
@@ -110,27 +111,27 @@ class AppSidebar extends StatelessWidget {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
-              children: const [
+              children: [
                 SidebarItem(
-                  icon: Icons.people,
+                  icon: PhosphorIcons.users(),
                   title: 'Usuários',
                   isActive: true,
                   route: '/users',
                 ),
                 SidebarItem(
-                  icon: Icons.analytics,
+                  icon: PhosphorIcons.chartLine(),
                   title: 'Análises',
                   isActive: false,
                   route: '/analytics',
                 ),
                 SidebarItem(
-                  icon: Icons.folder,
+                  icon: PhosphorIcons.folder(),
                   title: 'Documentos',
                   isActive: false,
                   route: '/documents',
                 ),
                 SidebarItem(
-                  icon: Icons.settings,
+                  icon: PhosphorIcons.gear(),
                   title: 'Configurações',
                   isActive: false,
                   route: '/settings',
@@ -147,13 +148,13 @@ class AppSidebar extends StatelessWidget {
               color: AppTheme.baseGray100,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Row(
+            child: Row(
               children: [
                 CircleAvatar(
                   radius: 16,
                   backgroundColor: AppTheme.primaryGreen,
                   child: Icon(
-                    Icons.person,
+                    PhosphorIcons.user(),
                     size: 18,
                     color: AppTheme.baseWhite,
                   ),
@@ -275,17 +276,11 @@ class AppNavbar extends StatelessWidget {
             // Profile/Settings
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.notifications_outlined,
-                color: AppTheme.baseGray600,
-              ),
+              icon: Icon(PhosphorIcons.bell(), color: AppTheme.baseGray600),
             ),
             IconButton(
               onPressed: () {},
-              icon: const Icon(
-                Icons.settings_outlined,
-                color: AppTheme.baseGray600,
-              ),
+              icon: Icon(PhosphorIcons.gear(), color: AppTheme.baseGray600),
             ),
           ],
         ),

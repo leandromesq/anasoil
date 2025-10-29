@@ -2,6 +2,7 @@ import 'package:anasoil_admin/features/users/viewmodels/user_list_viewmodel.dart
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/service_locator.dart';
 
@@ -39,7 +40,7 @@ class UsersDataTable extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.people_outline, size: 64, color: AppTheme.baseGray400),
+            Icon(PhosphorIcons.users(), size: 64, color: AppTheme.baseGray400),
             const SizedBox(height: 16),
             Text(
               'Nenhum usuário encontrado',
@@ -89,7 +90,11 @@ class UsersDataTable extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(Icons.people, size: 20, color: AppTheme.baseGray600),
+                    Icon(
+                      PhosphorIcons.users(),
+                      size: 20,
+                      color: AppTheme.baseGray600,
+                    ),
                     const SizedBox(width: 8),
                     Text(
                       'Usuários (${users.length})',
@@ -119,7 +124,7 @@ class UsersDataTable extends StatelessWidget {
                       );
                     }
                     return IconButton(
-                      icon: const Icon(Icons.refresh_outlined),
+                      icon: Icon(PhosphorIcons.arrowClockwise()),
                       onPressed: viewModel.fetchUsersCommand.execute,
                       tooltip: 'Atualizar',
                     );
@@ -362,7 +367,7 @@ class UsersDataTable extends StatelessWidget {
                 if (user.role == 'agricultor' || user.role == 'consultor')
                   IconButton(
                     onPressed: () => onManageRelations(user),
-                    icon: const Icon(Icons.link, size: 18),
+                    icon: Icon(PhosphorIcons.link(), size: 18),
                     color: AppTheme.baseGray600,
                     tooltip: 'Gerenciar Relações',
                     style: IconButton.styleFrom(
@@ -372,7 +377,7 @@ class UsersDataTable extends StatelessWidget {
                   ),
                 IconButton(
                   onPressed: () => onEdit(user),
-                  icon: const Icon(Icons.edit_outlined, size: 18),
+                  icon: Icon(PhosphorIcons.pencilSimple(), size: 18),
                   color: AppTheme.primaryGreen,
                   tooltip: 'Editar',
                   style: IconButton.styleFrom(
@@ -404,13 +409,13 @@ class UsersDataTable extends StatelessWidget {
   IconData _getRoleIcon(String role) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return Icons.admin_panel_settings;
+        return PhosphorIcons.shieldCheck();
       case 'consultor':
-        return Icons.person_search;
+        return PhosphorIcons.userCircle();
       case 'agricultor':
-        return Icons.agriculture;
+        return PhosphorIcons.plant();
       default:
-        return Icons.person;
+        return PhosphorIcons.user();
     }
   }
 

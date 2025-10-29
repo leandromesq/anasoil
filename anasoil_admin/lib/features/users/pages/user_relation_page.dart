@@ -3,6 +3,7 @@ import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_relation_viewmodel.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:flutter/material.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class UserRelationPage extends StatefulWidget {
   final String userId;
@@ -126,7 +127,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
               const Spacer(),
               ElevatedButton.icon(
                 onPressed: () => _showAddConsultorDialog(agricultor),
-                icon: const Icon(Icons.add),
+                icon: Icon(PhosphorIcons.plus()),
                 label: const Text('Adicionar'),
               ),
             ],
@@ -158,7 +159,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
               const Spacer(),
               ElevatedButton.icon(
                 onPressed: () => _showAddAgricultorDialog(consultor),
-                icon: const Icon(Icons.add),
+                icon: Icon(PhosphorIcons.plus()),
                 label: const Text('Adicionar'),
               ),
             ],
@@ -203,7 +204,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
             title: Text(user.name),
             subtitle: Text(user.email),
             trailing: IconButton(
-              icon: const Icon(Icons.remove_circle),
+              icon: Icon(PhosphorIcons.minusCircle()),
               color: Colors.red,
               onPressed: () =>
                   _showRemoveConfirmation(user, () => onRemove(user.id)),
@@ -422,13 +423,13 @@ class _UserRelationPageState extends State<UserRelationPage> {
   IconData _getRoleIcon(String role) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return Icons.admin_panel_settings;
+        return PhosphorIcons.shieldCheck();
       case 'consultor':
-        return Icons.person_search;
+        return PhosphorIcons.userCircle();
       case 'agricultor':
-        return Icons.agriculture;
+        return PhosphorIcons.plant();
       default:
-        return Icons.person;
+        return PhosphorIcons.user();
     }
   }
 

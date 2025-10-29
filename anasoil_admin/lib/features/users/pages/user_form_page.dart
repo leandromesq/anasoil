@@ -5,6 +5,7 @@ import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class UserFormPage extends StatefulWidget {
   final String? userId;
@@ -125,7 +126,9 @@ class _UserFormPageState extends State<UserFormPage> {
                     Row(
                       children: [
                         Icon(
-                          isEditing ? Icons.edit : Icons.person_add,
+                          isEditing
+                              ? PhosphorIcons.pencilSimple()
+                              : PhosphorIcons.userPlus(),
                           color: AppTheme.primaryGreen,
                           size: 24,
                         ),
@@ -147,9 +150,9 @@ class _UserFormPageState extends State<UserFormPage> {
                     // Form Fields
                     TextFormField(
                       controller: _nameController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Nome completo',
-                        prefixIcon: Icon(Icons.person_outline),
+                        prefixIcon: Icon(PhosphorIcons.user()),
                       ),
                       validator: (value) => (value == null || value.isEmpty)
                           ? 'Campo obrigatório'
@@ -159,9 +162,9 @@ class _UserFormPageState extends State<UserFormPage> {
 
                     TextFormField(
                       controller: _emailController,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'E-mail',
-                        prefixIcon: Icon(Icons.email_outlined),
+                        prefixIcon: Icon(PhosphorIcons.envelope()),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
@@ -179,9 +182,9 @@ class _UserFormPageState extends State<UserFormPage> {
 
                     DropdownButtonFormField<String>(
                       initialValue: _selectedRole,
-                      decoration: const InputDecoration(
+                      decoration: InputDecoration(
                         labelText: 'Função',
-                        prefixIcon: Icon(Icons.work_outline),
+                        prefixIcon: Icon(PhosphorIcons.briefcase()),
                       ),
                       items: const [
                         DropdownMenuItem(
@@ -223,7 +226,9 @@ class _UserFormPageState extends State<UserFormPage> {
                         child: Row(
                           children: [
                             Icon(
-                              _isActive ? Icons.check_circle : Icons.cancel,
+                              _isActive
+                                  ? PhosphorIcons.checkCircle()
+                                  : PhosphorIcons.xCircle(),
                               color: _isActive
                                   ? AppTheme.primaryGreen
                                   : AppTheme.secondaryRed,
