@@ -1,5 +1,6 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_relation_viewmodel.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:flutter/material.dart';
@@ -308,6 +309,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
         agricultorId,
         consultorId,
       ]);
+
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -410,13 +412,13 @@ class _UserRelationPageState extends State<UserRelationPage> {
   Color _getRoleColor(String role) {
     switch (role.toLowerCase()) {
       case 'admin':
-        return Colors.red;
+        return AppTheme.secondaryRed;
       case 'consultor':
-        return Colors.blue;
+        return const Color(0xFF3B82F6); // Azul
       case 'agricultor':
-        return Colors.green;
+        return AppTheme.primaryGreen;
       default:
-        return Colors.grey;
+        return AppTheme.baseGray500;
     }
   }
 
