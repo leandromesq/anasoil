@@ -1,5 +1,4 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
-import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_relation_viewmodel.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
@@ -8,27 +7,24 @@ import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 class UserRelationPage extends StatefulWidget {
   final String userId;
-  const UserRelationPage({super.key, required this.userId});
+  final UserRelationViewModel viewModel;
+  const UserRelationPage({
+    super.key,
+    required this.userId,
+    required this.viewModel,
+  });
 
   @override
   State<UserRelationPage> createState() => _UserRelationPageState();
 }
 
 class _UserRelationPageState extends State<UserRelationPage> {
-  late final UserRelationViewModel _viewModel;
-
+  late final UserRelationViewModel _viewModel = widget.viewModel;
   @override
   void initState() {
     super.initState();
-    _viewModel = locator<UserRelationViewModel>();
     _viewModel.fetchUserCommand.execute(widget.userId);
     _viewModel.fetchAllUsersCommand.execute();
-  }
-
-  @override
-  void dispose() {
-    _viewModel.dispose();
-    super.dispose();
   }
 
   @override
@@ -36,28 +32,69 @@ class _UserRelationPageState extends State<UserRelationPage> {
     return AppLayout(
       title: 'Gerenciar Relações',
       body: ListenableBuilder(
-        listenable: _viewModel,
+        listenable: Listenable.merge([_viewModel, _viewModel.fetchUserCommand]),
         builder: (context, _) {
-          if (_viewModel.currentUser == null) {
+          var command = _viewModel.fetchUserCommand;
+          var user = command.getCachedSuccess();
+
+          // Mostra loading apenas se não houver dados em cache (primeira carga)
+          if (command.value.isRunning && user == null) {
             return const Center(child: CircularProgressIndicator());
           }
 
-          final user = _viewModel.currentUser!;
+          if (command.value.isFailure && user == null) {
+            return Center(
+              child: Text(
+                'Erro ao carregar dados: ${command.getCachedFailure()}',
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
 
-          return Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildUserInfoCard(user),
-                const SizedBox(height: 20),
-                if (user.role == 'agricultor')
-                  _buildConsultorSection(user)
-                else if (user.role == 'consultor')
-                  _buildAgricultorSection(user),
-              ],
-            ),
-          );
+          if (user != null) {
+            if (user.role == 'agricultor') {
+              var linkedConsultors = _viewModel.linkedConsultors;
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildUserInfoCard(user),
+                    const SizedBox(height: 20),
+                    command.value.isRunning
+                        ? const LinearProgressIndicator(minHeight: 2)
+                        : const SizedBox(height: 2),
+                    _buildConsultorSection(user, linkedConsultors),
+                  ],
+                ),
+              );
+            } else if (user.role == 'consultor') {
+              var linkedAgricultors = _viewModel.linkedAgricultors;
+              return Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildUserInfoCard(user),
+                    const SizedBox(height: 20),
+                    command.value.isRunning
+                        ? const LinearProgressIndicator(minHeight: 2)
+                        : const SizedBox(height: 2),
+                    _buildAgricultorSection(user, linkedAgricultors),
+                  ],
+                ),
+              );
+            }
+            return Center(
+              child: Text(
+                'O usuário ${user.name} possui o papel de "${user.role}", que não tem relações gerenciáveis nesta seção.',
+                style: const TextStyle(fontSize: 16),
+                textAlign: TextAlign.center,
+              ),
+            );
+          }
+
+          return const SizedBox.shrink();
         },
       ),
     );
@@ -114,7 +151,10 @@ class _UserRelationPageState extends State<UserRelationPage> {
     );
   }
 
-  Widget _buildConsultorSection(UserModel agricultor) {
+  Widget _buildConsultorSection(
+    UserModel agricultor,
+    List<UserModel> linkedConsultors,
+  ) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -136,7 +176,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
           const SizedBox(height: 12),
           Expanded(
             child: _buildRelatedUsersList(
-              _viewModel.getLinkedConsultors(agricultor),
+              linkedConsultors,
               'Nenhum consultor vinculado',
               (consultorId) => _removeConsultor(agricultor.id, consultorId),
             ),
@@ -146,7 +186,10 @@ class _UserRelationPageState extends State<UserRelationPage> {
     );
   }
 
-  Widget _buildAgricultorSection(UserModel consultor) {
+  Widget _buildAgricultorSection(
+    UserModel consultor,
+    List<UserModel> linkedAgricultors,
+  ) {
     return Expanded(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,7 +211,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
           const SizedBox(height: 12),
           Expanded(
             child: _buildRelatedUsersList(
-              _viewModel.getLinkedAgricultors(consultor),
+              linkedAgricultors,
               'Nenhum agricultor vinculado',
               (agricultorId) => _removeAgricultor(consultor.id, agricultorId),
             ),
@@ -216,8 +259,10 @@ class _UserRelationPageState extends State<UserRelationPage> {
     );
   }
 
-  void _showAddConsultorDialog(UserModel agricultor) {
-    final availableConsultors = _viewModel.getAvailableConsultors(agricultor);
+  void _showAddConsultorDialog(UserModel agricultor) async {
+    final availableConsultors = await _viewModel.getAvailableConsultors(
+      agricultor,
+    );
     _showUserSelectionDialog(
       'Adicionar Consultor',
       availableConsultors,
@@ -225,8 +270,10 @@ class _UserRelationPageState extends State<UserRelationPage> {
     );
   }
 
-  void _showAddAgricultorDialog(UserModel consultor) {
-    final availableAgricultors = _viewModel.getAvailableAgricultors(consultor);
+  void _showAddAgricultorDialog(UserModel consultor) async {
+    final availableAgricultors = await _viewModel.getAvailableAgricultors(
+      consultor,
+    );
     _showUserSelectionDialog(
       'Adicionar Agricultor',
       availableAgricultors,

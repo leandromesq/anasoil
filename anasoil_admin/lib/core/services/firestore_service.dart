@@ -163,4 +163,14 @@ class FirestoreService {
       rethrow;
     }
   }
+
+  Future<UserModel?> getUser(String userId) async {
+    final doc = await _usersRef.doc(userId).get();
+    return doc.data();
+  }
+
+  Future<List<UserModel>> getAllUsers() async {
+    final snapshot = await _usersRef.get();
+    return snapshot.docs.map((doc) => doc.data()).toList();
+  }
 }

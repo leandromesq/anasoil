@@ -69,4 +69,9 @@ class UserModel {
       agricultorIds: agricultorIds ?? this.agricultorIds,
     );
   }
+
+  @override
+  String toString() {
+    return 'UserModel(id: $id, name: $name, email: $email, role: $role, active: $active, createdAt: $createdAt, consultorIds: $consultorIds, agricultorIds: $agricultorIds)';
+  }
 }

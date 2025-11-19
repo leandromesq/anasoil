@@ -3,6 +3,7 @@ import 'package:anasoil_admin/features/users/pages/user_form_page.dart';
 import 'package:anasoil_admin/features/users/pages/user_list_page.dart';
 import 'package:anasoil_admin/features/users/pages/user_relation_page.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_list_viewmodel.dart';
+import 'package:anasoil_admin/features/users/viewmodels/user_relation_viewmodel.dart';
 import 'package:go_router/go_router.dart';
 
 class AppRouter {
@@ -29,7 +30,10 @@ class AppRouter {
         path: '/user/:userId/relations',
         builder: (context, state) {
           final userId = state.pathParameters['userId']!;
-          return UserRelationPage(userId: userId);
+          return UserRelationPage(
+            userId: userId,
+            viewModel: locator<UserRelationViewModel>(),
+          );
         },
       ),
     ],

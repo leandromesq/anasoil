@@ -1,3 +1,5 @@
+import 'dart:developer';
+
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
 import 'package:flutter/material.dart';
@@ -7,11 +9,10 @@ import 'package:result_dart/result_dart.dart';
 class UserRelationViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService;
 
-  UserModel? _currentUser;
+  List<UserModel> linkedConsultors = [];
+  List<UserModel> linkedAgricultors = [];
   List<UserModel> _allUsers = [];
-
-  UserModel? get currentUser => _currentUser;
-  List<UserModel> get allUsers => _allUsers;
+  String? _currentUserId;
 
   late final fetchUserCommand = Command1(_fetchUser);
   late final fetchAllUsersCommand = Command0(_fetchAllUsers);
@@ -24,23 +25,49 @@ class UserRelationViewModel extends ChangeNotifier {
 
   UserRelationViewModel(this._firestoreService);
 
-  AsyncResult<Unit> _fetchUser(String userId) async {
+  AsyncResult<UserModel> _fetchUser(String userId) async {
+    _currentUserId = userId;
     try {
-      final user = await _firestoreService.getUserById(userId).first;
-      _currentUser = user;
-      notifyListeners();
-      return Success(unit);
+      // Usando Future para garantir uma busca pontual
+      final user = await _firestoreService.getUser(userId);
+      _allUsers = await _firestoreService.getAllUsers();
+
+      if (user != null) {
+        _updateLinkedUsers(user);
+        return Success(user);
+      } else {
+        return Failure(Exception("Usuário não encontrado"));
+      }
     } catch (e) {
       return Failure(Exception(e.toString()));
     }
   }
 
-  AsyncResult<Unit> _fetchAllUsers() async {
+  void _updateLinkedUsers(UserModel user) {
+    log('All users: ${_allUsers.toString()}');
+    if (user.role == 'agricultor') {
+      linkedConsultors = _allUsers
+          .where(
+            (u) => u.role == 'consultor' && user.consultorIds.contains(u.id),
+          )
+          .toList();
+      log('Linked consultors: ${linkedConsultors.length}');
+    } else if (user.role == 'consultor') {
+      linkedAgricultors = _allUsers
+          .where(
+            (u) => u.role == 'agricultor' && user.agricultorIds.contains(u.id),
+          )
+          .toList();
+      log('Linked agricultors: ${linkedAgricultors.length}');
+    }
+    notifyListeners();
+  }
+
+  AsyncResult<List<UserModel>> _fetchAllUsers() async {
     try {
-      final users = await _firestoreService.getUsers().first;
+      final users = await _firestoreService.getAllUsers();
       _allUsers = users;
-      notifyListeners();
-      return Success(unit);
+      return Success(users);
     } catch (e) {
       return Failure(Exception(e.toString()));
     }
@@ -53,9 +80,12 @@ class UserRelationViewModel extends ChangeNotifier {
 
       await _firestoreService.linkFarmerToConsultant(agricultorId, consultorId);
 
-      // Atualiza os dados locais
-      await fetchUserCommand.execute(_currentUser!.id);
-      await fetchAllUsersCommand.execute();
+      // Pequeno delay para garantir que a transação propagou
+      await Future.delayed(const Duration(milliseconds: 300));
+
+      if (_currentUserId != null) {
+        await fetchUserCommand.execute(_currentUserId!);
+      }
 
       return Success(unit);
     } catch (e) {
@@ -73,9 +103,9 @@ class UserRelationViewModel extends ChangeNotifier {
         consultorId,
       );
 
-      // Atualiza os dados locais
-      await fetchUserCommand.execute(_currentUser!.id);
-      await fetchAllUsersCommand.execute();
+      if (_currentUserId != null) {
+        await fetchUserCommand.execute(_currentUserId!);
+      }
 
       return Success(unit);
     } catch (e) {
@@ -83,31 +113,9 @@ class UserRelationViewModel extends ChangeNotifier {
     }
   }
 
-  /// Retorna os consultores vinculados a um agricultor
-  List<UserModel> getLinkedConsultors(UserModel agricultor) {
-    return _allUsers
-        .where(
-          (user) =>
-              user.role == 'consultor' &&
-              agricultor.consultorIds.contains(user.id),
-        )
-        .toList();
-  }
-
-  /// Retorna os agricultores vinculados a um consultor
-  List<UserModel> getLinkedAgricultors(UserModel consultor) {
-    return _allUsers
-        .where(
-          (user) =>
-              user.role == 'agricultor' &&
-              consultor.agricultorIds.contains(user.id),
-        )
-        .toList();
-  }
-
-  /// Retorna os consultores disponíveis para vincular a um agricultor
-  List<UserModel> getAvailableConsultors(UserModel agricultor) {
-    return _allUsers
+  Future<List<UserModel>> getAvailableConsultors(UserModel agricultor) async {
+    var allUsers = await _firestoreService.getAllUsers();
+    return allUsers
         .where(
           (user) =>
               user.role == 'consultor' &&
@@ -117,9 +125,9 @@ class UserRelationViewModel extends ChangeNotifier {
         .toList();
   }
 
-  /// Retorna os agricultores disponíveis para vincular a um consultor
-  List<UserModel> getAvailableAgricultors(UserModel consultor) {
-    return _allUsers
+  Future<List<UserModel>> getAvailableAgricultors(UserModel consultor) async {
+    var allUsers = await _firestoreService.getAllUsers();
+    return allUsers
         .where(
           (user) =>
               user.role == 'agricultor' &&
