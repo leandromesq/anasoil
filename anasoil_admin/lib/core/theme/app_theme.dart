@@ -2,26 +2,23 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // Paleta de cores
-  static const Color primaryGreen = Color(0xFF2D5A32); // Verde escuro
-  static const Color primaryGreenLight = Color(
-    0xFF4A7C59,
-  ); // Verde escuro claro
-  static const Color primaryGreenDark = Color(0xFF1B3A1F); // Verde muito escuro
+  static const Color primaryGreen = Color(0xFF2D5A32);
+  static const Color primaryGreenLight = Color(0xFF4A7C59); // Verde claro
+  static const Color primaryGreenDark = Color(0xFF1B3A1F);
 
-  static const Color secondaryRed = Color(0xFFDC3545); // Vermelho
-  static const Color secondaryRedLight = Color(0xFFF8D7DA); // Vermelho claro
-  static const Color secondaryRedDark = Color(0xFFB02A37); // Vermelho escuro
+  static const Color secondaryRed = Color(0xFFDC3545);
+  static const Color secondaryRedLight = Color(0xFFF8D7DA);
+  static const Color secondaryRedDark = Color(0xFFB02A37);
 
-  static const Color baseWhite = Color(0xFFFFFFFF); // Branco
-  static const Color baseGray50 = Color(0xFFFAFAFA); // Cinza muito claro
-  static const Color baseGray100 = Color(0xFFF5F5F5); // Cinza claro
-  static const Color baseGray200 = Color(0xFFEEEEEE); // Cinza
-  static const Color baseGray300 = Color(0xFFE0E0E0); // Cinza médio
-  static const Color baseGray400 = Color(0xFFBDBDBD); // Cinza escuro
-  static const Color baseGray500 = Color(0xFF9E9E9E); // Cinza muito escuro
-  static const Color baseGray600 = Color(0xFF757575); // Cinza quase preto
-  static const Color baseGray900 = Color(0xFF212121); // Preto
+  static const Color baseWhite = Color(0xFFFFFFFF);
+  static const Color baseGray50 = Color(0xFFFAFAFA);
+  static const Color baseGray100 = Color(0xFFF5F5F5);
+  static const Color baseGray200 = Color(0xFFEEEEEE);
+  static const Color baseGray300 = Color(0xFFE0E0E0);
+  static const Color baseGray400 = Color(0xFFBDBDBD);
+  static const Color baseGray500 = Color(0xFF9E9E9E);
+  static const Color baseGray600 = Color(0xFF757575);
+  static const Color baseGray900 = Color(0xFF212121);
 
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -55,7 +52,6 @@ class AppTheme {
       outlineVariant: baseGray200,
     ),
 
-    // Typography with Poppins font
     textTheme: GoogleFonts.poppinsTextTheme().copyWith(
       // Headings
       displayLarge: GoogleFonts.poppins(
@@ -138,7 +134,6 @@ class AppTheme {
       ),
     ),
 
-    // AppBar Theme
     appBarTheme: AppBarTheme(
       backgroundColor: baseWhite,
       foregroundColor: baseGray900,
@@ -152,7 +147,6 @@ class AppTheme {
       iconTheme: const IconThemeData(color: baseGray600),
     ),
 
-    // Card Theme
     cardTheme: CardThemeData(
       color: baseWhite,
       elevation: 1,
@@ -160,7 +154,6 @@ class AppTheme {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
     ),
 
-    // Elevated Button Theme
     elevatedButtonTheme: ElevatedButtonThemeData(
       style: ElevatedButton.styleFrom(
         backgroundColor: primaryGreen,
@@ -175,7 +168,6 @@ class AppTheme {
       ),
     ),
 
-    // Outlined Button Theme
     outlinedButtonTheme: OutlinedButtonThemeData(
       style: OutlinedButton.styleFrom(
         foregroundColor: baseGray600,
@@ -189,7 +181,6 @@ class AppTheme {
       ),
     ),
 
-    // Input Decoration Theme
     inputDecorationTheme: InputDecorationTheme(
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
@@ -212,7 +203,6 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
     ),
 
-    // Data Table Theme
     dataTableTheme: DataTableThemeData(
       headingRowColor: const WidgetStatePropertyAll(baseGray100),
       headingTextStyle: GoogleFonts.poppins(
@@ -226,7 +216,6 @@ class AppTheme {
       columnSpacing: 32,
     ),
 
-    // Divider Theme
     dividerTheme: const DividerThemeData(
       color: baseGray200,
       thickness: 1,

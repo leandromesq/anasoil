@@ -45,7 +45,6 @@ class UsersFilters extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header
           Row(
             children: [
               Icon(
@@ -76,10 +75,8 @@ class UsersFilters extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          // Filters Row
           Row(
             children: [
-              // Search Field
               Expanded(
                 flex: 3,
                 child: TextFormField(
@@ -94,7 +91,6 @@ class UsersFilters extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // Status Filter
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
@@ -143,7 +139,6 @@ class UsersFilters extends StatelessWidget {
               ),
               const SizedBox(width: 16),
 
-              // Role Filter
               Expanded(
                 flex: 2,
                 child: DropdownButtonFormField<String>(
@@ -207,7 +202,6 @@ class UsersFilters extends StatelessWidget {
             ],
           ),
 
-          // Active filters indicator
           if (hasActiveFilters) ...[
             const SizedBox(height: 12),
             Wrap(

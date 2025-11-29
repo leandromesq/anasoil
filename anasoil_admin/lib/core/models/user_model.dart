@@ -30,7 +30,6 @@ class UserModel {
       role: data['role'] ?? '',
       active: data['active'] ?? false,
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      // Converte os dados da lista do Firestore para List<String>
       consultorIds: List<String>.from(data['consultorIds'] ?? []),
       agricultorIds: List<String>.from(data['agricultorIds'] ?? []),
     );

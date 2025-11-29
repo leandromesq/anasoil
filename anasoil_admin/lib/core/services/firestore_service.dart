@@ -33,7 +33,7 @@ class FirestoreService {
   }
 
   Future<void> addUser(UserModel user) async {
-    // Validação de email único
+    // validação de email único
     final existingUsers = await _usersRef
         .where('email', isEqualTo: user.email)
         .limit(1)
@@ -47,7 +47,7 @@ class FirestoreService {
   }
 
   Future<void> updateUser(String userId, UserModel user) async {
-    // Validação de email único (excluindo o próprio usuário)
+    // validação de email único
     final existingUsers = await _usersRef
         .where('email', isEqualTo: user.email)
         .limit(2)
@@ -85,16 +85,12 @@ class FirestoreService {
     return query.docs.isNotEmpty;
   }
 
-  /// Método para verificar se o usuário pode ser excluído (não é o próprio usuário)
-  /// TODO: Implementar autenticação real para obter o ID do usuário atual
+  /// TODO: implementar auth
   Future<bool> canDeleteUser(String userId) async {
-    // Por enquanto, como não temos autenticação implementada,
-    // vamos simular verificando se o usuário é administrador
+    // simulação: verifica se o usuário não é um administrador
     final userDoc = await _usersRef.doc(userId).get();
     if (userDoc.exists) {
       final user = userDoc.data()!;
-      // Se for administrador, não pode ser excluído (simulação)
-      // Na implementação real, seria: return userId != currentUserId;
       return user.role != 'admin';
     }
     return false;

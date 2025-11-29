@@ -81,6 +81,7 @@ class _UserFormPageState extends State<UserFormPage> {
                     : 'Usuário criado com sucesso!',
               ),
               backgroundColor: AppTheme.primaryGreen,
+              duration: const Duration(seconds: 1),
             ),
           );
           context.go('/users');
@@ -93,6 +94,7 @@ class _UserFormPageState extends State<UserFormPage> {
                 'Erro: ${e.toString().replaceFirst('Exception: ', '')}',
               ),
               backgroundColor: AppTheme.secondaryRed,
+              duration: const Duration(seconds: 1),
             ),
           );
         }
@@ -122,7 +124,6 @@ class _UserFormPageState extends State<UserFormPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Header
                     Row(
                       children: [
                         Icon(
@@ -147,7 +148,6 @@ class _UserFormPageState extends State<UserFormPage> {
                     const Divider(),
                     const SizedBox(height: 24),
 
-                    // Form Fields
                     TextFormField(
                       controller: _nameController,
                       decoration: InputDecoration(
@@ -211,7 +211,6 @@ class _UserFormPageState extends State<UserFormPage> {
                     ),
                     const SizedBox(height: 20),
 
-                    // Status Switch (only for editing)
                     if (isEditing) ...[
                       Container(
                         padding: const EdgeInsets.all(16),
@@ -267,7 +266,6 @@ class _UserFormPageState extends State<UserFormPage> {
 
                     const SizedBox(height: 12),
 
-                    // Action Buttons
                     Row(
                       children: [
                         Expanded(

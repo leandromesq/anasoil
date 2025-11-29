@@ -37,7 +37,6 @@ class _UserRelationPageState extends State<UserRelationPage> {
           var command = _viewModel.fetchUserCommand;
           var user = command.getCachedSuccess();
 
-          // Mostra loading apenas se não houver dados em cache (primeira carga)
           if (command.value.isRunning && user == null) {
             return const Center(child: CircularProgressIndicator());
           }
@@ -361,7 +360,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Consultor adicionado com sucesso!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 1),
           ),
         );
       }
@@ -370,7 +370,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.secondaryRed,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -388,7 +389,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Agricultor adicionado com sucesso!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 1),
           ),
         );
       }
@@ -397,7 +399,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.secondaryRed,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -414,7 +417,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Consultor removido com sucesso!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 1),
           ),
         );
       }
@@ -423,7 +427,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.secondaryRed,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -440,7 +445,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Agricultor removido com sucesso!'),
-            backgroundColor: Colors.green,
+            backgroundColor: AppTheme.primaryGreen,
+            duration: Duration(seconds: 1),
           ),
         );
       }
@@ -449,7 +455,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Erro: ${e.toString()}'),
-            backgroundColor: Colors.red,
+            backgroundColor: AppTheme.secondaryRed,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -461,7 +468,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
       case 'admin':
         return AppTheme.secondaryRed;
       case 'consultor':
-        return const Color(0xFF3B82F6); // Azul
+        return const Color(0xFF3B82F6);
       case 'agricultor':
         return AppTheme.primaryGreen;
       default:

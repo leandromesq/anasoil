@@ -75,7 +75,6 @@ class UsersDataTable extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Table Header
           Container(
             padding: const EdgeInsets.all(24),
             decoration: const BoxDecoration(
@@ -106,7 +105,6 @@ class UsersDataTable extends StatelessWidget {
                     ),
                   ],
                 ),
-                // Refresh Button
                 ListenableBuilder(
                   listenable: viewModel.fetchUsersCommand,
                   builder: (context, _) {
@@ -134,7 +132,6 @@ class UsersDataTable extends StatelessWidget {
             ),
           ),
 
-          // Table Content
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
@@ -238,7 +235,6 @@ class UsersDataTable extends StatelessWidget {
   DataRow _buildUserRow(UserModel user, BuildContext context) {
     return DataRow(
       cells: [
-        // User Info
         DataCell(
           SizedBox(
             width: 280,
@@ -288,7 +284,6 @@ class UsersDataTable extends StatelessWidget {
           ),
         ),
 
-        // Role
         DataCell(
           SizedBox(
             width: 120,
@@ -315,7 +310,6 @@ class UsersDataTable extends StatelessWidget {
           ),
         ),
 
-        // Status Switch
         DataCell(
           SizedBox(
             width: 140,
@@ -346,7 +340,6 @@ class UsersDataTable extends StatelessWidget {
           ),
         ),
 
-        // Created Date
         DataCell(
           SizedBox(
             width: 100,
@@ -357,7 +350,6 @@ class UsersDataTable extends StatelessWidget {
           ),
         ),
 
-        // Actions
         DataCell(
           SizedBox(
             width: 100,
@@ -398,7 +390,7 @@ class UsersDataTable extends StatelessWidget {
       case 'admin':
         return AppTheme.secondaryRed;
       case 'consultor':
-        return const Color(0xFF3B82F6); // Azul
+        return const Color(0xFF3B82F6);
       case 'agricultor':
         return AppTheme.primaryGreen;
       default:

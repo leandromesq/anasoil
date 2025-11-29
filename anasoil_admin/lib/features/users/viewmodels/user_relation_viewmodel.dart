@@ -28,7 +28,6 @@ class UserRelationViewModel extends ChangeNotifier {
   AsyncResult<UserModel> _fetchUser(String userId) async {
     _currentUserId = userId;
     try {
-      // Usando Future para garantir uma busca pontual
       final user = await _firestoreService.getUser(userId);
       _allUsers = await _firestoreService.getAllUsers();
 
@@ -80,7 +79,6 @@ class UserRelationViewModel extends ChangeNotifier {
 
       await _firestoreService.linkFarmerToConsultant(agricultorId, consultorId);
 
-      // Pequeno delay para garantir que a transação propagou
       await Future.delayed(const Duration(milliseconds: 300));
 
       if (_currentUserId != null) {

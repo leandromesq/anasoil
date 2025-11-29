@@ -21,15 +21,11 @@ class AppLayout extends StatelessWidget {
       backgroundColor: AppTheme.baseGray50,
       body: Row(
         children: [
-          // Sidebar
           const AppSidebar(),
-          // Main Content
           Expanded(
             child: Column(
               children: [
-                // Top Navigation Bar
                 AppNavbar(title: title, actions: actions),
-                // Content Area
                 Expanded(
                   child: Container(
                     width: double.infinity,
@@ -62,7 +58,6 @@ class AppSidebar extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Logo/Header
           Container(
             padding: const EdgeInsets.all(24),
             child: Row(
@@ -107,7 +102,6 @@ class AppSidebar extends StatelessWidget {
 
           const Divider(height: 1),
 
-          // Navigation Items
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
@@ -140,7 +134,6 @@ class AppSidebar extends StatelessWidget {
             ),
           ),
 
-          // User Profile
           Container(
             margin: const EdgeInsets.all(16),
             padding: const EdgeInsets.all(12),
@@ -258,7 +251,6 @@ class AppNavbar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
-            // Title
             Text(
               title,
               style: const TextStyle(
@@ -270,10 +262,8 @@ class AppNavbar extends StatelessWidget {
 
             const Spacer(),
 
-            // Actions
             if (actions != null) ...actions!,
 
-            // Profile/Settings
             IconButton(
               onPressed: () {},
               icon: Icon(PhosphorIcons.bell(), color: AppTheme.baseGray600),

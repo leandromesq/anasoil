@@ -38,7 +38,7 @@ class _UserListPageState extends State<UserListPage> {
   List<UserModel> _applyFilters(List<UserModel> users) {
     var filteredUsers = users;
 
-    // Apply search filter
+    // search filter
     if (searchQuery != null && searchQuery!.isNotEmpty) {
       filteredUsers = filteredUsers.where((user) {
         return user.name.toLowerCase().contains(searchQuery!.toLowerCase()) ||
@@ -46,21 +46,21 @@ class _UserListPageState extends State<UserListPage> {
       }).toList();
     }
 
-    // Apply status filter
+    // status filter
     if (statusFilter != null && statusFilter != 'todos') {
       filteredUsers = filteredUsers.where((user) {
         return statusFilter == 'ativo' ? user.active : !user.active;
       }).toList();
     }
 
-    // Apply role filter
+    // role filter
     if (roleFilter != null && roleFilter != 'todos') {
       filteredUsers = filteredUsers.where((user) {
         return user.role == roleFilter;
       }).toList();
     }
 
-    // Apply sorting
+    // sorting
     if (sortColumn != null) {
       filteredUsers.sort((a, b) {
         dynamic aValue, bValue;
@@ -104,7 +104,6 @@ class _UserListPageState extends State<UserListPage> {
 
   void _handleStatusChange(UserModel user, bool newStatus) async {
     try {
-      // Usar o comando de atualização de status do ViewModel
       await widget.viewModel.updateUserStatusCommand.execute(
         user.id,
         newStatus,
@@ -117,6 +116,7 @@ class _UserListPageState extends State<UserListPage> {
               'Status do usuário ${newStatus ? 'ativado' : 'desativado'} com sucesso!',
             ),
             backgroundColor: AppTheme.primaryGreen,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -128,6 +128,7 @@ class _UserListPageState extends State<UserListPage> {
               'Erro ao alterar status: ${e.toString().replaceFirst('Exception: ', '')}',
             ),
             backgroundColor: AppTheme.secondaryRed,
+            duration: const Duration(seconds: 1),
           ),
         );
       }
@@ -151,7 +152,6 @@ class _UserListPageState extends State<UserListPage> {
       ],
       body: Column(
         children: [
-          // Filters
           UsersFilters(
             searchText: searchQuery ?? '',
             statusFilter: statusFilter ?? 'todos',
@@ -181,7 +181,6 @@ class _UserListPageState extends State<UserListPage> {
           ),
           const SizedBox(height: 24),
 
-          // Table
           Expanded(
             child: ListenableBuilder(
               listenable: Listenable.merge([
@@ -193,7 +192,6 @@ class _UserListPageState extends State<UserListPage> {
                     widget.viewModel.fetchUsersCommand.value.isRunning &&
                     widget.viewModel.users.isEmpty;
 
-                // Apply filters
                 final filteredUsers = _applyFilters(widget.viewModel.users);
 
                 return UsersDataTable(
