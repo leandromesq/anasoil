@@ -69,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo
-                  Icon(Icons.grass, size: 80, color: Colors.green[700]),
+                  Icon(Icons.eco, size: 80, color: Colors.green[700]),
                   const SizedBox(height: 16),
 
                   // Título
