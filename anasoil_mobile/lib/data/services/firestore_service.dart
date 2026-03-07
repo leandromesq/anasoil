@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/models/user.dart';
 import '../../../domain/models/profile_type.dart';
+import '../../../domain/models/document.dart';
 import '../../../utils/result.dart';
 
 /// Serviço de acesso ao Firestore
@@ -10,8 +11,12 @@ class FirestoreService {
   /// Referência da coleção de usuários
   late final CollectionReference<Map<String, dynamic>> _usersRef;
 
+  /// Referência da coleção de documentos
+  late final CollectionReference<Map<String, dynamic>> _documentsRef;
+
   FirestoreService() {
     _usersRef = _db.collection('users');
+    _documentsRef = _db.collection('documents');
   }
 
   /// Busca usuário por ID do Firebase Auth
@@ -257,6 +262,49 @@ class FirestoreService {
       return Result.error(
         Exception('Erro ao buscar agricultores do consultor: $e'),
       );
+    }
+  }
+
+  // ==================== Documentos ====================
+
+  /// Cria um documento na coleção documents
+  Future<Result<SoilDocument>> createDocument(SoilDocument doc) async {
+    try {
+      final docRef = await _documentsRef.add(doc.toFirestore());
+      final created = doc.copyWith(id: docRef.id);
+      return Result.ok(created);
+    } catch (e) {
+      return Result.error(Exception('Erro ao criar documento: $e'));
+    }
+  }
+
+  /// Busca documentos de um usuário
+  Future<Result<List<SoilDocument>>> getDocumentsByUser(String userId) async {
+    try {
+      final querySnapshot = await _documentsRef
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      final documents = querySnapshot.docs
+          .map((doc) => SoilDocument.fromFirestore(doc.id, doc.data()))
+          .toList();
+
+      // Ordena localmente para evitar necessidade de índice composto
+      documents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return Result.ok(documents);
+    } catch (e) {
+      return Result.error(Exception('Erro ao buscar documentos: $e'));
+    }
+  }
+
+  /// Deleta um documento da coleção
+  Future<Result<void>> deleteDocument(String docId) async {
+    try {
+      await _documentsRef.doc(docId).delete();
+      return Result.ok(null);
+    } catch (e) {
+      return Result.error(Exception('Erro ao deletar documento: $e'));
     }
   }
 }

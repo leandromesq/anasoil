@@ -32,7 +32,10 @@ class _MainScaffoldState extends State<MainScaffold> {
   void initState() {
     super.initState();
     _pages = [
-      HomePage(authViewModel: widget.authViewModel),
+      HomePage(
+        authViewModel: widget.authViewModel,
+        onNavigateToTab: _onItemTapped,
+      ),
       const AnalysisPage(),
       const HistoryPage(),
       ProfilePage(
@@ -51,14 +54,14 @@ class _MainScaffoldState extends State<MainScaffold> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: const CommonAppBar(),
+      appBar: CommonAppBar(onProfileTap: () => _onItemTapped(3)),
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.1),
+              color: Colors.black.withAlpha(26),
               blurRadius: 8,
               offset: const Offset(0, -2),
             ),

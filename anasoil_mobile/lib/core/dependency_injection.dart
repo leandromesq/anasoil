@@ -1,11 +1,15 @@
 import 'package:anasoil_mobile/data/repositories/auth/auth_repository.dart';
 import 'package:anasoil_mobile/data/repositories/auth/auth_repository_remote.dart';
+import 'package:anasoil_mobile/data/repositories/document/document_repository.dart';
+import 'package:anasoil_mobile/data/repositories/document/document_repository_remote.dart';
 import 'package:anasoil_mobile/data/repositories/profile/profile_repository.dart';
 import 'package:anasoil_mobile/data/repositories/profile/profile_repository_remote.dart';
 import 'package:anasoil_mobile/data/services/firebase_auth_service.dart';
+import 'package:anasoil_mobile/data/services/firebase_storage_service.dart';
 import 'package:anasoil_mobile/data/services/firestore_service.dart';
 import 'package:anasoil_mobile/data/services/storage_service.dart';
 import 'package:anasoil_mobile/ui/auth/auth_viewmodel.dart';
+import 'package:anasoil_mobile/ui/home/analysis_viewmodel.dart';
 import 'package:anasoil_mobile/ui/profile/profile_viewmodel.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -37,6 +41,7 @@ Future<void> _setupServices() async {
   // Firebase Services
   getIt.registerSingleton<FirebaseAuthService>(FirebaseAuthService());
   getIt.registerSingleton<FirestoreService>(FirestoreService());
+  getIt.registerSingleton<FirebaseStorageService>(FirebaseStorageService());
 }
 
 /// Configura os repositories
@@ -58,6 +63,15 @@ void _setupRepositories() {
       storage: getIt<StorageService>(),
     ),
   );
+
+  // DocumentRepository
+  getIt.registerSingleton<DocumentRepository>(
+    DocumentRepositoryRemote(
+      authService: getIt<FirebaseAuthService>(),
+      storageService: getIt<FirebaseStorageService>(),
+      firestoreService: getIt<FirestoreService>(),
+    ),
+  );
 }
 
 /// Configura os ViewModels
@@ -70,5 +84,10 @@ void _setupViewModels() {
   // ProfileViewModel
   getIt.registerSingleton<ProfileViewModel>(
     ProfileViewModel(profileRepository: getIt<ProfileRepository>()),
+  );
+
+  // AnalysisViewModel
+  getIt.registerSingleton<AnalysisViewModel>(
+    AnalysisViewModel(documentRepository: getIt<DocumentRepository>()),
   );
 }

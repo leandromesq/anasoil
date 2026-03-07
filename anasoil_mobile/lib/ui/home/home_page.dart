@@ -1,11 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../auth/auth_viewmodel.dart';
 
 /// Tela principal do app (Home)
 class HomePage extends StatelessWidget {
   final AuthViewModel authViewModel;
+  final ValueChanged<int> onNavigateToTab;
 
-  const HomePage({super.key, required this.authViewModel});
+  const HomePage({
+    super.key,
+    required this.authViewModel,
+    required this.onNavigateToTab,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -53,7 +59,7 @@ class HomePage extends StatelessWidget {
                     subtitle: '',
                     color: Colors.green[700]!,
                     onTap: () {
-                      // TODO: Navegar para documentos
+                      context.push('/documents');
                     },
                   ),
                 ),
@@ -96,7 +102,9 @@ class HomePage extends StatelessWidget {
   }
 
   Widget _buildMainAnalysisCard(BuildContext context) {
-    return Container(
+    return GestureDetector(
+      onTap: () => onNavigateToTab(1),
+      child: Container(
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
@@ -105,7 +113,7 @@ class HomePage extends StatelessWidget {
         border: Border.all(color: Colors.green[200]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -132,6 +140,7 @@ class HomePage extends StatelessWidget {
           ),
         ],
       ),
+    ),
     );
   }
 
@@ -259,7 +268,7 @@ class HomePage extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),

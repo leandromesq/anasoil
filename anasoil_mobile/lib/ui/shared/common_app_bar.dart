@@ -4,7 +4,9 @@ import '../profile/profile_viewmodel.dart';
 
 /// AppBar comum do aplicativo com logo, notificações e avatar
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
-  const CommonAppBar({super.key});
+  final VoidCallback? onProfileTap;
+
+  const CommonAppBar({super.key, this.onProfileTap});
 
   @override
   Size get preferredSize => const Size.fromHeight(64);
@@ -18,7 +20,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
         color: Colors.white,
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withAlpha(13),
             blurRadius: 4,
             offset: const Offset(0, 2),
           ),
@@ -79,10 +81,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
                   final hasAvatar = avatarUrl != null && avatarUrl.isNotEmpty;
 
                   return GestureDetector(
-                    onTap: () {
-                      // Avatar já está visível na aba Perfil
-                      // Não precisa fazer nada aqui
-                    },
+                    onTap: onProfileTap,
                     child: CircleAvatar(
                       radius: 18,
                       backgroundColor: Colors.green[700],

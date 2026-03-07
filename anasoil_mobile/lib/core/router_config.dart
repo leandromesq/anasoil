@@ -2,10 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../core/dependency_injection.dart';
 import '../data/repositories/auth/auth_repository.dart';
+import '../domain/models/document.dart';
 import '../ui/auth/auth_viewmodel.dart';
 import '../ui/auth/login_page.dart';
 import '../ui/auth/reset_password_page.dart';
 import '../ui/auth/splash_page.dart';
+import '../ui/documents/documents_page.dart';
+import '../ui/documents/pdf_preview_page.dart';
 import '../ui/home/main_scaffold.dart';
 import '../ui/profile/profile_viewmodel.dart';
 import '../ui/profile/edit_profile_page.dart';
@@ -58,6 +61,21 @@ final goRouter = GoRouter(
       name: 'profile-change-password',
       builder: (context, state) =>
           ChangePasswordPage(viewModel: getIt<ProfileViewModel>()),
+    ),
+
+    // Documents Routes
+    GoRoute(
+      path: '/documents',
+      name: 'documents',
+      builder: (context, state) => const DocumentsPage(),
+    ),
+    GoRoute(
+      path: '/documents/preview',
+      name: 'documents-preview',
+      builder: (context, state) {
+        final doc = state.extra as SoilDocument;
+        return PdfPreviewPage(document: doc);
+      },
     ),
   ],
   errorBuilder: (context, state) => Scaffold(

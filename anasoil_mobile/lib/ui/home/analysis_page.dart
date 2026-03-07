@@ -1,5 +1,9 @@
-import 'package:flutter/material.dart';
 import 'dart:io';
+import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
+import '../../core/dependency_injection.dart';
+import '../../utils/result.dart';
+import 'analysis_viewmodel.dart';
 
 /// Página de nova análise
 class AnalysisPage extends StatefulWidget {
@@ -10,20 +14,85 @@ class AnalysisPage extends StatefulWidget {
 }
 
 class _AnalysisPageState extends State<AnalysisPage> {
-  File? _selectedDocument;
+  late final AnalysisViewModel _viewModel;
+  File? _selectedFile;
 
-  Future<void> _pickDocument() async {
-    // TODO: Implementar seleção de documento usando file_picker
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Seleção de documento em desenvolvimento'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = getIt<AnalysisViewModel>();
+    _viewModel.uploadDocumentCommand.addListener(_onUploadChanged);
   }
 
-  Future<void> _startAnalysis() async {
-    if (_selectedDocument == null) {
+  @override
+  void dispose() {
+    _viewModel.uploadDocumentCommand.removeListener(_onUploadChanged);
+    super.dispose();
+  }
+
+  void _onUploadChanged() {
+    if (!mounted) return;
+    setState(() {});
+
+    final command = _viewModel.uploadDocumentCommand;
+
+    if (command.completed) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Documento importado com sucesso!'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } else if (command.error) {
+      final errorMsg = command.result is Error
+          ? (command.result as Error).error.toString()
+          : 'Erro desconhecido';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao importar: $errorMsg'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _pickDocument() async {
+    try {
+      final result = await FilePicker.platform.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['pdf'],
+      );
+
+      if (result != null && result.files.single.path != null) {
+        final file = File(result.files.single.path!);
+        final fileName = result.files.single.name;
+
+        setState(() {
+          _selectedFile = file;
+        });
+
+        _viewModel.setSelectedFileName(fileName);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao selecionar arquivo: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  void _removeSelection() {
+    setState(() {
+      _selectedFile = null;
+    });
+    _viewModel.clearSelection();
+  }
+
+  Future<void> _startUpload() async {
+    if (_selectedFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Por favor, importe um documento primeiro'),
@@ -33,17 +102,19 @@ class _AnalysisPageState extends State<AnalysisPage> {
       return;
     }
 
-    // TODO: Implementar início da análise
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Análise em desenvolvimento'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    await _viewModel.uploadDocumentCommand.execute(_selectedFile!);
+
+    if (_viewModel.uploadDocumentCommand.completed) {
+      setState(() {
+        _selectedFile = null;
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final isUploading = _viewModel.uploadDocumentCommand.running;
+
     return Scaffold(
       backgroundColor: Colors.grey[50],
       body: Padding(
@@ -62,8 +133,11 @@ class _AnalysisPageState extends State<AnalysisPage> {
             ),
             const SizedBox(height: 32),
 
-            // Card de importar documento
-            _buildImportCard(),
+            // Card de importar documento ou arquivo selecionado
+            if (_selectedFile == null)
+              _buildImportCard()
+            else
+              _buildSelectedFileCard(),
 
             const SizedBox(height: 32),
 
@@ -72,7 +146,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
               width: double.infinity,
               height: 56,
               child: ElevatedButton(
-                onPressed: _startAnalysis,
+                onPressed: isUploading ? null : _startUpload,
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.green[700],
                   foregroundColor: Colors.white,
@@ -80,11 +154,24 @@ class _AnalysisPageState extends State<AnalysisPage> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
+                  disabledBackgroundColor: Colors.green[300],
                 ),
-                child: const Text(
-                  'Iniciar',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-                ),
+                child: isUploading
+                    ? const SizedBox(
+                        height: 24,
+                        width: 24,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2.5,
+                        ),
+                      )
+                    : const Text(
+                        'Iniciar',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
               ),
             ),
           ],
@@ -112,7 +199,6 @@ class _AnalysisPageState extends State<AnalysisPage> {
           ),
           child: Column(
             children: [
-              // Ícone de documento
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
@@ -138,12 +224,67 @@ class _AnalysisPageState extends State<AnalysisPage> {
               const SizedBox(height: 8),
 
               Text(
-                '*Formatos Suportados: .pdf, .xlsx',
+                '*Formatos Suportados: .pdf',
                 style: TextStyle(fontSize: 13, color: Colors.red[400]),
               ),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  Widget _buildSelectedFileCard() {
+    final fileName = _viewModel.selectedFileName ?? 'documento.pdf';
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.green[700]!, width: 2),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: Colors.red[50],
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(Icons.picture_as_pdf, color: Colors.red[700], size: 32),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  fileName,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'PDF selecionado',
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
+                ),
+              ],
+            ),
+          ),
+          IconButton(
+            onPressed: _viewModel.uploadDocumentCommand.running
+                ? null
+                : _removeSelection,
+            icon: Icon(Icons.close, color: Colors.grey[600]),
+          ),
+        ],
       ),
     );
   }
