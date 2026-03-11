@@ -96,12 +96,8 @@ Future<String?> _handleRedirect(
   // Páginas públicas que não requerem autenticação
   const publicRoutes = ['/login', '/reset-password'];
 
-  // Se está na splash, verificar autenticação
+  // Se está na splash, redirecionar com base na autenticação
   if (currentLocation == '/splash') {
-    // Aguardar um pouco para mostrar a splash
-    await Future.delayed(const Duration(seconds: 1));
-
-    // Verificar se está autenticado
     if (authRepository.isAuthenticated) {
       return '/home';
     } else {

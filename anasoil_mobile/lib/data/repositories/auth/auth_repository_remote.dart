@@ -21,6 +21,12 @@ class AuthRepositoryRemote extends AuthRepository {
   }) : _authService = authService,
        _firestoreService = firestoreService,
        _storage = storage {
+    // Carrega usuário do cache local imediatamente (síncrono)
+    final userJson = _storage.getUser();
+    if (userJson != null) {
+      _currentUser = User.fromJson(userJson);
+    }
+    // Atualiza dados do Firestore em background
     _initializeUser();
   }
 
@@ -30,32 +36,24 @@ class AuthRepositoryRemote extends AuthRepository {
   @override
   bool get isAuthenticated => _currentUser != null;
 
-  /// Inicializa o usuário do storage ao instanciar o repository
+  /// Atualiza os dados do usuário a partir do Firebase/Firestore em background
   Future<void> _initializeUser() async {
-    // Verifica se há usuário autenticado no Firebase Auth
     final firebaseUser = _authService.currentFirebaseUser;
 
     if (firebaseUser != null && firebaseUser.email != null) {
-      // Busca os dados do usuário no Firestore por email
+      // Sessão Firebase válida: atualiza dados do Firestore
       final result = await _firestoreService.getUserByEmail(
         firebaseUser.email!,
       );
 
-      if (result is Ok<User?>) {
-        final user = result.value;
-        if (user != null) {
-          _currentUser = user;
-          await _storage.saveUser(user.toJson());
-          notifyListeners();
-        }
-      }
-    } else {
-      // Tenta carregar do storage local
-      final userJson = _storage.getUser();
-      if (userJson != null) {
-        _currentUser = User.fromJson(userJson);
+      if (result is Ok<User?> && result.value != null) {
+        _currentUser = result.value;
+        await _storage.saveUser(result.value!.toJson());
         notifyListeners();
       }
+    } else if (_currentUser != null) {
+      // Sessão Firebase expirou: limpa cache local
+      await _clearAuthData();
     }
   }
 
