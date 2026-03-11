@@ -2,7 +2,6 @@ import 'package:flutter/foundation.dart';
 import '../../../data/repositories/auth/auth_repository.dart';
 import '../../../domain/models/user.dart';
 import '../../../domain/models/login_credentials.dart';
-import '../../../domain/models/register_data.dart';
 import '../../../utils/command.dart';
 import '../../../utils/result.dart';
 
@@ -17,7 +16,6 @@ class AuthViewModel extends ChangeNotifier {
 
     // Inicializa commands
     loginCommand = Command1(_login);
-    registerCommand = Command1(_register);
     resetPasswordCommand = Command1(_resetPassword);
     loadUserCommand = Command0(_authRepository.loadCurrentUser);
     logoutCommand = Command0(_authRepository.logout);
@@ -25,7 +23,6 @@ class AuthViewModel extends ChangeNotifier {
 
   // Commands
   late final Command1<User, LoginCredentials> loginCommand;
-  late final Command1<User, RegisterData> registerCommand;
   late final Command1<void, String> resetPasswordCommand;
   late final Command0<User?> loadUserCommand;
   late final Command0<void> logoutCommand;
@@ -39,11 +36,6 @@ class AuthViewModel extends ChangeNotifier {
   /// Realiza o login
   Future<Result<User>> _login(LoginCredentials credentials) async {
     return await _authRepository.login(credentials);
-  }
-
-  /// Registra um novo usuário
-  Future<Result<User>> _register(RegisterData data) async {
-    return await _authRepository.register(data);
   }
 
   /// Recupera a senha

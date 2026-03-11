@@ -135,6 +135,7 @@ class FirestoreService {
       email: data['email'] as String? ?? '',
       profileType: profileType,
       phone: data['phone'] as String?,
+      avatarUrl: data['avatarUrl'] as String?,
     );
   }
 

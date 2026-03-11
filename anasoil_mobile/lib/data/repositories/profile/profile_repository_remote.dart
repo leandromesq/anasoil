@@ -4,6 +4,7 @@ import '../../../domain/models/profile_update_data.dart';
 import '../../../domain/models/password_update_data.dart';
 import '../../../utils/result.dart';
 import '../../services/firebase_auth_service.dart';
+import '../../services/firebase_storage_service.dart';
 import '../../services/firestore_service.dart';
 import '../../services/storage_service.dart';
 import 'profile_repository.dart';
@@ -13,6 +14,7 @@ class ProfileRepositoryRemote extends ProfileRepository {
   final FirebaseAuthService _authService;
   final FirestoreService _firestoreService;
   final StorageService _storage;
+  final FirebaseStorageService _storageService;
 
   UserProfile? _profile;
 
@@ -20,9 +22,11 @@ class ProfileRepositoryRemote extends ProfileRepository {
     required FirebaseAuthService authService,
     required FirestoreService firestoreService,
     required StorageService storage,
+    required FirebaseStorageService storageService,
   }) : _authService = authService,
        _firestoreService = firestoreService,
-       _storage = storage;
+       _storage = storage,
+       _storageService = storageService;
 
   @override
   UserProfile? get profile => _profile;
@@ -58,8 +62,8 @@ class ProfileRepositoryRemote extends ProfileRepository {
         email: user.email,
         profileType: user.profileType,
         phone: user.phone,
-        avatarUrl: null, // TODO: Implementar storage de imagens
-        createdAt: DateTime.now(), // TODO: Pegar do Firestore
+        avatarUrl: user.avatarUrl,
+        createdAt: user.createdAt ?? DateTime.now(),
       );
 
       notifyListeners();
@@ -137,14 +141,101 @@ class ProfileRepositoryRemote extends ProfileRepository {
 
   @override
   Future<Result<UserProfile>> updateAvatar(File imageFile) async {
-    // TODO: Implementar upload de imagem para Firebase Storage
-    return Result.error(Exception('Upload de imagem não implementado ainda'));
+    try {
+      if (_profile == null) {
+        return Result.error(Exception('Perfil não carregado'));
+      }
+
+      // Remove avatar anterior se existir
+      if (_profile!.avatarUrl != null) {
+        await _storageService.deleteFileByUrl(_profile!.avatarUrl!);
+      }
+
+      // Faz upload do novo avatar
+      final storagePath = 'avatars/${_profile!.id}/avatar.jpg';
+      final uploadResult = await _storageService.uploadFile(
+        storagePath,
+        imageFile,
+      );
+
+      if (uploadResult is Error) {
+        return Result.error((uploadResult as Error).error);
+      }
+
+      final downloadUrl = (uploadResult as Ok<String>).value;
+
+      // Atualiza no Firestore
+      final updateResult = await _firestoreService.updateUser(_profile!.id, {
+        'avatarUrl': downloadUrl,
+      });
+
+      if (updateResult is Error) {
+        return Result.error(updateResult.error);
+      }
+
+      // Atualiza perfil local
+      _profile = _profile!.copyWith(
+        avatarUrl: downloadUrl,
+        updatedAt: DateTime.now(),
+      );
+
+      await _storage.saveUser(_profile!.toJson());
+
+      notifyListeners();
+      return Result.ok(_profile!);
+    } catch (e) {
+      return Result.error(Exception('Erro ao atualizar avatar: $e'));
+    }
   }
 
   @override
   Future<Result<UserProfile>> removeAvatar() async {
-    // TODO: Implementar remoção de imagem do Firebase Storage
-    return Result.error(Exception('Remoção de imagem não implementada ainda'));
+    try {
+      if (_profile == null) {
+        return Result.error(Exception('Perfil não carregado'));
+      }
+
+      if (_profile!.avatarUrl == null) {
+        return Result.ok(_profile!);
+      }
+
+      // Remove do Storage
+      final deleteResult = await _storageService.deleteFileByUrl(
+        _profile!.avatarUrl!,
+      );
+
+      if (deleteResult is Error) {
+        return Result.error(deleteResult.error);
+      }
+
+      // Atualiza no Firestore
+      final updateResult = await _firestoreService.updateUser(_profile!.id, {
+        'avatarUrl': null,
+      });
+
+      if (updateResult is Error) {
+        return Result.error(updateResult.error);
+      }
+
+      // Atualiza perfil local
+      _profile = UserProfile(
+        id: _profile!.id,
+        name: _profile!.name,
+        email: _profile!.email,
+        profileType: _profile!.profileType,
+        phone: _profile!.phone,
+        avatarUrl: null,
+        createdAt: _profile!.createdAt,
+        updatedAt: DateTime.now(),
+      );
+
+      await _storage.saveUser(_profile!.toJson());
+
+      notifyListeners();
+      return Result.ok(_profile!);
+    } catch (e) {
+      return Result.error(Exception('Erro ao remover avatar: $e'));
+    }
   }
 
   @override

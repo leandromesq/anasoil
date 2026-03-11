@@ -1,3 +1,5 @@
+import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
@@ -47,6 +49,9 @@ class AppSidebar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final authService = locator<AuthService>();
+    final userEmail = authService.currentUser?.email ?? '';
+
     return Container(
       width: 280,
       height: double.infinity,
@@ -152,12 +157,12 @@ class AppSidebar extends StatelessWidget {
                     color: AppTheme.baseWhite,
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
+                      const Text(
                         'Administrador',
                         style: TextStyle(
                           fontSize: 12,
@@ -166,14 +171,27 @@ class AppSidebar extends StatelessWidget {
                         ),
                       ),
                       Text(
-                        'admin@anasoil.com',
-                        style: TextStyle(
+                        userEmail,
+                        style: const TextStyle(
                           fontSize: 10,
                           color: AppTheme.baseGray500,
                         ),
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ],
                   ),
+                ),
+                IconButton(
+                  icon: Icon(
+                    PhosphorIcons.signOut(),
+                    size: 18,
+                    color: AppTheme.baseGray500,
+                  ),
+                  tooltip: 'Sair',
+                  onPressed: () async {
+                    await authService.signOut();
+                    if (context.mounted) context.go('/login');
+                  },
                 ),
               ],
             ),

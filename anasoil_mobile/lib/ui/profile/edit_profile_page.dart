@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../domain/models/profile_update_data.dart';
 import '../../utils/result.dart';
 import 'profile_viewmodel.dart';
@@ -16,6 +18,7 @@ class EditProfilePage extends StatefulWidget {
 
 class _EditProfilePageState extends State<EditProfilePage> {
   final _formKey = GlobalKey<FormState>();
+  final _imagePicker = ImagePicker();
   late final TextEditingController _nameController;
   late final TextEditingController _phoneController;
 
@@ -32,6 +35,110 @@ class _EditProfilePageState extends State<EditProfilePage> {
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
+  }
+
+  Future<void> _showAvatarOptions() async {
+    final profile = widget.viewModel.profile;
+    await showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      builder: (context) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+            ListTile(
+              leading: const Icon(Icons.camera_alt_outlined),
+              title: const Text('Tirar foto'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAvatar(ImageSource.camera);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library_outlined),
+              title: const Text('Escolher da galeria'),
+              onTap: () {
+                Navigator.pop(context);
+                _pickAvatar(ImageSource.gallery);
+              },
+            ),
+            if (profile?.avatarUrl != null)
+              ListTile(
+                leading: Icon(Icons.delete_outline, color: Colors.red[700]),
+                title: Text(
+                  'Remover foto',
+                  style: TextStyle(color: Colors.red[700]),
+                ),
+                onTap: () {
+                  Navigator.pop(context);
+                  _removeAvatar();
+                },
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _pickAvatar(ImageSource source) async {
+    final picked = await _imagePicker.pickImage(
+      source: source,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 85,
+    );
+
+    if (picked == null || !mounted) return;
+
+    await widget.viewModel.updateAvatarCommand.execute(File(picked.path));
+
+    if (!mounted) return;
+
+    final result = widget.viewModel.updateAvatarCommand.result;
+    if (result is Error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text((result as Error).error.toString()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Foto atualizada com sucesso'),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
+  }
+
+  Future<void> _removeAvatar() async {
+    await widget.viewModel.removeAvatarCommand.execute();
+
+    if (!mounted) return;
+
+    final result = widget.viewModel.removeAvatarCommand.result;
+    if (result is Error) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text((result as Error).error.toString()),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   Future<void> _handleSave() async {
@@ -100,33 +207,50 @@ class _EditProfilePageState extends State<EditProfilePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Avatar (não editável por enquanto)
+              // Avatar
               Center(
-                child: Column(
-                  children: [
-                    CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Colors.green[700],
-                      child: const Icon(
-                        Icons.person,
-                        size: 50,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextButton.icon(
-                      onPressed: () {
-                        // TODO: Implementar alteração de foto
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Alteração de foto em breve'),
-                          ),
-                        );
-                      },
-                      icon: const Icon(Icons.camera_alt),
-                      label: const Text('Alterar Imagem'),
-                    ),
-                  ],
+                child: ListenableBuilder(
+                  listenable: widget.viewModel,
+                  builder: (context, _) {
+                    final profile = widget.viewModel.profile;
+                    final isUploading =
+                        widget.viewModel.updateAvatarCommand.running ||
+                        widget.viewModel.removeAvatarCommand.running;
+
+                    return Column(
+                      children: [
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            CircleAvatar(
+                              radius: 50,
+                              backgroundColor: Colors.green[700],
+                              backgroundImage: profile?.avatarUrl != null
+                                  ? NetworkImage(profile!.avatarUrl!)
+                                  : null,
+                              child: isUploading
+                                  ? const CircularProgressIndicator(
+                                      color: Colors.white,
+                                    )
+                                  : profile?.avatarUrl == null
+                                  ? const Icon(
+                                      Icons.person,
+                                      size: 50,
+                                      color: Colors.white,
+                                    )
+                                  : null,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        TextButton.icon(
+                          onPressed: isUploading ? null : _showAvatarOptions,
+                          icon: const Icon(Icons.camera_alt),
+                          label: const Text('Alterar Imagem'),
+                        ),
+                      ],
+                    );
+                  },
                 ),
               ),
               const SizedBox(height: 32),

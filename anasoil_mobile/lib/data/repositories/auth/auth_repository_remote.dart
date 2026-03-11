@@ -1,6 +1,5 @@
 import '../../../domain/models/user.dart';
 import '../../../domain/models/login_credentials.dart';
-import '../../../domain/models/register_data.dart';
 import '../../../utils/result.dart';
 import '../../services/firebase_auth_service.dart';
 import '../../services/firestore_service.dart';
@@ -119,16 +118,6 @@ class AuthRepositoryRemote extends AuthRepository {
     } catch (e) {
       return Result.error(Exception('Erro ao fazer login: $e'));
     }
-  }
-
-  @override
-  Future<Result<User>> register(RegisterData data) async {
-    // Registro não é permitido pelo app móvel
-    return Result.error(
-      Exception(
-        'Cadastro não disponível. Entre em contato com o administrador',
-      ),
-    );
   }
 
   @override

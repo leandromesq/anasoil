@@ -32,7 +32,7 @@ class FirestoreService {
     });
   }
 
-  Future<void> addUser(UserModel user) async {
+  Future<void> addUser(String uid, UserModel user) async {
     // validação de email único
     final existingUsers = await _usersRef
         .where('email', isEqualTo: user.email)
@@ -43,7 +43,7 @@ class FirestoreService {
       throw Exception('Este email já está em uso por outro usuário.');
     }
 
-    await _usersRef.add(user);
+    await _usersRef.doc(uid).set(user);
   }
 
   Future<void> updateUser(String userId, UserModel user) async {
@@ -85,7 +85,6 @@ class FirestoreService {
     return query.docs.isNotEmpty;
   }
 
-  /// TODO: implementar auth
   Future<bool> canDeleteUser(String userId) async {
     // simulação: verifica se o usuário não é um administrador
     final userDoc = await _usersRef.doc(userId).get();

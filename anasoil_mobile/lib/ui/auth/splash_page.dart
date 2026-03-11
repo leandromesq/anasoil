@@ -13,7 +13,7 @@ class SplashPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo do AnaSoil
-            Icon(Icons.grass, size: 120, color: Colors.green[700]),
+            Icon(Icons.eco, size: 120, color: Colors.green[700]),
             const SizedBox(height: 24),
             Text(
               'AnaSoil',

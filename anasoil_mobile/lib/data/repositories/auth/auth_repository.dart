@@ -1,7 +1,6 @@
 import 'package:flutter/foundation.dart';
 import '../../../domain/models/user.dart';
 import '../../../domain/models/login_credentials.dart';
-import '../../../domain/models/register_data.dart';
 import '../../../utils/result.dart';
 
 /// Interface do repositório de autenticação
@@ -14,9 +13,6 @@ abstract class AuthRepository extends ChangeNotifier {
 
   /// Realiza o login do usuário
   Future<Result<User>> login(LoginCredentials credentials);
-
-  /// Registra um novo usuário
-  Future<Result<User>> register(RegisterData data);
 
   /// Recupera a senha do usuário
   Future<Result<void>> resetPassword(String email);

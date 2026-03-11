@@ -61,6 +61,7 @@ void _setupRepositories() {
       authService: getIt<FirebaseAuthService>(),
       firestoreService: getIt<FirestoreService>(),
       storage: getIt<StorageService>(),
+      storageService: getIt<FirebaseStorageService>(),
     ),
   );
 

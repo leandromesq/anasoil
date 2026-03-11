@@ -51,7 +51,7 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyCvo-gR4hEOFnh1xdDvpMN8Yzvq_jgzpXo',
-    appId: '1:926534037297:android:38d4d08dddbfb1c60d0a10',
+    appId: '1:926534037297:android:542e6f639c2510510d0a10',
     messagingSenderId: '926534037297',
     projectId: 'anasoil',
     storageBucket: 'anasoil.firebasestorage.app',
