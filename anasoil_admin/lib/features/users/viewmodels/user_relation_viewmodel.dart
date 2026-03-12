@@ -2,9 +2,9 @@ import 'dart:developer';
 
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
+import 'package:anasoil_admin/core/utils/command.dart';
+import 'package:anasoil_admin/core/utils/result.dart';
 import 'package:flutter/material.dart';
-import 'package:result_command/result_command.dart';
-import 'package:result_dart/result_dart.dart';
 
 class UserRelationViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService;
@@ -25,7 +25,7 @@ class UserRelationViewModel extends ChangeNotifier {
 
   UserRelationViewModel(this._firestoreService);
 
-  AsyncResult<UserModel> _fetchUser(String userId) async {
+  Future<Result<UserModel>> _fetchUser(String userId) async {
     _currentUserId = userId;
     try {
       final user = await _firestoreService.getUser(userId);
@@ -33,12 +33,12 @@ class UserRelationViewModel extends ChangeNotifier {
 
       if (user != null) {
         _updateLinkedUsers(user);
-        return Success(user);
+        return Result.ok(user);
       } else {
-        return Failure(Exception("Usuário não encontrado"));
+        return Result.error(Exception("Usuário não encontrado"));
       }
     } catch (e) {
-      return Failure(Exception(e.toString()));
+      return Result.error(Exception(e.toString()));
     }
   }
 
@@ -62,17 +62,17 @@ class UserRelationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  AsyncResult<List<UserModel>> _fetchAllUsers() async {
+  Future<Result<List<UserModel>>> _fetchAllUsers() async {
     try {
       final users = await _firestoreService.getAllUsers();
       _allUsers = users;
-      return Success(users);
+      return Result.ok(users);
     } catch (e) {
-      return Failure(Exception(e.toString()));
+      return Result.error(Exception(e.toString()));
     }
   }
 
-  AsyncResult<Unit> _linkAgricultorConsultor(List<String> ids) async {
+  Future<Result<void>> _linkAgricultorConsultor(List<String> ids) async {
     try {
       final agricultorId = ids[0];
       final consultorId = ids[1];
@@ -85,13 +85,13 @@ class UserRelationViewModel extends ChangeNotifier {
         await fetchUserCommand.execute(_currentUserId!);
       }
 
-      return Success(unit);
+      return Result.ok(null);
     } catch (e) {
-      return Failure(Exception(e.toString()));
+      return Result.error(Exception(e.toString()));
     }
   }
 
-  AsyncResult<Unit> _unlinkAgricultorConsultor(List<String> ids) async {
+  Future<Result<void>> _unlinkAgricultorConsultor(List<String> ids) async {
     try {
       final agricultorId = ids[0];
       final consultorId = ids[1];
@@ -105,9 +105,9 @@ class UserRelationViewModel extends ChangeNotifier {
         await fetchUserCommand.execute(_currentUserId!);
       }
 
-      return Success(unit);
+      return Result.ok(null);
     } catch (e) {
-      return Failure(Exception(e.toString()));
+      return Result.error(Exception(e.toString()));
     }
   }
 

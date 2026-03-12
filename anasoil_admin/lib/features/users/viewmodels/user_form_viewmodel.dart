@@ -1,9 +1,9 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/services/auth_service.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
+import 'package:anasoil_admin/core/utils/command.dart';
+import 'package:anasoil_admin/core/utils/result.dart';
 import 'package:flutter/material.dart';
-import 'package:result_command/result_command.dart';
-import 'package:result_dart/result_dart.dart';
 
 class UserFormViewModel extends ChangeNotifier {
   final FirestoreService _firestoreService;
@@ -17,14 +17,14 @@ class UserFormViewModel extends ChangeNotifier {
 
   UserFormViewModel(this._firestoreService, this._authService);
 
-  AsyncResult<Unit> _fetchUser(String userId) async {
+  Future<Result<void>> _fetchUser(String userId) async {
     final user = await _firestoreService.getUserById(userId).first;
     _editingUser = user;
     notifyListeners();
-    return Success(unit);
+    return Result.ok(null);
   }
 
-  AsyncResult<Unit> _saveUser(UserModel user) async {
+  Future<Result<void>> _saveUser(UserModel user) async {
     try {
       if (user.id.isEmpty) {
         // Cria o usuário no Firebase Auth primeiro para obter o UID
@@ -33,9 +33,9 @@ class UserFormViewModel extends ChangeNotifier {
       } else {
         await _firestoreService.updateUser(user.id, user);
       }
-      return Success(unit);
+      return Result.ok(null);
     } catch (e) {
-      return Failure(Exception(e.toString()));
+      return Result.error(Exception(e.toString()));
     }
   }
 }

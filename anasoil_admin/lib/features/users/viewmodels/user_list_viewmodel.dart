@@ -1,9 +1,9 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/repositories/user_repository.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
+import 'package:anasoil_admin/core/utils/command.dart';
+import 'package:anasoil_admin/core/utils/result.dart';
 import 'package:flutter/material.dart';
-import 'package:result_command/result_command.dart';
-import 'package:result_dart/result_dart.dart';
 
 class UserListViewModel extends ChangeNotifier {
   final UserRepository _userRepository;
@@ -19,13 +19,13 @@ class UserListViewModel extends ChangeNotifier {
     _userRepository.addListener(notifyListeners);
   }
 
-  AsyncResult<Unit> _fetchUsers() async {
+  Future<Result<void>> _fetchUsers() async {
     final userList = await _firestoreService.getUsers().first;
     _userRepository.setUsers(userList);
-    return Success(unit);
+    return Result.ok(null);
   }
 
-  AsyncResult<Unit> _deleteUser(String userId) async {
+  Future<Result<void>> _deleteUser(String userId) async {
     try {
       final canDelete = await _firestoreService.canDeleteUser(userId);
       if (!canDelete) {
@@ -34,19 +34,19 @@ class UserListViewModel extends ChangeNotifier {
 
       await _firestoreService.deleteUser(userId);
       await fetchUsersCommand.execute();
-      return Success(unit);
+      return Result.ok(null);
     } catch (e) {
-      return Failure(Exception(e.toString()));
+      return Result.error(Exception(e.toString()));
     }
   }
 
-  AsyncResult<Unit> _updateUserStatus(String userId, bool active) async {
+  Future<Result<void>> _updateUserStatus(String userId, bool active) async {
     try {
       await _firestoreService.updateUserStatus(userId, active);
       await fetchUsersCommand.execute();
-      return Success(unit);
+      return Result.ok(null);
     } catch (e) {
-      return Failure(Exception(e.toString()));
+      return Result.error(Exception(e.toString()));
     }
   }
 
