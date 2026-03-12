@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/dependency_injection.dart';
 import '../auth/auth_viewmodel.dart';
+import 'analysis_viewmodel.dart';
 
 /// Tela principal do app (Home)
 class HomePage extends StatelessWidget {
@@ -47,7 +49,7 @@ class HomePage extends StatelessWidget {
                     subtitle: '',
                     color: Colors.green[700]!,
                     onTap: () {
-                      // TODO: Navegar para histórico
+                      onNavigateToTab(2);
                     },
                   ),
                 ),
@@ -94,7 +96,7 @@ class HomePage extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            _buildRecentActivity(),
+            _buildRecentActivity(context),
           ],
         ),
       ),
@@ -105,42 +107,42 @@ class HomePage extends StatelessWidget {
     return GestureDetector(
       onTap: () => onNavigateToTab(1),
       child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(32),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.green[700],
-              shape: BoxShape.circle,
+        width: double.infinity,
+        padding: const EdgeInsets.all(32),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.green[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 8,
+              offset: const Offset(0, 2),
             ),
-            child: const Icon(Icons.add, color: Colors.white, size: 40),
-          ),
-          const SizedBox(height: 16),
-          const Text(
-            'Iniciar Nova Análise',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
+          ],
+        ),
+        child: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.green[700],
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(Icons.add, color: Colors.white, size: 40),
             ),
-          ),
-        ],
+            const SizedBox(height: 16),
+            const Text(
+              'Iniciar Nova Análise',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+              ),
+            ),
+          ],
+        ),
       ),
-    ),
     );
   }
 
@@ -232,36 +234,92 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _buildRecentActivity() {
-    return Column(
-      children: [
-        _buildActivityItem(
-          title: 'Análise Solo - Fazenda Norte',
-          subtitle: 'Há 2 horas',
-          icon: Icons.description,
-        ),
-        const SizedBox(height: 8),
-        _buildActivityItem(
-          title: 'Relatório Nutrientes - Lote 15',
-          subtitle: 'Ontem',
-          icon: Icons.description,
-        ),
-        const SizedBox(height: 8),
-        _buildActivityItem(
-          title: 'Análise pH - Setor A',
-          subtitle: '3 dias atrás',
-          icon: Icons.description,
-        ),
-      ],
+  Widget _buildRecentActivity(BuildContext context) {
+    final viewModel = getIt<AnalysisViewModel>();
+
+    return ListenableBuilder(
+      listenable: viewModel,
+      builder: (context, _) {
+        final analyses = viewModel.savedAnalyses;
+
+        if (analyses.isEmpty) {
+          return Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withAlpha(13),
+                  blurRadius: 4,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Column(
+              children: [
+                Icon(Icons.history, size: 40, color: Colors.grey[400]),
+                const SizedBox(height: 8),
+                Text(
+                  'Nenhuma análise realizada',
+                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                ),
+              ],
+            ),
+          );
+        }
+
+        final recent = analyses.take(3).toList();
+
+        return Column(
+          children: [
+            for (var i = 0; i < recent.length; i++) ...[
+              if (i > 0) const SizedBox(height: 8),
+              _buildActivityItem(
+                title: recent[i].farmName.isNotEmpty
+                    ? 'Análise de Solo - ${recent[i].farmName}'
+                    : 'Análise de Solo - ${recent[i].sampleCode}',
+                subtitle: _timeAgo(recent[i].createdAt),
+                icon: Icons.grass,
+                onTap: () => onNavigateToTab(2),
+              ),
+            ],
+          ],
+        );
+      },
     );
+  }
+
+  String _timeAgo(DateTime date) {
+    final now = DateTime.now();
+    final diff = now.difference(date);
+
+    if (diff.inMinutes < 1) return 'Agora';
+    if (diff.inMinutes < 60) return 'Há ${diff.inMinutes} min';
+    if (diff.inHours < 24) {
+      return diff.inHours == 1 ? 'Há 1 hora' : 'Há ${diff.inHours} horas';
+    }
+    if (diff.inDays < 7) {
+      return diff.inDays == 1 ? 'Ontem' : 'Há ${diff.inDays} dias';
+    }
+    if (diff.inDays < 30) {
+      final weeks = diff.inDays ~/ 7;
+      return weeks == 1 ? 'Há 1 semana' : 'Há $weeks semanas';
+    }
+    final months = diff.inDays ~/ 30;
+    return months == 1 ? 'Há 1 mês' : 'Há $months meses';
   }
 
   Widget _buildActivityItem({
     required String title,
     required String subtitle,
     required IconData icon,
+    VoidCallback? onTap,
   }) {
-    return Container(
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -279,10 +337,10 @@ class HomePage extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.red[50],
+              color: Colors.green[50],
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: Colors.red[700], size: 24),
+            child: Icon(icon, color: Colors.green[700], size: 24),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -296,6 +354,8 @@ class HomePage extends StatelessWidget {
                     fontWeight: FontWeight.w600,
                     color: Colors.black87,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -308,6 +368,7 @@ class HomePage extends StatelessWidget {
           Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
         ],
       ),
+    ),
     );
   }
 }

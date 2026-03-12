@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../../core/dependency_injection.dart';
+import '../../domain/models/soil_analysis.dart';
+import '../../utils/result.dart';
+import 'analysis_viewmodel.dart';
 
 /// Página de histórico de análises
 class HistoryPage extends StatefulWidget {
@@ -9,93 +13,102 @@ class HistoryPage extends StatefulWidget {
 }
 
 class _HistoryPageState extends State<HistoryPage> {
-  // Mock data - TODO: substituir por dados reais
-  final List<Map<String, dynamic>> _analyses = [
-    {
-      'title': 'Análise Solo - Fazenda Norte',
-      'date': '2025, 30 de Agosto',
-      'consultant': 'José Leandro Mesquita',
-      'id': '1',
-    },
-    {
-      'title': 'Análise Solo - Fazenda Norte',
-      'date': '2025, 30 de Agosto',
-      'consultant': 'José Leandro Mesquita',
-      'id': '2',
-    },
-    {
-      'title': 'Análise Solo - Fazenda Norte',
-      'date': '2025, 30 de Agosto',
-      'consultant': 'José Leandro Mesquita',
-      'id': '3',
-    },
-    {
-      'title': 'Análise Solo - Fazenda Norte',
-      'date': '2025, 30 de Agosto',
-      'consultant': 'José Leandro Mesquita',
-      'id': '4',
-    },
-  ];
+  late final AnalysisViewModel _viewModel;
+  bool _isLoading = false;
 
-  void _deleteAnalysis(String id) {
-    // TODO: Implementar exclusão de análise
-    showDialog(
+  @override
+  void initState() {
+    super.initState();
+    _viewModel = getIt<AnalysisViewModel>();
+    _loadAnalyses();
+  }
+
+  Future<void> _loadAnalyses() async {
+    setState(() => _isLoading = true);
+    await _viewModel.loadAnalysesCommand.execute();
+    if (mounted) setState(() => _isLoading = false);
+  }
+
+  Future<void> _deleteAnalysis(SoilAnalysis analysis) async {
+    final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
         title: const Text('Excluir Análise'),
-        content: const Text('Deseja realmente excluir esta análise?'),
+        content: Text(
+          'Deseja realmente excluir a análise '
+          '${analysis.farmName.isNotEmpty ? analysis.farmName : analysis.sampleCode}?',
+        ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () => Navigator.pop(context, false),
             child: const Text('Cancelar'),
           ),
           TextButton(
-            onPressed: () {
-              setState(() {
-                _analyses.removeWhere((a) => a['id'] == id);
-              });
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Análise excluída'),
-                  duration: Duration(seconds: 2),
-                ),
-              );
-            },
+            onPressed: () => Navigator.pop(context, true),
             child: Text('Excluir', style: TextStyle(color: Colors.red[700])),
           ),
         ],
       ),
     );
-  }
 
-  void _downloadAnalysis(String id) {
-    // TODO: Implementar download de análise
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Download em desenvolvimento'),
-        duration: Duration(seconds: 2),
-      ),
-    );
+    if (confirmed != true || !mounted) return;
+
+    final deleteResult = await _viewModel.deleteAnalysis(analysis.id);
+
+    if (!mounted) return;
+
+    if (deleteResult is Ok) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Análise excluída'),
+          backgroundColor: Colors.green,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      _loadAnalyses();
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao excluir: ${(deleteResult as Error).error}'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.grey[50],
-      body: _analyses.isEmpty
-          ? _buildEmptyState()
-          : ListView.builder(
+      body: ListenableBuilder(
+        listenable: _viewModel,
+        builder: (context, _) {
+          if (_isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          final analyses = _viewModel.savedAnalyses;
+
+          if (analyses.isEmpty) {
+            return _buildEmptyState();
+          }
+
+          return RefreshIndicator(
+            onRefresh: _loadAnalyses,
+            color: Colors.green[700],
+            child: ListView.builder(
               padding: const EdgeInsets.all(16),
-              itemCount: _analyses.length,
+              itemCount: analyses.length,
               itemBuilder: (context, index) {
-                final analysis = _analyses[index];
                 return Padding(
                   padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildAnalysisCard(analysis),
+                  child: _buildAnalysisCard(analyses[index]),
                 );
               },
             ),
+          );
+        },
+      ),
     );
   }
 
@@ -114,18 +127,27 @@ class _HistoryPageState extends State<HistoryPage> {
               fontWeight: FontWeight.w500,
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Importe um PDF na aba Análise para começar',
+            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+          ),
         ],
       ),
     );
   }
 
-  Widget _buildAnalysisCard(Map<String, dynamic> analysis) {
+  Widget _buildAnalysisCard(SoilAnalysis analysis) {
+    final d = analysis.analysisDate;
+    final dateStr =
+        '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[300]!),
+        border: Border.all(color: Colors.grey[200]!),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withAlpha(8),
@@ -137,25 +159,36 @@ class _HistoryPageState extends State<HistoryPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header com título e botão deletar
+          // Header
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.green[50],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.grass, color: Colors.green[700], size: 24),
+              ),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      analysis['title'],
+                      analysis.farmName.isNotEmpty
+                          ? analysis.farmName
+                          : 'Análise ${analysis.sampleCode}',
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
                         color: Colors.black87,
                       ),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
-                      analysis['date'],
+                      dateStr,
                       style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                     ),
                   ],
@@ -165,34 +198,68 @@ class _HistoryPageState extends State<HistoryPage> {
                 icon: Icon(Icons.delete_outline, color: Colors.red[400]),
                 padding: EdgeInsets.zero,
                 constraints: const BoxConstraints(),
-                onPressed: () => _deleteAnalysis(analysis['id']),
+                onPressed: () => _deleteAnalysis(analysis),
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          // const SizedBox(height: 12),
 
-          // Nome do consultor
-          Text(
-            analysis['consultant'],
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
-          ),
-          const SizedBox(height: 12),
+          // Info rows
+          // _buildInfoChips(analysis),
 
-          // Botão de download
-          Align(
-            alignment: Alignment.centerRight,
-            child: Container(
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: IconButton(
-                icon: Icon(Icons.download, color: Colors.green[700]),
-                onPressed: () => _downloadAnalysis(analysis['id']),
-              ),
-            ),
+          // Document info
+          if (analysis.solicitante != null || analysis.interessado != null) ...[
+            const SizedBox(height: 10),
+            if (analysis.solicitante != null)
+              _buildInfoRow(Icons.business, analysis.solicitante!),
+          ],
+
+          const SizedBox(height: 10),
+
+          // DMLab + Amostra
+          Row(
+            children: [
+              _buildTag('DMLab ${analysis.dmlabNumber}', Colors.blue),
+              const SizedBox(width: 8),
+              _buildTag('Amostra ${analysis.sampleNumber}', Colors.grey),
+            ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String text) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: Colors.grey[500]),
+        const SizedBox(width: 6),
+        Expanded(
+          child: Text(
+            text,
+            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+            overflow: TextOverflow.ellipsis,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildTag(String text, MaterialColor color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: color[50],
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color[200]!),
+      ),
+      child: Text(
+        text,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.w500,
+          color: color[700],
+        ),
       ),
     );
   }

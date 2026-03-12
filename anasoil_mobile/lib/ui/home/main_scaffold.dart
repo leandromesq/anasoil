@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import '../../core/dependency_injection.dart';
 import '../auth/auth_viewmodel.dart';
 import '../profile/profile_viewmodel.dart';
 import '../shared/common_app_bar.dart';
+import 'analysis_viewmodel.dart';
 import 'home_page.dart';
 import 'analysis_page.dart';
 import 'history_page.dart';
@@ -43,6 +45,12 @@ class _MainScaffoldState extends State<MainScaffold> {
         authViewModel: widget.authViewModel,
       ),
     ];
+
+    // Carrega análises salvas para exibir na home (atividades recentes)
+    getIt<AnalysisViewModel>().loadAnalysesCommand.execute();
+
+    // Carrega perfil do usuário para exibir avatar na AppBar
+    widget.profileViewModel.loadProfileCommand.execute();
   }
 
   void _onItemTapped(int index) {

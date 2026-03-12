@@ -2,6 +2,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/models/user.dart';
 import '../../../domain/models/profile_type.dart';
 import '../../../domain/models/document.dart';
+import '../../../domain/models/soil_analysis.dart';
 import '../../../utils/result.dart';
 
 /// Serviço de acesso ao Firestore
@@ -14,9 +15,13 @@ class FirestoreService {
   /// Referência da coleção de documentos
   late final CollectionReference<Map<String, dynamic>> _documentsRef;
 
+  /// Referência da coleção de análises de solo
+  late final CollectionReference<Map<String, dynamic>> _soilAnalysesRef;
+
   FirestoreService() {
     _usersRef = _db.collection('users');
     _documentsRef = _db.collection('documents');
+    _soilAnalysesRef = _db.collection('soilAnalyses');
   }
 
   /// Busca usuário por ID do Firebase Auth
@@ -306,6 +311,86 @@ class FirestoreService {
       return Result.ok(null);
     } catch (e) {
       return Result.error(Exception('Erro ao deletar documento: $e'));
+    }
+  }
+
+  // ==================== Análises de Solo ====================
+
+  /// Cria uma análise de solo na coleção soilAnalyses
+  Future<Result<SoilAnalysis>> createSoilAnalysis(SoilAnalysis analysis) async {
+    try {
+      final docRef = await _soilAnalysesRef.add(analysis.toFirestore());
+      final created = analysis.copyWith(id: docRef.id);
+      return Result.ok(created);
+    } catch (e) {
+      return Result.error(Exception('Erro ao criar análise de solo: $e'));
+    }
+  }
+
+  /// Busca análises de solo de um usuário
+  Future<Result<List<SoilAnalysis>>> getSoilAnalysesByUser(String userId) async {
+    try {
+      final querySnapshot = await _soilAnalysesRef
+          .where('userId', isEqualTo: userId)
+          .get();
+
+      final analyses = querySnapshot.docs
+          .map((doc) => SoilAnalysis.fromFirestore(doc.id, doc.data()))
+          .toList();
+
+      analyses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+      return Result.ok(analyses);
+    } catch (e) {
+      return Result.error(Exception('Erro ao buscar análises: $e'));
+    }
+  }
+
+  /// Busca uma análise de solo pelo ID
+  Future<Result<SoilAnalysis?>> getSoilAnalysisById(String id) async {
+    try {
+      final doc = await _soilAnalysesRef.doc(id).get();
+
+      if (!doc.exists || doc.data() == null) {
+        return Result.ok(null);
+      }
+
+      return Result.ok(SoilAnalysis.fromFirestore(doc.id, doc.data()!));
+    } catch (e) {
+      return Result.error(Exception('Erro ao buscar análise: $e'));
+    }
+  }
+
+  /// Busca análises vinculadas a um documento
+  Future<Result<List<SoilAnalysis>>> getSoilAnalysesByDocument(
+    String documentId,
+  ) async {
+    try {
+      final querySnapshot = await _soilAnalysesRef
+          .where('documentId', isEqualTo: documentId)
+          .get();
+
+      final analyses = querySnapshot.docs
+          .map((doc) => SoilAnalysis.fromFirestore(doc.id, doc.data()))
+          .toList();
+
+      analyses.sort((a, b) => b.analysisDate.compareTo(a.analysisDate));
+
+      return Result.ok(analyses);
+    } catch (e) {
+      return Result.error(
+        Exception('Erro ao buscar análises do documento: $e'),
+      );
+    }
+  }
+
+  /// Deleta uma análise de solo
+  Future<Result<void>> deleteSoilAnalysis(String analysisId) async {
+    try {
+      await _soilAnalysesRef.doc(analysisId).delete();
+      return Result.ok(null);
+    } catch (e) {
+      return Result.error(Exception('Erro ao deletar análise: $e'));
     }
   }
 }

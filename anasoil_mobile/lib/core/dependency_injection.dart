@@ -4,9 +4,12 @@ import 'package:anasoil_mobile/data/repositories/document/document_repository.da
 import 'package:anasoil_mobile/data/repositories/document/document_repository_remote.dart';
 import 'package:anasoil_mobile/data/repositories/profile/profile_repository.dart';
 import 'package:anasoil_mobile/data/repositories/profile/profile_repository_remote.dart';
+import 'package:anasoil_mobile/data/repositories/soil_analysis/soil_analysis_repository.dart';
+import 'package:anasoil_mobile/data/repositories/soil_analysis/soil_analysis_repository_remote.dart';
 import 'package:anasoil_mobile/data/services/firebase_auth_service.dart';
 import 'package:anasoil_mobile/data/services/firebase_storage_service.dart';
 import 'package:anasoil_mobile/data/services/firestore_service.dart';
+import 'package:anasoil_mobile/data/services/pdf_extraction_service.dart';
 import 'package:anasoil_mobile/data/services/storage_service.dart';
 import 'package:anasoil_mobile/ui/auth/auth_viewmodel.dart';
 import 'package:anasoil_mobile/ui/home/analysis_viewmodel.dart';
@@ -42,6 +45,9 @@ Future<void> _setupServices() async {
   getIt.registerSingleton<FirebaseAuthService>(FirebaseAuthService());
   getIt.registerSingleton<FirestoreService>(FirestoreService());
   getIt.registerSingleton<FirebaseStorageService>(FirebaseStorageService());
+
+  // PDF Extraction Service
+  getIt.registerSingleton<PdfExtractionService>(PdfExtractionService());
 }
 
 /// Configura os repositories
@@ -73,6 +79,15 @@ void _setupRepositories() {
       firestoreService: getIt<FirestoreService>(),
     ),
   );
+
+  // SoilAnalysisRepository
+  getIt.registerSingleton<SoilAnalysisRepository>(
+    SoilAnalysisRepositoryRemote(
+      authService: getIt<FirebaseAuthService>(),
+      firestoreService: getIt<FirestoreService>(),
+      pdfExtractionService: getIt<PdfExtractionService>(),
+    ),
+  );
 }
 
 /// Configura os ViewModels
@@ -89,6 +104,9 @@ void _setupViewModels() {
 
   // AnalysisViewModel
   getIt.registerSingleton<AnalysisViewModel>(
-    AnalysisViewModel(documentRepository: getIt<DocumentRepository>()),
+    AnalysisViewModel(
+      documentRepository: getIt<DocumentRepository>(),
+      soilAnalysisRepository: getIt<SoilAnalysisRepository>(),
+    ),
   );
 }

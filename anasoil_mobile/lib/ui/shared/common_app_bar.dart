@@ -56,21 +56,21 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
               const Spacer(),
 
               // Notificações
-              IconButton(
-                icon: const Icon(Icons.notifications_outlined),
-                color: Colors.grey[700],
-                onPressed: () {
-                  // TODO: Implementar notificações
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Notificações em desenvolvimento'),
-                      duration: Duration(seconds: 2),
-                    ),
-                  );
-                },
-              ),
+              // IconButton(
+              //   icon: const Icon(Icons.notifications_outlined),
+              //   color: Colors.grey[700],
+              //   onPressed: () {
+              //     // Implementar notificações
+              //     ScaffoldMessenger.of(context).showSnackBar(
+              //       const SnackBar(
+              //         content: Text('Notificações em desenvolvimento'),
+              //         duration: Duration(seconds: 2),
+              //       ),
+              //     );
+              //   },
+              // ),
 
-              const SizedBox(width: 8),
+              // const SizedBox(width: 8),
 
               // Avatar do perfil
               ListenableBuilder(
