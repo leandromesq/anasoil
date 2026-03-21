@@ -310,7 +310,7 @@ class HomePage extends StatelessWidget {
                       farmersViewModel,
                     ),
                     icon: Icons.grass,
-                    onTap: () => onNavigateToTab(2),
+                    onTap: () => context.push('/analysis/detail', extra: recent[i]),
                   ),
                 ],
               ],

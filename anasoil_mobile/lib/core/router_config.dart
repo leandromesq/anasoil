@@ -3,11 +3,13 @@ import 'package:go_router/go_router.dart';
 import '../core/dependency_injection.dart';
 import '../data/repositories/auth/auth_repository.dart';
 import '../domain/models/document.dart';
+import '../domain/models/soil_analysis.dart';
 import '../domain/models/user.dart';
 import '../ui/auth/auth_viewmodel.dart';
 import '../ui/auth/login_page.dart';
 import '../ui/auth/reset_password_page.dart';
 import '../ui/auth/splash_page.dart';
+import '../ui/analysis/analysis_detail_page.dart';
 import '../ui/documents/documents_page.dart';
 import '../ui/documents/pdf_preview_page.dart';
 import '../ui/farmers/farmer_analyses_page.dart';
@@ -93,6 +95,16 @@ final goRouter = GoRouter(
       builder: (context, state) {
         final farmer = state.extra as User;
         return FarmerAnalysesPage(farmer: farmer);
+      },
+    ),
+
+    // Analysis Detail
+    GoRoute(
+      path: '/analysis/detail',
+      name: 'analysis-detail',
+      builder: (context, state) {
+        final analysis = state.extra as SoilAnalysis;
+        return AnalysisDetailPage(analysis: analysis);
       },
     ),
   ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/dependency_injection.dart';
 import '../../domain/models/soil_analysis.dart';
 import '../../utils/result.dart';
@@ -142,7 +143,9 @@ class _HistoryPageState extends State<HistoryPage> {
     final dateStr =
         '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
 
-    return Container(
+    return GestureDetector(
+      onTap: () => context.push('/analysis/detail', extra: analysis),
+      child: Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: Colors.white,
@@ -225,6 +228,7 @@ class _HistoryPageState extends State<HistoryPage> {
             ],
           ),
         ],
+      ),
       ),
     );
   }
