@@ -23,6 +23,18 @@ class AuthService extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> resetPassword(String email) async {
+    await _auth.sendPasswordResetEmail(email: email);
+  }
+
+  Future<String> verifyPasswordResetCode(String code) async {
+    return await _auth.verifyPasswordResetCode(code);
+  }
+
+  Future<void> confirmPasswordReset(String code, String newPassword) async {
+    await _auth.confirmPasswordReset(code: code, newPassword: newPassword);
+  }
+
   /// Cria um usuário no Firebase Auth via REST API, sem afetar a sessão do admin.
   /// Retorna o UID do novo usuário e envia email de redefinição de senha.
   Future<String> createAuthUser(String email) async {

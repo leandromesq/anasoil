@@ -5,6 +5,25 @@ import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
+class AppShell extends StatelessWidget {
+  final Widget child;
+
+  const AppShell({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.baseGray50,
+      body: Row(
+        children: [
+          const AppSidebar(),
+          Expanded(child: child),
+        ],
+      ),
+    );
+  }
+}
+
 class AppLayout extends StatelessWidget {
   final Widget body;
   final String title;
@@ -19,27 +38,17 @@ class AppLayout extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.baseGray50,
-      body: Row(
-        children: [
-          const AppSidebar(),
-          Expanded(
-            child: Column(
-              children: [
-                AppNavbar(title: title, actions: actions),
-                Expanded(
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.all(24),
-                    child: body,
-                  ),
-                ),
-              ],
-            ),
+    return Column(
+      children: [
+        AppNavbar(title: title, actions: actions),
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            child: body,
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 }

@@ -194,6 +194,25 @@ class _LoginPageState extends State<LoginPage> {
                           },
                           onFieldSubmitted: (_) => _signIn(),
                         ),
+                        const SizedBox(height: 8),
+                        Align(
+                          alignment: Alignment.centerRight,
+                          child: TextButton(
+                            onPressed: () => context.go('/reset-password'),
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: const Size(0, 0),
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            child: const Text(
+                              'Esqueceu a senha?',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: AppTheme.primaryGreen,
+                              ),
+                            ),
+                          ),
+                        ),
 
                         // Erro
                         if (_errorMessage != null) ...[
