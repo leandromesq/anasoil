@@ -3,12 +3,15 @@ import 'package:go_router/go_router.dart';
 import '../core/dependency_injection.dart';
 import '../data/repositories/auth/auth_repository.dart';
 import '../domain/models/document.dart';
+import '../domain/models/user.dart';
 import '../ui/auth/auth_viewmodel.dart';
 import '../ui/auth/login_page.dart';
 import '../ui/auth/reset_password_page.dart';
 import '../ui/auth/splash_page.dart';
 import '../ui/documents/documents_page.dart';
 import '../ui/documents/pdf_preview_page.dart';
+import '../ui/farmers/farmer_analyses_page.dart';
+import '../ui/farmers/farmers_list_page.dart';
 import '../ui/home/main_scaffold.dart';
 import '../ui/profile/profile_viewmodel.dart';
 import '../ui/profile/edit_profile_page.dart';
@@ -75,6 +78,21 @@ final goRouter = GoRouter(
       builder: (context, state) {
         final doc = state.extra as SoilDocument;
         return PdfPreviewPage(document: doc);
+      },
+    ),
+
+    // Farmers Routes
+    GoRoute(
+      path: '/farmers',
+      name: 'farmers',
+      builder: (context, state) => const FarmersListPage(),
+    ),
+    GoRoute(
+      path: '/farmers/:farmerId',
+      name: 'farmer-analyses',
+      builder: (context, state) {
+        final farmer = state.extra as User;
+        return FarmerAnalysesPage(farmer: farmer);
       },
     ),
   ],

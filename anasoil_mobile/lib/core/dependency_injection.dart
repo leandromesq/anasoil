@@ -12,6 +12,7 @@ import 'package:anasoil_mobile/data/services/firestore_service.dart';
 import 'package:anasoil_mobile/data/services/pdf_extraction_service.dart';
 import 'package:anasoil_mobile/data/services/storage_service.dart';
 import 'package:anasoil_mobile/ui/auth/auth_viewmodel.dart';
+import 'package:anasoil_mobile/ui/farmers/farmers_viewmodel.dart';
 import 'package:anasoil_mobile/ui/home/analysis_viewmodel.dart';
 import 'package:anasoil_mobile/ui/profile/profile_viewmodel.dart';
 import 'package:get_it/get_it.dart';
@@ -108,5 +109,10 @@ void _setupViewModels() {
       documentRepository: getIt<DocumentRepository>(),
       soilAnalysisRepository: getIt<SoilAnalysisRepository>(),
     ),
+  );
+
+  // FarmersViewModel
+  getIt.registerSingleton<FarmersViewModel>(
+    FarmersViewModel(firestoreService: getIt<FirestoreService>()),
   );
 }

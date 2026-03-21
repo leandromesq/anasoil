@@ -1,5 +1,7 @@
 import 'dart:developer';
 
+import 'package:anasoil_admin/core/models/document_model.dart';
+import 'package:anasoil_admin/core/models/soil_analysis_model.dart';
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -7,6 +9,8 @@ class FirestoreService {
   final FirebaseFirestore _db = FirebaseFirestore.instance;
 
   late final CollectionReference<UserModel> _usersRef;
+  late final CollectionReference<DocumentModel> _documentsRef;
+  late final CollectionReference<SoilAnalysisModel> _analysesRef;
 
   FirestoreService() {
     _usersRef = _db
@@ -14,6 +18,22 @@ class FirestoreService {
         .withConverter<UserModel>(
           fromFirestore: (snapshots, _) => UserModel.fromFirestore(snapshots),
           toFirestore: (user, _) => user.toFirestore(),
+        );
+
+    _documentsRef = _db
+        .collection('documents')
+        .withConverter<DocumentModel>(
+          fromFirestore: (snapshots, _) =>
+              DocumentModel.fromFirestore(snapshots),
+          toFirestore: (doc, _) => doc.toFirestore(),
+        );
+
+    _analysesRef = _db
+        .collection('soilAnalyses')
+        .withConverter<SoilAnalysisModel>(
+          fromFirestore: (snapshots, _) =>
+              SoilAnalysisModel.fromFirestore(snapshots),
+          toFirestore: (analysis, _) => analysis.toFirestore(),
         );
   }
 
@@ -167,5 +187,31 @@ class FirestoreService {
   Future<List<UserModel>> getAllUsers() async {
     final snapshot = await _usersRef.get();
     return snapshot.docs.map((doc) => doc.data()).toList();
+  }
+
+  // ==================== DOCUMENTS ====================
+
+  Stream<List<DocumentModel>> getDocuments() {
+    return _documentsRef
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  Future<void> deleteDocument(String documentId) async {
+    await _documentsRef.doc(documentId).delete();
+  }
+
+  // ==================== SOIL ANALYSES ====================
+
+  Stream<List<SoilAnalysisModel>> getAnalyses() {
+    return _analysesRef
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+  }
+
+  Future<void> deleteAnalysis(String analysisId) async {
+    await _analysesRef.doc(analysisId).delete();
   }
 }

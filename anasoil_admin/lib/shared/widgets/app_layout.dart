@@ -51,6 +51,7 @@ class AppSidebar extends StatelessWidget {
   Widget build(BuildContext context) {
     final authService = locator<AuthService>();
     final userEmail = authService.currentUser?.email ?? '';
+    final currentRoute = GoRouterState.of(context).matchedLocation;
 
     return Container(
       width: 280,
@@ -114,25 +115,25 @@ class AppSidebar extends StatelessWidget {
                 SidebarItem(
                   icon: PhosphorIcons.users(),
                   title: 'Usuários',
-                  isActive: true,
+                  isActive: currentRoute.startsWith('/user'),
                   route: '/users',
                 ),
                 SidebarItem(
                   icon: PhosphorIcons.chartLine(),
                   title: 'Análises',
-                  isActive: false,
-                  route: '/analytics',
+                  isActive: currentRoute == '/analyses',
+                  route: '/analyses',
                 ),
                 SidebarItem(
                   icon: PhosphorIcons.folder(),
                   title: 'Documentos',
-                  isActive: false,
+                  isActive: currentRoute == '/documents',
                   route: '/documents',
                 ),
                 SidebarItem(
                   icon: PhosphorIcons.gear(),
                   title: 'Configurações',
-                  isActive: false,
+                  isActive: currentRoute == '/settings',
                   route: '/settings',
                 ),
               ],

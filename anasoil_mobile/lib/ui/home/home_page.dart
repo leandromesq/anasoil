@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/dependency_injection.dart';
+import '../../domain/models/soil_analysis.dart';
 import '../auth/auth_viewmodel.dart';
+import '../farmers/farmers_viewmodel.dart';
 import 'analysis_viewmodel.dart';
 
 /// Tela principal do app (Home)
@@ -192,7 +194,7 @@ class HomePage extends StatelessWidget {
   Widget _buildFarmersCard(BuildContext context) {
     return InkWell(
       onTap: () {
-        // TODO: Navegar para lista de agricultores
+        context.push('/farmers');
       },
       borderRadius: BorderRadius.circular(12),
       child: Container(
@@ -205,7 +207,7 @@ class HomePage extends StatelessWidget {
         ),
         child: Row(
           children: [
-            Icon(Icons.people_outline, color: Colors.green[700], size: 32),
+            Icon(Icons.people, color: Colors.green[700], size: 32),
             const SizedBox(width: 12),
             const Expanded(
               child: Column(
@@ -236,59 +238,103 @@ class HomePage extends StatelessWidget {
 
   Widget _buildRecentActivity(BuildContext context) {
     final viewModel = getIt<AnalysisViewModel>();
+    final farmersViewModel = getIt<FarmersViewModel>();
+    final isConsultant =
+        authViewModel.currentUser?.profileType.name == 'consultant';
+
+    // Carrega análises dos agricultores para consultores
+    if (isConsultant) {
+      final userId = authViewModel.currentUser?.id;
+      if (userId != null && farmersViewModel.allFarmersAnalyses.isEmpty) {
+        farmersViewModel.loadAllFarmersAnalyses(userId);
+      }
+    }
 
     return ListenableBuilder(
       listenable: viewModel,
       builder: (context, _) {
-        final analyses = viewModel.savedAnalyses;
+        return ListenableBuilder(
+          listenable: farmersViewModel,
+          builder: (context, _) {
+            final userAnalyses = viewModel.savedAnalyses;
+            final farmerAnalyses = isConsultant
+                ? farmersViewModel.allFarmersAnalyses
+                : <SoilAnalysis>[];
 
-        if (analyses.isEmpty) {
-          return Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withAlpha(13),
-                  blurRadius: 4,
-                  offset: const Offset(0, 2),
+            final allAnalyses = [...userAnalyses, ...farmerAnalyses];
+            allAnalyses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+
+            if (allAnalyses.isEmpty) {
+              return Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withAlpha(13),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-            child: Column(
+                child: Column(
+                  children: [
+                    Icon(Icons.history, size: 40, color: Colors.grey[400]),
+                    const SizedBox(height: 8),
+                    Text(
+                      'Nenhuma análise realizada',
+                      style: TextStyle(fontSize: 14, color: Colors.grey[500]),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            final recent = allAnalyses.take(5).toList();
+            final currentUserId = authViewModel.currentUser?.id;
+
+            return Column(
               children: [
-                Icon(Icons.history, size: 40, color: Colors.grey[400]),
-                const SizedBox(height: 8),
-                Text(
-                  'Nenhuma análise realizada',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-                ),
+                for (var i = 0; i < recent.length; i++) ...[
+                  if (i > 0) const SizedBox(height: 8),
+                  _buildActivityItem(
+                    title: recent[i].farmName.isNotEmpty
+                        ? 'Análise de Solo - ${recent[i].farmName}'
+                        : 'Análise de Solo - ${recent[i].sampleCode}',
+                    subtitle: _buildActivitySubtitle(
+                      recent[i],
+                      currentUserId,
+                      isConsultant,
+                      farmersViewModel,
+                    ),
+                    icon: Icons.grass,
+                    onTap: () => onNavigateToTab(2),
+                  ),
+                ],
               ],
-            ),
-          );
-        }
-
-        final recent = analyses.take(3).toList();
-
-        return Column(
-          children: [
-            for (var i = 0; i < recent.length; i++) ...[
-              if (i > 0) const SizedBox(height: 8),
-              _buildActivityItem(
-                title: recent[i].farmName.isNotEmpty
-                    ? 'Análise de Solo - ${recent[i].farmName}'
-                    : 'Análise de Solo - ${recent[i].sampleCode}',
-                subtitle: _timeAgo(recent[i].createdAt),
-                icon: Icons.grass,
-                onTap: () => onNavigateToTab(2),
-              ),
-            ],
-          ],
+            );
+          },
         );
       },
     );
+  }
+
+  String _buildActivitySubtitle(
+    SoilAnalysis analysis,
+    String? currentUserId,
+    bool isConsultant,
+    FarmersViewModel farmersViewModel,
+  ) {
+    final timeStr = _timeAgo(analysis.createdAt);
+    if (isConsultant && analysis.userId != currentUserId) {
+      final farmerName = farmersViewModel.getFarmerName(analysis.userId);
+      if (farmerName.isNotEmpty) {
+        return '$timeStr · $farmerName';
+      }
+    }
+    return timeStr;
   }
 
   String _timeAgo(DateTime date) {
@@ -320,55 +366,55 @@ class HomePage extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.green[50],
-              borderRadius: BorderRadius.circular(8),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(13),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
             ),
-            child: Icon(icon, color: Colors.green[700], size: 24),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
+          ],
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.green[50],
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, color: Colors.green[700], size: 24),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                ),
-              ],
+                  const SizedBox(height: 2),
+                  Text(
+                    subtitle,
+                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
-        ],
+            Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
+          ],
+        ),
       ),
-    ),
     );
   }
 }
