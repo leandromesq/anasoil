@@ -10,41 +10,35 @@ Este diagrama representa a estrutura estática do sistema, dividida em camadas d
 
 ```mermaid
 classDiagram
-    %% ==========================================
-    %% FRONTEIRAS (BOUNDARY) - UIs e Telas
-    %% ==========================================
     class LoginPage {
         <<Boundary>>
-        +build()
+        +build(BuildContext context)
     }
     class HomePage {
         <<Boundary>>
-        +build()
+        +build(BuildContext context)
     }
     class ProfilePage {
         <<Boundary>>
-        +build()
+        +build(BuildContext context)
     }
     class AnalysisPage {
         <<Boundary>>
-        +build()
+        +build(BuildContext context)
     }
     class FarmersListPage {
         <<Boundary>>
-        +build()
+        +build(BuildContext context)
     }
     class DocumentsPage {
         <<Boundary>>
-        +build()
+        +build(BuildContext context)
     }
-
-    %% ==========================================
-    %% CONTROLES (CONTROL) - ViewModels
-    %% ==========================================
     class AuthViewModel {
         <<Control>>
         +login()
         +logout()
+        +resetPassword()
     }
     class ProfileViewModel {
         <<Control>>
@@ -54,52 +48,34 @@ classDiagram
     }
     class AnalysisViewModel {
         <<Control>>
-        +processDocument()
+        +processDocument(file)
         +loadHistory()
     }
     class FarmersViewModel {
         <<Control>>
         +loadLinkedFarmers()
-        +linkFarmer()
+        +linkFarmer(email)
     }
-    class UserFormViewModel {
-        <<Control>>
-        +createUser()
-        +deleteUser()
-    }
-
-    %% ==========================================
-    %% ACESSO A DADOS (SERVICES / REPOSITORIES)
-    %% ==========================================
     class AuthRepository {
         <<Service>>
-        +signIn()
-        +reauthenticateUser()
+        +signInWithEmailAndPassword()
         +registerUser()
     }
     class ProfileRepository {
         <<Service>>
-        +getUserData()
-        +updateUserData()
-        +linkUserByEmail()
+        +getUserData(uid)
+        +updateUserData(user)
     }
     class DocumentRepository {
         <<Service>>
-        +uploadDocument()
+        +uploadDocument(file)
+        +getDocuments()
     }
     class SoilAnalysisRepository {
         <<Service>>
-        +saveAnalysis()
+        +saveAnalysis(analysis)
         +getHistory()
     }
-    class ExtractionService {
-        <<Service>>
-        +extractText()
-    }
-
-    %% ==========================================
-    %% ENTIDADES (ENTITY) - Domínio
-    %% ==========================================
     class User {
         <<Entity>>
         +String id
@@ -110,6 +86,7 @@ classDiagram
     class Document {
         <<Entity>>
         +String id
+        +String fileName
         +String url
     }
     class SoilAnalysis {
@@ -124,24 +101,22 @@ classDiagram
         consultant
         admin
     }
-
-    %% Relacionamentos
-    LoginPage --> AuthViewModel
-    ProfilePage --> ProfileViewModel
-    AnalysisPage --> AnalysisViewModel
-    FarmersListPage --> FarmersViewModel
+    LoginPage --> AuthViewModel : aciona
+    ProfilePage --> ProfileViewModel : aciona
+    AnalysisPage --> AnalysisViewModel : aciona
+    FarmersListPage --> FarmersViewModel : aciona
+    DocumentsPage --> AnalysisViewModel : aciona
+    AuthViewModel --> AuthRepository : delega
+    ProfileViewModel --> ProfileRepository : delega
+    AnalysisViewModel --> DocumentRepository : delega
+    AnalysisViewModel --> SoilAnalysisRepository : delega
+    FarmersViewModel --> ProfileRepository : delega
+    AuthRepository ..> User : manipula
+    ProfileRepository ..> User : manipula
+    DocumentRepository ..> Document : manipula
+    SoilAnalysisRepository ..> SoilAnalysis : manipula
     
-    AuthViewModel --> AuthRepository
-    ProfileViewModel --> ProfileRepository
-    ProfileViewModel --> AuthRepository
-    AnalysisViewModel --> DocumentRepository
-    AnalysisViewModel --> SoilAnalysisRepository
-    AnalysisViewModel --> ExtractionService
-    FarmersViewModel --> ProfileRepository
-    UserFormViewModel --> AuthRepository
-    UserFormViewModel --> ProfileRepository
-
-    User --> ProfileType
+    User --> ProfileType : possui
 ```
 
 2. Diagramas de Sequência (Casos de Uso)
