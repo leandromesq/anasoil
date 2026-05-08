@@ -618,3 +618,252 @@ sequenceDiagram
 │           Command, Result, ThemeTokens)              │
 └─────────────────────────────────────────────────────┘
 ```
+
+---
+
+## 4. Diagrama de Caso de Uso
+
+O AnaSoil possui três atores e dezesseis casos de uso distribuídos
+entre o aplicativo móvel e a plataforma web administrativa.
+
+```mermaid
+graph TD
+    A1((Agricultor))
+    A2((Consultor))
+    A3((Administrador))
+
+    subgraph "Aplicativo Móvel"
+        UC01["Autenticar usuário"]
+        UC02["Recuperar senha"]
+        UC03["Gerenciar perfil"]
+        UC04["Importar documento PDF"]
+        UC05["Gerar análise de solo"]
+        UC06["Consultar histórico"]
+        UC07["Visualizar detalhes da análise"]
+        UC08["Gerenciar documentos"]
+        UC09["Consultar agricultores vinculados"]
+    end
+
+    subgraph "Plataforma Web Administrativa"
+        UC10["Autenticar administrador"]
+        UC11["Gerenciar usuários"]
+        UC12["Vincular agricultor e consultor"]
+        UC13["Consultar documentos"]
+        UC14["Consultar análises"]
+        UC15["Remover documentos"]
+        UC16["Remover análises"]
+    end
+
+    A1 --> UC01
+    A1 --> UC02
+    A1 --> UC03
+    A1 --> UC04
+    A1 --> UC05
+    A1 --> UC06
+    A1 --> UC07
+    A1 --> UC08
+
+    A2 --> UC01
+    A2 --> UC02
+    A2 --> UC03
+    A2 --> UC04
+    A2 --> UC05
+    A2 --> UC06
+    A2 --> UC07
+    A2 --> UC08
+    A2 --> UC09
+
+    A3 --> UC10
+    A3 --> UC11
+    A3 --> UC12
+    A3 --> UC13
+    A3 --> UC14
+    A3 --> UC15
+    A3 --> UC16
+```
+
+---
+
+## 5. Diagrama de Componentes
+
+O sistema é composto por clientes Flutter e serviços Firebase. O pacote
+compartilhado `anasoil_shared` provê contratos de domínio para ambas as
+aplicações.
+
+```mermaid
+graph TD
+    subgraph "Clientes"
+        Mobile["AnaSoil Mobile\n(Flutter/Dart)"]
+        Admin["AnaSoil Admin\n(Flutter Web)"]
+    end
+
+    subgraph "Camada Compartilhada"
+        Shared["anasoil_shared\n(ParameterClassifier,\nFirestoreSchema,\nCommand, Result,\nThemeTokens)"]
+    end
+
+    subgraph "Firebase"
+        Auth["Firebase\nAuthentication"]
+        Firestore["Cloud\nFirestore"]
+        Storage["Firebase\nStorage"]
+        Identity["Identity Toolkit\nREST API"]
+    end
+
+    subgraph "Externo"
+        Email["Serviço de\nE-mail"]
+        PDF["Motor de Extração\nSyncfusion PDF"]
+    end
+
+    Mobile --> Auth
+    Mobile --> Firestore
+    Mobile --> Storage
+    Mobile --> Shared
+    Mobile --> PDF
+
+    Admin --> Auth
+    Admin --> Firestore
+    Admin --> Shared
+    Admin --> Identity
+
+    Auth --> Email
+    Identity --> Auth
+```
+
+---
+
+## 6. Diagrama de Implantação
+
+O AnaSoil é implantado em dispositivos Android, navegadores web e serviços
+Firebase hospedados na Google Cloud Platform.
+
+```mermaid
+graph TD
+    subgraph "Dispositivo do Usuário"
+        Phone["Smartphone Android\n(APK Flutter)"]
+        Browser["Navegador Web\n(Flutter Web)"]
+    end
+
+    subgraph "Google Cloud Platform"
+        AuthSvc["Firebase\nAuthentication"]
+        FirestoreSvc["Cloud Firestore\n(NoSQL)"]
+        StorageSvc["Firebase Storage\n(PDFs)"]
+    end
+
+    Phone -->|REST/gRPC| AuthSvc
+    Phone -->|REST/gRPC| FirestoreSvc
+    Phone -->|Upload| StorageSvc
+
+    Browser -->|REST/gRPC| AuthSvc
+    Browser -->|REST/gRPC| FirestoreSvc
+    Browser -->|REST| AuthSvc
+
+    Phone -.->|Armazenamento local| PhoneLocal["SharedPreferences\n(sessão)"]
+```
+
+---
+
+## 7. Diagramas de Estado
+
+### 7.1 Ciclo de Vida do Usuário
+
+Usuários são criados pela plataforma administrativa e transitam entre os
+estados ativo e inativo por decisão do administrador.
+
+```mermaid
+stateDiagram-v2
+    [*] --> Criado : Administrador cria usuário
+    Criado --> Ativo : Credencial gerada\n+ perfil atribuído
+    
+    Ativo --> Inativo : Administrador desativa
+    Inativo --> Ativo : Administrador reativa
+    
+    Ativo --> Atualizado : Dados editados
+    Atualizado --> Ativo
+    
+    note right of Inativo
+        Usuário permanece no Firestore.\nConta Firebase mantida.\nLogin bloqueado via campo active.
+    end note
+```
+
+### 7.2 Upload Flow (Máquina de Estados)
+
+O fluxo de importação e extração no aplicativo móvel é governado por uma
+máquina de estados com nove passos, implementada no módulo `UploadFlow`.
+
+```mermaid
+stateDiagram-v2
+    [*] --> idle : Tela de análise aberta
+
+    idle --> fileSelected : Arquivo PDF selecionado
+
+    fileSelected --> uploadingDocument : Usuário inicia análise
+    fileSelected --> idle : Arquivo removido
+
+    uploadingDocument --> documentUploaded : Upload no Storage concluído
+    uploadingDocument --> failed : Erro no upload
+
+    documentUploaded --> extracting : Extração iniciada
+
+    extracting --> extracted : Dados extraídos do PDF
+    extracting --> failed : Erro na extração
+
+    extracted --> saving : Usuário salva análises
+    extracted --> documentUploaded : Análises descartadas
+
+    saving --> complete : Todas as análises salvas
+    saving --> failed : Erro ao salvar
+
+    complete --> idle : Iniciar nova importação
+
+    failed --> idle : Reiniciar fluxo
+```
+
+---
+
+## 8. Workflow TO BE (Fluxo Digital)
+
+O fluxo proposto substitui a transcrição manual por um processo digital
+integrado com Firebase.
+
+```mermaid
+flowchart TD
+    A([Usuário autenticado]) --> B[Acessa Análise > Nova]
+    B --> C[Seleciona arquivo PDF]
+    C --> D{PDF válido?}
+    D -->|Não| E[Exibe erro de formato]
+    E --> C
+    D -->|Sim| F[Upload para Firebase Storage]
+    F --> G[Grava metadados no Firestore]
+    G --> H[Extrai texto do PDF<br/>Syncfusion]
+    H --> I[Interpreta amostras DMLab]
+    I --> J[Classifica parâmetros<br/>ParameterClassifier]
+    J --> K[Exibe preview com<br/>cards de classificação]
+    K --> L{Usuário decide}
+    L -->|Descartar| B
+    L -->|Salvar| M[Persiste análises<br/>no Firestore]
+    M --> N{Quantas análises?}
+    N -->|1 análise| O[Botão: Ver análise]
+    N -->|N análises| P[Botão: Ver histórico]
+    O --> Q[AnalysisDetailPage]
+    P --> R[HistoryPage]
+```
+
+---
+
+## 9. Visualização dos Parâmetros (Atualizado)
+
+A tela de detalhe da análise **não utiliza mais gráfico de barras com
+FL Chart**. Desde a refatoração de maio/2026, a visualização é composta por:
+
+- **Resumo**: contagem de parâmetros classificados (Baixo, Médio, Alto).
+- **Faixas dos parâmetros**: barras horizontais por parâmetro, cada uma
+  usando a própria faixa de referência, com marcador posicionado no valor
+  medido.
+- **Detalhamento**: cards agrupados por nível de classificação, com valor,
+  unidade, faixa de referência e indicação Baixo/Médio/Alto.
+
+A classificação é feita pelo módulo compartilhado `ParameterClassifier`
+do pacote `anasoil_shared`, consumido por ambas as aplicações.
+
+A dependência `fl_chart` permanece no `pubspec.yaml` mas não é mais
+utilizada na página de detalhe da análise. Caso nenhuma outra tela a
+referencie, pode ser removida em limpeza futura.
