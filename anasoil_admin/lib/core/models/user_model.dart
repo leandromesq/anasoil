@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserModel {
@@ -9,6 +10,8 @@ class UserModel {
   final DateTime createdAt;
   final List<String> consultorIds; // Para agricultores
   final List<String> agricultorIds; // Para consultores
+
+  UserRole get userRole => UserRole.parse(role);
 
   UserModel({
     required this.id,
@@ -25,25 +28,27 @@ class UserModel {
     Map<String, dynamic> data = doc.data()!;
     return UserModel(
       id: doc.id,
-      name: data['name'] ?? '',
-      email: data['email'] ?? '',
-      role: data['role'] ?? '',
-      active: data['active'] ?? false,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      consultorIds: List<String>.from(data['consultorIds'] ?? []),
-      agricultorIds: List<String>.from(data['agricultorIds'] ?? []),
+      name: data[UserFields.name] ?? '',
+      email: data[UserFields.email] ?? '',
+      role: UserRole.parse(data[UserFields.role] as String?).firestoreValue,
+      active: data[UserFields.active] ?? false,
+      createdAt:
+          (data[UserFields.createdAt] as Timestamp?)?.toDate() ??
+          DateTime.now(),
+      consultorIds: List<String>.from(data[UserFields.consultorIds] ?? []),
+      agricultorIds: List<String>.from(data[UserFields.agricultorIds] ?? []),
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
-      'name': name,
-      'email': email,
-      'role': role,
-      'active': active,
-      'createdAt': Timestamp.fromDate(createdAt),
-      'consultorIds': consultorIds,
-      'agricultorIds': agricultorIds,
+      UserFields.name: name,
+      UserFields.email: email.trim().toLowerCase(),
+      UserFields.role: userRole.firestoreValue,
+      UserFields.active: active,
+      UserFields.createdAt: Timestamp.fromDate(createdAt),
+      UserFields.consultorIds: consultorIds,
+      UserFields.agricultorIds: agricultorIds,
     };
   }
 

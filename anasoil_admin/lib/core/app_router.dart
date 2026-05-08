@@ -1,12 +1,15 @@
 import 'package:anasoil_admin/core/service_locator.dart';
-import 'package:anasoil_admin/core/services/auth_service.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
+import 'package:anasoil_admin/features/analyses/pages/analysis_detail_page.dart';
 import 'package:anasoil_admin/features/analyses/pages/analysis_list_page.dart';
 import 'package:anasoil_admin/features/analyses/viewmodels/analysis_list_viewmodel.dart';
 import 'package:anasoil_admin/features/auth/pages/change_password_page.dart';
 import 'package:anasoil_admin/features/auth/pages/login_page.dart';
 import 'package:anasoil_admin/features/auth/pages/reset_password_page.dart';
+import 'package:anasoil_admin/features/documents/pages/document_detail_page.dart';
 import 'package:anasoil_admin/features/documents/pages/document_list_page.dart';
 import 'package:anasoil_admin/features/documents/viewmodels/document_list_viewmodel.dart';
+import 'package:anasoil_admin/features/settings/pages/settings_page.dart';
 import 'package:anasoil_admin/features/users/pages/user_form_page.dart';
 import 'package:anasoil_admin/features/users/pages/user_list_page.dart';
 import 'package:anasoil_admin/features/users/pages/user_relation_page.dart';
@@ -19,21 +22,27 @@ import 'package:go_router/go_router.dart';
 class AppRouter {
   static final router = GoRouter(
     initialLocation: '/users',
-    refreshListenable: locator<AuthService>(),
+    refreshListenable: locator<AdminSession>(),
     redirect: (context, state) {
-      final isAuthenticated = locator<AuthService>().isAuthenticated;
+      final session = locator<AdminSession>();
       final isLoginRoute = state.matchedLocation == '/login';
       final isResetRoute = state.matchedLocation == '/reset-password';
-      final isChangePasswordRoute =
-          state.matchedLocation == '/change-password';
+      final isChangePasswordRoute = state.matchedLocation == '/change-password';
 
-      if (!isAuthenticated &&
+      if (!session.isAuthenticated &&
           !isLoginRoute &&
           !isResetRoute &&
           !isChangePasswordRoute) {
         return '/login';
       }
-      if (isAuthenticated && (isLoginRoute || isResetRoute)) return '/users';
+
+      if (session.shouldRedirectToLogin && !isChangePasswordRoute) {
+        return '/login';
+      }
+
+      if (session.shouldRedirectFromPublic && (isLoginRoute || isResetRoute)) {
+        return '/users';
+      }
       return null;
     },
     routes: [
@@ -99,6 +108,16 @@ class AppRouter {
             ),
           ),
           GoRoute(
+            path: '/document/:documentId',
+            pageBuilder: (context, state) {
+              final documentId = state.pathParameters['documentId']!;
+              return _fadeTransitionPage(
+                key: state.pageKey,
+                child: DocumentDetailPage(documentId: documentId),
+              );
+            },
+          ),
+          GoRoute(
             path: '/analyses',
             pageBuilder: (context, state) => _fadeTransitionPage(
               key: state.pageKey,
@@ -107,22 +126,32 @@ class AppRouter {
               ),
             ),
           ),
+          GoRoute(
+            path: '/analysis/:analysisId',
+            pageBuilder: (context, state) {
+              final analysisId = state.pathParameters['analysisId']!;
+              return _fadeTransitionPage(
+                key: state.pageKey,
+                child: AnalysisDetailPage(analysisId: analysisId),
+              );
+            },
+          ),
+          GoRoute(
+            path: '/settings',
+            pageBuilder: (context, state) => _fadeTransitionPage(
+              key: state.pageKey,
+              child: const SettingsPage(),
+            ),
+          ),
         ],
       ),
     ],
   );
 
-  static CustomTransitionPage _fadeTransitionPage({
+  static NoTransitionPage _fadeTransitionPage({
     required LocalKey key,
     required Widget child,
   }) {
-    return CustomTransitionPage(
-      key: key,
-      child: child,
-      transitionDuration: const Duration(milliseconds: 200),
-      transitionsBuilder: (context, animation, secondaryAnimation, child) {
-        return FadeTransition(opacity: animation, child: child);
-      },
-    );
+    return NoTransitionPage(key: key, child: child);
   }
 }

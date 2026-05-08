@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SoilAnalysisModel {
@@ -5,15 +6,13 @@ class SoilAnalysisModel {
   final String? documentId;
   final String userId;
 
-  final String dmlabNumber;
+  final String labNumber;
   final DateTime analysisDate;
-  final String sampleNumber;
-  final String sampleCode;
-  final String farmName;
+  final String propertyName;
   final double? depthCm;
 
-  final String? solicitante;
-  final String? interessado;
+  final String? requester;
+  final String? stakeholder;
   final String? dataEntrada;
   final String? material;
 
@@ -29,20 +28,19 @@ class SoilAnalysisModel {
   final double? pst;
   final double? mPercent;
 
+  final bool active;
   final DateTime createdAt;
 
   SoilAnalysisModel({
     required this.id,
     required this.userId,
     this.documentId,
-    required this.dmlabNumber,
+    required this.labNumber,
     required this.analysisDate,
-    required this.sampleNumber,
-    required this.sampleCode,
-    required this.farmName,
+    required this.propertyName,
     this.depthCm,
-    this.solicitante,
-    this.interessado,
+    this.requester,
+    this.stakeholder,
     this.dataEntrada,
     this.material,
     this.organicMatter,
@@ -56,6 +54,7 @@ class SoilAnalysisModel {
     this.vPercent,
     this.pst,
     this.mPercent,
+    this.active = true,
     DateTime? createdAt,
   }) : createdAt = createdAt ?? DateTime.now();
 
@@ -65,60 +64,61 @@ class SoilAnalysisModel {
     final data = doc.data()!;
     return SoilAnalysisModel(
       id: doc.id,
-      userId: data['userId'] ?? '',
-      documentId: data['documentId'],
-      dmlabNumber: data['dmlabNumber'] ?? '',
+      userId: data[AnalysisFields.userId] ?? '',
+      documentId: data[AnalysisFields.documentId],
+      labNumber: data[AnalysisFields.labNumber] ?? '',
       analysisDate:
-          (data['analysisDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      sampleNumber: data['sampleNumber'] ?? '',
-      sampleCode: data['sampleCode'] ?? '',
-      farmName: data['farmName'] ?? '',
-      depthCm: (data['depthCm'] as num?)?.toDouble(),
-      solicitante: data['solicitante'],
-      interessado: data['interessado'],
-      dataEntrada: data['dataEntrada'],
-      material: data['material'],
-      organicMatter: (data['organicMatter'] as num?)?.toDouble(),
-      phCacl2: (data['phCacl2'] as num?)?.toDouble(),
-      al3Plus: (data['al3Plus'] as num?)?.toDouble(),
-      ca2Plus: (data['ca2Plus'] as num?)?.toDouble(),
-      mg2Plus: (data['mg2Plus'] as num?)?.toDouble(),
-      kPlus: (data['kPlus'] as num?)?.toDouble(),
-      ctcEfetiva: (data['ctcEfetiva'] as num?)?.toDouble(),
-      ctcPh7: (data['ctcPh7'] as num?)?.toDouble(),
-      vPercent: (data['vPercent'] as num?)?.toDouble(),
-      pst: (data['pst'] as num?)?.toDouble(),
-      mPercent: (data['mPercent'] as num?)?.toDouble(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          (data[AnalysisFields.analysisDate] as Timestamp?)?.toDate() ??
+          DateTime.now(),
+      propertyName: data[AnalysisFields.propertyName] ?? '',
+      depthCm: (data[AnalysisFields.depthCm] as num?)?.toDouble(),
+      requester: data[AnalysisFields.requester],
+      stakeholder: data[AnalysisFields.stakeholder],
+      dataEntrada: data[AnalysisFields.dataEntrada],
+      material: data[AnalysisFields.material],
+      organicMatter: (data[AnalysisFields.organicMatter] as num?)?.toDouble(),
+      phCacl2: (data[AnalysisFields.phCacl2] as num?)?.toDouble(),
+      al3Plus: (data[AnalysisFields.al3Plus] as num?)?.toDouble(),
+      ca2Plus: (data[AnalysisFields.ca2Plus] as num?)?.toDouble(),
+      mg2Plus: (data[AnalysisFields.mg2Plus] as num?)?.toDouble(),
+      kPlus: (data[AnalysisFields.kPlus] as num?)?.toDouble(),
+      ctcEfetiva: (data[AnalysisFields.ctcEfetiva] as num?)?.toDouble(),
+      ctcPh7: (data[AnalysisFields.ctcPh7] as num?)?.toDouble(),
+      vPercent: (data[AnalysisFields.vPercent] as num?)?.toDouble(),
+      pst: (data[AnalysisFields.pst] as num?)?.toDouble(),
+      mPercent: (data[AnalysisFields.mPercent] as num?)?.toDouble(),
+      active: data[AnalysisFields.active] as bool? ?? true,
+      createdAt:
+          (data[AnalysisFields.createdAt] as Timestamp?)?.toDate() ??
+          DateTime.now(),
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
-      'userId': userId,
-      'documentId': documentId,
-      'dmlabNumber': dmlabNumber,
-      'analysisDate': Timestamp.fromDate(analysisDate),
-      'sampleNumber': sampleNumber,
-      'sampleCode': sampleCode,
-      'farmName': farmName,
-      'depthCm': depthCm,
-      'solicitante': solicitante,
-      'interessado': interessado,
-      'dataEntrada': dataEntrada,
-      'material': material,
-      'organicMatter': organicMatter,
-      'phCacl2': phCacl2,
-      'al3Plus': al3Plus,
-      'ca2Plus': ca2Plus,
-      'mg2Plus': mg2Plus,
-      'kPlus': kPlus,
-      'ctcEfetiva': ctcEfetiva,
-      'ctcPh7': ctcPh7,
-      'vPercent': vPercent,
-      'pst': pst,
-      'mPercent': mPercent,
-      'createdAt': Timestamp.fromDate(createdAt),
+      AnalysisFields.userId: userId,
+      AnalysisFields.documentId: documentId,
+      AnalysisFields.labNumber: labNumber,
+      AnalysisFields.analysisDate: Timestamp.fromDate(analysisDate),
+      AnalysisFields.propertyName: propertyName,
+      AnalysisFields.depthCm: depthCm,
+      AnalysisFields.requester: requester,
+      AnalysisFields.stakeholder: stakeholder,
+      AnalysisFields.dataEntrada: dataEntrada,
+      AnalysisFields.material: material,
+      AnalysisFields.organicMatter: organicMatter,
+      AnalysisFields.phCacl2: phCacl2,
+      AnalysisFields.al3Plus: al3Plus,
+      AnalysisFields.ca2Plus: ca2Plus,
+      AnalysisFields.mg2Plus: mg2Plus,
+      AnalysisFields.kPlus: kPlus,
+      AnalysisFields.ctcEfetiva: ctcEfetiva,
+      AnalysisFields.ctcPh7: ctcPh7,
+      AnalysisFields.vPercent: vPercent,
+      AnalysisFields.pst: pst,
+      AnalysisFields.mPercent: mPercent,
+      AnalysisFields.active: active,
+      AnalysisFields.createdAt: Timestamp.fromDate(createdAt),
     };
   }
 }

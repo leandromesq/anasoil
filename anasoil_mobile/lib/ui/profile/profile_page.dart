@@ -220,7 +220,7 @@ class _ProfilePageState extends State<ProfilePage> {
     );
   }
 
-  Widget _buildInfoCard(profile) {
+  Widget _buildInfoCard(UserProfile profile) {
     return Container(
       decoration: BoxDecoration(
         color: Colors.white,

@@ -1,24 +1,30 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  static const Color primaryGreen = Color(0xFF2D5A32);
-  static const Color primaryGreenLight = Color(0xFF4A7C59); // Verde claro
-  static const Color primaryGreenDark = Color(0xFF1B3A1F);
+  static const Color primaryGreen = AnaSoilColors.primaryGreen;
+  static const Color primaryGreenLight = AnaSoilColors.primaryGreenLight;
+  static const Color primaryGreenDark = AnaSoilColors.primaryGreenDark;
+  static const Color primaryGreenSoft = AnaSoilColors.primaryGreenSoft;
 
-  static const Color secondaryRed = Color(0xFFDC3545);
-  static const Color secondaryRedLight = Color(0xFFF8D7DA);
-  static const Color secondaryRedDark = Color(0xFFB02A37);
+  static const Color warningAmber = AnaSoilColors.warningAmber;
+  static const Color warningAmberLight = AnaSoilColors.warningAmberLight;
+  static const Color warningAmberDark = AnaSoilColors.warningAmberDark;
 
-  static const Color baseWhite = Color(0xFFFFFFFF);
-  static const Color baseGray50 = Color(0xFFFAFAFA);
-  static const Color baseGray100 = Color(0xFFF5F5F5);
-  static const Color baseGray200 = Color(0xFFEEEEEE);
-  static const Color baseGray300 = Color(0xFFE0E0E0);
-  static const Color baseGray400 = Color(0xFFBDBDBD);
-  static const Color baseGray500 = Color(0xFF9E9E9E);
-  static const Color baseGray600 = Color(0xFF757575);
-  static const Color baseGray900 = Color(0xFF212121);
+  static const Color secondaryRed = AnaSoilColors.secondaryRed;
+  static const Color secondaryRedLight = AnaSoilColors.secondaryRedLight;
+  static const Color secondaryRedDark = AnaSoilColors.secondaryRedDark;
+
+  static const Color baseWhite = AnaSoilColors.baseWhite;
+  static const Color baseGray50 = AnaSoilColors.baseGray50;
+  static const Color baseGray100 = AnaSoilColors.baseGray100;
+  static const Color baseGray200 = AnaSoilColors.baseGray200;
+  static const Color baseGray300 = AnaSoilColors.baseGray300;
+  static const Color baseGray400 = AnaSoilColors.baseGray400;
+  static const Color baseGray500 = AnaSoilColors.baseGray500;
+  static const Color baseGray600 = AnaSoilColors.baseGray600;
+  static const Color baseGray900 = AnaSoilColors.baseGray900;
 
   static final ThemeData lightTheme = ThemeData(
     useMaterial3: true,

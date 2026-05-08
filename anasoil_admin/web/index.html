@@ -31,6 +31,15 @@
 
   <title>anasoil_admin</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    // Flutter web CanvasKit can occasionally throw during hot restart after a
+    // WebGL context-loss event, especially after an earlier widget crash. Stop
+    // the browser event from reaching CanvasKit before the engine is ready.
+    window.addEventListener('webglcontextlost', function (event) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+    }, true);
+  </script>
 </head>
 <body>
   <script src="flutter_bootstrap.js" async></script>

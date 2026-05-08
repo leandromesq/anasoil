@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Modelo de documento importado para análise de solo
@@ -8,6 +9,7 @@ class SoilDocument {
   final String fileUrl;
   final int fileSize;
   final String mimeType;
+  final bool active;
   final DateTime createdAt;
 
   const SoilDocument({
@@ -17,29 +19,34 @@ class SoilDocument {
     required this.fileUrl,
     required this.fileSize,
     required this.mimeType,
+    this.active = true,
     required this.createdAt,
   });
 
   factory SoilDocument.fromFirestore(String id, Map<String, dynamic> data) {
     return SoilDocument(
       id: id,
-      userId: data['userId'] as String? ?? '',
-      fileName: data['fileName'] as String? ?? '',
-      fileUrl: data['fileUrl'] as String? ?? '',
-      fileSize: data['fileSize'] as int? ?? 0,
-      mimeType: data['mimeType'] as String? ?? 'application/pdf',
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+      userId: data[DocumentFields.userId] as String? ?? '',
+      fileName: data[DocumentFields.fileName] as String? ?? '',
+      fileUrl: data[DocumentFields.fileUrl] as String? ?? '',
+      fileSize: data[DocumentFields.fileSize] as int? ?? 0,
+      mimeType: data[DocumentFields.mimeType] as String? ?? 'application/pdf',
+      active: data[DocumentFields.active] as bool? ?? true,
+      createdAt:
+          (data[DocumentFields.createdAt] as Timestamp?)?.toDate() ??
+          DateTime.now(),
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
-      'userId': userId,
-      'fileName': fileName,
-      'fileUrl': fileUrl,
-      'fileSize': fileSize,
-      'mimeType': mimeType,
-      'createdAt': FieldValue.serverTimestamp(),
+      DocumentFields.userId: userId,
+      DocumentFields.fileName: fileName,
+      DocumentFields.fileUrl: fileUrl,
+      DocumentFields.fileSize: fileSize,
+      DocumentFields.mimeType: mimeType,
+      DocumentFields.active: active,
+      DocumentFields.createdAt: FieldValue.serverTimestamp(),
     };
   }
 
@@ -50,6 +57,7 @@ class SoilDocument {
     String? fileUrl,
     int? fileSize,
     String? mimeType,
+    bool? active,
     DateTime? createdAt,
   }) {
     return SoilDocument(
@@ -59,6 +67,7 @@ class SoilDocument {
       fileUrl: fileUrl ?? this.fileUrl,
       fileSize: fileSize ?? this.fileSize,
       mimeType: mimeType ?? this.mimeType,
+      active: active ?? this.active,
       createdAt: createdAt ?? this.createdAt,
     );
   }

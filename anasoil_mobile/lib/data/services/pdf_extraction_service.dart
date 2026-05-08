@@ -63,11 +63,9 @@ class PdfExtractionService {
   SoilAnalysis createFromManualInput({
     required String userId,
     String? documentId,
-    required String dmlabNumber,
+    required String labNumber,
     required DateTime analysisDate,
-    required String sampleNumber,
-    required String sampleCode,
-    required String farmName,
+    required String propertyName,
     double? depthCm,
     double? organicMatter,
     double? phCacl2,
@@ -85,11 +83,9 @@ class PdfExtractionService {
       id: '',
       userId: userId,
       documentId: documentId,
-      dmlabNumber: dmlabNumber,
+      labNumber: labNumber,
       analysisDate: analysisDate,
-      sampleNumber: sampleNumber,
-      sampleCode: sampleCode,
-      farmName: farmName,
+      propertyName: propertyName,
       depthCm: depthCm,
       organicMatter: organicMatter,
       phCacl2: phCacl2,
@@ -176,8 +172,8 @@ class PdfExtractionService {
     // --- Extrai informações do cabeçalho ---
     String certificateNumber = '';
     DateTime analysisDate = DateTime.now();
-    String solicitante = '';
-    String interessado = '';
+    String requester = '';
+    String stakeholder = '';
     String dataEntrada = '';
     String material = '';
 
@@ -197,27 +193,45 @@ class PdfExtractionService {
 
       // Solicitante: valor na próxima linha
       if (RegExp(r'^Solicitante\s*:', caseSensitive: false).hasMatch(line)) {
-        final inline = line.replaceFirst(RegExp(r'^Solicitante\s*:\s*', caseSensitive: false), '').trim();
+        final inline = line
+            .replaceFirst(
+              RegExp(r'^Solicitante\s*:\s*', caseSensitive: false),
+              '',
+            )
+            .trim();
         if (inline.isNotEmpty) {
-          solicitante = inline;
+          requester = inline;
         } else if (i + 1 < lines.length) {
-          solicitante = lines[i + 1];
+          requester = lines[i + 1];
         }
       }
 
       // Interessado: valor na próxima linha
       if (RegExp(r'^Interessado\s*:', caseSensitive: false).hasMatch(line)) {
-        final inline = line.replaceFirst(RegExp(r'^Interessado\s*:\s*', caseSensitive: false), '').trim();
+        final inline = line
+            .replaceFirst(
+              RegExp(r'^Interessado\s*:\s*', caseSensitive: false),
+              '',
+            )
+            .trim();
         if (inline.isNotEmpty) {
-          interessado = inline;
+          stakeholder = inline;
         } else if (i + 1 < lines.length) {
-          interessado = lines[i + 1];
+          stakeholder = lines[i + 1];
         }
       }
 
       // Data de entrada: valor na próxima linha (formato "dd/mm" ou "dd/mm/aaaa")
-      if (RegExp(r'^Data\s+de\s+entrada\s*:', caseSensitive: false).hasMatch(line)) {
-        final inline = line.replaceFirst(RegExp(r'^Data\s+de\s+entrada\s*:\s*', caseSensitive: false), '').trim();
+      if (RegExp(
+        r'^Data\s+de\s+entrada\s*:',
+        caseSensitive: false,
+      ).hasMatch(line)) {
+        final inline = line
+            .replaceFirst(
+              RegExp(r'^Data\s+de\s+entrada\s*:\s*', caseSensitive: false),
+              '',
+            )
+            .trim();
         if (inline.isNotEmpty) {
           dataEntrada = inline;
         } else if (i + 1 < lines.length) {
@@ -227,7 +241,9 @@ class PdfExtractionService {
 
       // Material: valor na próxima linha
       if (RegExp(r'^Material\s*:', caseSensitive: false).hasMatch(line)) {
-        final inline = line.replaceFirst(RegExp(r'^Material\s*:\s*', caseSensitive: false), '').trim();
+        final inline = line
+            .replaceFirst(RegExp(r'^Material\s*:\s*', caseSensitive: false), '')
+            .trim();
         if (inline.isNotEmpty) {
           material = inline;
         } else if (i + 1 < lines.length) {
@@ -252,14 +268,9 @@ class PdfExtractionService {
     }
 
     // --- Localiza início da tabela de resultados ---
-    // Procura pela sequência de cabeçalhos da tabela (inicia com "Nº" seguido
-    // de "DMLab"). O bloco de dados começa após as linhas de unidades.
     int tableDataStart = -1;
     for (var i = 0; i < lines.length - 1; i++) {
-      // Detecta o cabeçalho da tabela principal (primeira ocorrência)
       if (lines[i] == 'Nº' && i + 1 < lines.length && lines[i + 1] == 'DMLab') {
-        // Pula cabeçalhos + unidades: procura a primeira linha que seja um
-        // número de 3 dígitos (nº DMLab da amostra) após o cabeçalho
         for (var j = i + 2; j < lines.length; j++) {
           if (RegExp(r'^\d{3,6}$').hasMatch(lines[j])) {
             tableDataStart = j;
@@ -275,15 +286,12 @@ class PdfExtractionService {
     }
 
     // --- Localiza fim da tabela de resultados ---
-    // A segunda tabela (granulometria/micronutrientes) começa com outro "Nº"
-    // + "DMLab", ou dados não relevantes começam com sequências de "--".
     int tableDataEnd = lines.length;
     for (var i = tableDataStart + 1; i < lines.length - 1; i++) {
       if (lines[i] == 'Nº' && i + 1 < lines.length && lines[i + 1] == 'DMLab') {
         tableDataEnd = i;
         break;
       }
-      // Muitas linhas "--" consecutivas indicam preenchimento vazio entre tabelas
       if (i + 5 < lines.length &&
           lines[i] == '--' &&
           lines[i + 1] == '--' &&
@@ -299,10 +307,7 @@ class PdfExtractionService {
     // --- Coleta tokens da tabela ---
     final tokens = lines.sublist(tableDataStart, tableDataEnd);
 
-    // --- Segmenta tokens em blocos de 25 colunas por amostra ---
-    // Cada amostra começa com seu nº DMLab (3-6 dígitos).
-    // A primeira amostra traz todos os 25 campos; amostras subsequentes
-    // podem ter "--" para Data, Amostra, Código (repetidos do lote).
+    // --- Segmenta tokens em blocos por amostra ---
     final analyses = <SoilAnalysis>[];
     final sampleStartIndices = <int>[];
 
@@ -319,14 +324,10 @@ class PdfExtractionService {
           : tokens.length;
 
       final block = tokens.sublist(start, end);
-      if (block.length < 15) continue; // bloco incompleto
+      if (block.length < 15) continue;
 
-      final dmlabNum = block[0];
+      final labNum = block[0];
 
-      // Encontra o índice da profundidade (formato "X-Y") para alinhar as
-      // colunas corretamente. A primeira amostra pode não ter Data/Amostra/
-      // Código (vem direto Fazenda após nº DMLab), enquanto amostras
-      // subsequentes têm "--" nesses campos.
       int depthIdx = -1;
       for (var i = 1; i < block.length && i < 10; i++) {
         if (_looksLikeDepth(block[i])) {
@@ -335,38 +336,12 @@ class PdfExtractionService {
         }
       }
 
-      if (depthIdx < 0) continue; // não encontrou profundidade
-
-      // A partir da profundidade, os valores numéricos seguem na ordem fixa:
-      // depthIdx+0: Prof(cm)
-      // depthIdx+1: Mat.Org.
-      // depthIdx+2: pH CaCl₂
-      // depthIdx+3: P (Resina) → PST
-      // depthIdx+4: K
-      // depthIdx+5: Ca²⁺
-      // depthIdx+6: Mg²⁺
-      // depthIdx+7: Al³⁺
-      // depthIdx+8: H+Al SMP → ignorado
-      // depthIdx+9: S → ignorado
-      // depthIdx+10: Si → ignorado
-      // depthIdx+11: SB → usado no cálculo CTC efetiva (SB + Al)
-      // depthIdx+12: CTC → CTC pH 7,0
-      // depthIdx+13: V%
-      // depthIdx+14: m%
-      // depthIdx+15: K% → ignorado
-      // depthIdx+16: Ca% → ignorado
-      // depthIdx+17: Mg% → ignorado
+      if (depthIdx < 0) continue;
 
       String at(int offset) =>
           depthIdx + offset < block.length ? block[depthIdx + offset] : '--';
 
-      // Extrai identificação: Fazenda fica entre nº DMLab e profundidade
-      // Ordem esperada antes da prof: [Data?, Amostra?, Código?], Fazenda, Zona, Talhão, Prof
-      // Fazenda está 3 posições antes da profundidade (Fazenda, Zona, Talhão, Prof)
-      final farmName = depthIdx >= 4 ? block[depthIdx - 3] : '';
-      final sampleCode = depthIdx >= 5
-          ? block[depthIdx - 4]
-          : 'AMOSTRA-${s + 1}';
+      final propertyName = depthIdx >= 4 ? block[depthIdx - 3] : '';
 
       // CTC efetiva = SB + Al
       final sbVal = _parseValue(at(11));
@@ -380,14 +355,12 @@ class PdfExtractionService {
           id: '',
           userId: userId,
           documentId: documentId,
-          dmlabNumber: dmlabNum,
+          labNumber: labNum,
           analysisDate: analysisDate,
-          sampleNumber: '${s + 1}',
-          sampleCode: sampleCode != '--' ? sampleCode : 'AMOSTRA-${s + 1}',
-          farmName: farmName != '--' ? farmName : '',
+          propertyName: propertyName != '--' ? propertyName : '',
           depthCm: _parseDepth(at(0)),
-          solicitante: solicitante.isNotEmpty ? solicitante : null,
-          interessado: interessado.isNotEmpty ? interessado : null,
+          requester: requester.isNotEmpty ? requester : null,
+          stakeholder: stakeholder.isNotEmpty ? stakeholder : null,
           dataEntrada: dataEntrada.isNotEmpty ? dataEntrada : null,
           material: material.isNotEmpty ? material : null,
           organicMatter: _parseValue(at(1)),
@@ -396,10 +369,10 @@ class PdfExtractionService {
           ca2Plus: _parseValue(at(5)),
           mg2Plus: _parseValue(at(6)),
           kPlus: _parseValue(at(4)),
-          ctcEfetiva: ctcEfetiva, // SB + Al
-          ctcPh7: _parseValue(at(12)), // CTC na tabela DMLab
+          ctcEfetiva: ctcEfetiva,
+          ctcPh7: _parseValue(at(12)),
           vPercent: _parseValue(at(13)),
-          pst: _parseValue(at(3)), // P (Resina) na tabela DMLab
+          pst: null,
           mPercent: _parseValue(at(14)),
           createdAt: DateTime.now(),
         ),
@@ -410,13 +383,11 @@ class PdfExtractionService {
   }
 
   /// Tenta parsear um valor numérico de uma string da tabela.
-  /// Retorna null para "--", "<1", "<2", strings vazias etc.
   double? _parseValue(String? raw) {
     if (raw == null) return null;
     final trimmed = raw.trim();
     if (trimmed.isEmpty || trimmed == '--') return null;
 
-    // Valores como "<1" ou "<2" → retorna o número (limite de quantificação)
     if (trimmed.startsWith('<')) {
       final num = trimmed.substring(1).replaceAll(',', '.');
       return double.tryParse(num);
@@ -426,13 +397,11 @@ class PdfExtractionService {
   }
 
   /// Parseia profundidade no formato "0-20", "20-40" etc.
-  /// Retorna a profundidade máxima como double.
   double? _parseDepth(String? raw) {
     if (raw == null) return null;
     final trimmed = raw.trim();
     if (trimmed.isEmpty || trimmed == '--') return null;
 
-    // Formato "0-20" → retorna 20
     final depthMatch = RegExp(r'(\d+)\s*-\s*(\d+)').firstMatch(trimmed);
     if (depthMatch != null) {
       return double.tryParse(depthMatch.group(2)!);

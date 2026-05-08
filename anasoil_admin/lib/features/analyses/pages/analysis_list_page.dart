@@ -6,6 +6,7 @@ import 'package:anasoil_admin/features/analyses/viewmodels/analysis_list_viewmod
 import 'package:anasoil_admin/features/analyses/widgets/analyses_data_table.dart';
 import 'package:anasoil_admin/features/analyses/widgets/analyses_filters.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
+import 'package:anasoil_admin/shared/widgets/deferred_table.dart';
 import 'package:flutter/material.dart';
 
 class AnalysisListPage extends StatefulWidget {
@@ -24,7 +25,6 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
   @override
   void initState() {
     super.initState();
-    widget.viewModel.fetchAnalysesCommand.execute();
   }
 
   @override
@@ -47,9 +47,11 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
 
     if (searchQuery != null && searchQuery!.isNotEmpty) {
       filtered = filtered.where((a) {
-        return a.farmName.toLowerCase().contains(searchQuery!.toLowerCase()) ||
-            a.sampleCode.toLowerCase().contains(searchQuery!.toLowerCase()) ||
-            a.dmlabNumber.toLowerCase().contains(searchQuery!.toLowerCase());
+        return a.propertyName.toLowerCase().contains(
+              searchQuery!.toLowerCase(),
+            ) ||
+            a.labNumber.toLowerCase().contains(searchQuery!.toLowerCase()) ||
+            a.labNumber.toLowerCase().contains(searchQuery!.toLowerCase());
       }).toList();
     }
 
@@ -58,16 +60,16 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
         dynamic aValue, bValue;
         switch (sortColumn) {
           case 0:
-            aValue = a.farmName;
-            bValue = b.farmName;
+            aValue = a.propertyName;
+            bValue = b.propertyName;
             break;
           case 1:
             aValue = a.userId;
             bValue = b.userId;
             break;
           case 2:
-            aValue = a.dmlabNumber;
-            bValue = b.dmlabNumber;
+            aValue = a.labNumber;
+            bValue = b.labNumber;
             break;
           case 4:
             aValue = a.analysisDate;
@@ -90,9 +92,9 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
   }
 
   void _handleDelete(SoilAnalysisModel analysis) async {
-    final displayName = analysis.farmName.isNotEmpty
-        ? analysis.farmName
-        : analysis.sampleCode;
+    final displayName = analysis.propertyName.isNotEmpty
+        ? analysis.propertyName
+        : analysis.labNumber;
 
     final confirmed = await showDialog<bool>(
       context: context,
@@ -165,32 +167,40 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
             child: ListenableBuilder(
               listenable: Listenable.merge([
                 widget.viewModel,
+                widget.viewModel.fetchAnalysesCommand,
                 widget.viewModel.deleteAnalysisCommand,
               ]),
               builder: (context, _) {
-                final isLoading =
-                    widget.viewModel.fetchAnalysesCommand.value.isRunning &&
-                    widget.viewModel.analyses.isEmpty;
+                return DeferredTable(
+                  onReady: widget.viewModel.analyses.isEmpty
+                      ? () => widget.viewModel.fetchAnalysesCommand.execute()
+                      : null,
+                  builder: () {
+                    final isLoading =
+                        widget.viewModel.fetchAnalysesCommand.value.isRunning &&
+                        widget.viewModel.analyses.isEmpty;
 
-                final filtered = _applyFilters(widget.viewModel.analyses);
+                    final filtered = _applyFilters(widget.viewModel.analyses);
 
-                return AnalysesDataTable(
-                  analyses: filtered,
-                  userNames: _buildUserNameMap(),
-                  isLoading: isLoading,
-                  sortColumn: sortColumn,
-                  sortAscending: sortAscending,
-                  onSort: (columnIndex) {
-                    setState(() {
-                      if (sortColumn == columnIndex) {
-                        sortAscending = !sortAscending;
-                      } else {
-                        sortColumn = columnIndex;
-                        sortAscending = true;
-                      }
-                    });
+                    return AnalysesDataTable(
+                      analyses: filtered,
+                      userNames: _buildUserNameMap(),
+                      isLoading: isLoading,
+                      sortColumn: sortColumn,
+                      sortAscending: sortAscending,
+                      onSort: (columnIndex) {
+                        setState(() {
+                          if (sortColumn == columnIndex) {
+                            sortAscending = !sortAscending;
+                          } else {
+                            sortColumn = columnIndex;
+                            sortAscending = true;
+                          }
+                        });
+                      },
+                      onDelete: _handleDelete,
+                    );
                   },
-                  onDelete: _handleDelete,
                 );
               },
             ),

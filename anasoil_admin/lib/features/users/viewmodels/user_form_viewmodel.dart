@@ -26,12 +26,16 @@ class UserFormViewModel extends ChangeNotifier {
 
   Future<Result<void>> _saveUser(UserModel user) async {
     try {
-      if (user.id.isEmpty) {
+      final normalizedUser = user.copyWith(
+        email: user.email.trim().toLowerCase(),
+      );
+
+      if (normalizedUser.id.isEmpty) {
         // Cria o usuário no Firebase Auth primeiro para obter o UID
-        final uid = await _authService.createAuthUser(user.email);
-        await _firestoreService.addUser(uid, user);
+        final uid = await _authService.createAuthUser(normalizedUser.email);
+        await _firestoreService.addUser(uid, normalizedUser);
       } else {
-        await _firestoreService.updateUser(user.id, user);
+        await _firestoreService.updateUser(normalizedUser.id, normalizedUser);
       }
       return Result.ok(null);
     } catch (e) {

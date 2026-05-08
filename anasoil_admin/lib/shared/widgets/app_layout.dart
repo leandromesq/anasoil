@@ -1,9 +1,12 @@
 import 'package:anasoil_admin/core/service_locator.dart';
-import 'package:anasoil_admin/core/services/auth_service.dart';
-import 'package:flutter/material.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
+
+/// Breakpoint below which the layout switches to mobile (drawer + bottom nav)
+const double _kMobileBreakpoint = 800;
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -12,11 +15,17 @@ class AppShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < _kMobileBreakpoint;
+
+    if (isMobile) {
+      return _MobileScaffold(child: child);
+    }
+
     return Scaffold(
       backgroundColor: AppTheme.baseGray50,
       body: Row(
         children: [
-          const AppSidebar(),
+          const _AppSidebar(),
           Expanded(child: child),
         ],
       ),
@@ -24,42 +33,230 @@ class AppShell extends StatelessWidget {
   }
 }
 
-class AppLayout extends StatelessWidget {
-  final Widget body;
-  final String title;
-  final List<Widget>? actions;
+// ============================================================================
+// Mobile layout
+// ============================================================================
 
-  const AppLayout({
-    super.key,
-    required this.body,
-    required this.title,
-    this.actions,
-  });
+class _MobileScaffold extends StatelessWidget {
+  final Widget child;
+
+  const _MobileScaffold({required this.child});
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AppNavbar(title: title, actions: actions),
-        Expanded(
-          child: Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(24),
-            child: body,
+    final currentRoute = GoRouterState.of(context).matchedLocation;
+
+    return Scaffold(
+      backgroundColor: AppTheme.baseGray50,
+      appBar: AppBar(
+        backgroundColor: AppTheme.baseWhite,
+        foregroundColor: AppTheme.baseGray900,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        title: Text(
+          _routeTitle(currentRoute),
+          style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
+        ),
+        leading: Builder(
+          builder: (context) => IconButton(
+            icon: Icon(PhosphorIcons.list(), color: AppTheme.baseGray600),
+            onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
-      ],
+      ),
+      drawer: const _AppDrawer(),
+      body: child,
+    );
+  }
+
+  String _routeTitle(String route) {
+    if (route.startsWith('/user')) return 'Usuários';
+    if (route.startsWith('/document')) return 'Documentos';
+    if (route.startsWith('/analysis')) return 'Análises';
+    if (route == '/settings') return 'Configurações';
+    if (route == '/users') return 'Usuários';
+    if (route == '/documents') return 'Documentos';
+    if (route == '/analyses') return 'Análises';
+    return 'AnaSoil Admin';
+  }
+}
+
+// ============================================================================
+// Drawer (mobile)
+// ============================================================================
+
+class _AppDrawer extends StatelessWidget {
+  const _AppDrawer();
+
+  @override
+  Widget build(BuildContext context) {
+    final session = locator<AdminSession>();
+    final userEmail = session.email ?? '';
+    final currentRoute = GoRouterState.of(context).matchedLocation;
+
+    return Drawer(
+      child: Column(
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(color: AppTheme.primaryGreen),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppTheme.baseWhite,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    PhosphorIcons.leaf(),
+                    color: AppTheme.primaryGreen,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Text(
+                        'AnaSoil',
+                        style: TextStyle(
+                          fontSize: 22,
+                          fontWeight: FontWeight.bold,
+                          color: AppTheme.baseWhite,
+                        ),
+                      ),
+                      Text(
+                        'Admin',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: AppTheme.baseWhite.withValues(alpha: 0.8),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _DrawerItem(
+            icon: PhosphorIcons.users(),
+            title: 'Usuários',
+            isActive: currentRoute.startsWith('/user'),
+            route: '/users',
+          ),
+          _DrawerItem(
+            icon: PhosphorIcons.chartLine(),
+            title: 'Análises',
+            isActive:
+                currentRoute.startsWith('/analysis') ||
+                currentRoute == '/analyses',
+            route: '/analyses',
+          ),
+          _DrawerItem(
+            icon: PhosphorIcons.folder(),
+            title: 'Documentos',
+            isActive:
+                currentRoute.startsWith('/document') ||
+                currentRoute == '/documents',
+            route: '/documents',
+          ),
+          _DrawerItem(
+            icon: PhosphorIcons.gear(),
+            title: 'Configurações',
+            isActive: currentRoute == '/settings',
+            route: '/settings',
+          ),
+          const Spacer(),
+          const Divider(),
+          ListTile(
+            leading: CircleAvatar(
+              radius: 16,
+              backgroundColor: AppTheme.primaryGreen,
+              child: Icon(
+                PhosphorIcons.user(),
+                size: 18,
+                color: AppTheme.baseWhite,
+              ),
+            ),
+            title: const Text(
+              'Administrador',
+              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+            ),
+            subtitle: Text(
+              userEmail,
+              style: const TextStyle(fontSize: 12),
+              overflow: TextOverflow.ellipsis,
+            ),
+            trailing: IconButton(
+              icon: Icon(PhosphorIcons.signOut(), color: AppTheme.baseGray500),
+              onPressed: () async {
+                Navigator.pop(context);
+                await session.signOut();
+                if (context.mounted) context.go('/login');
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+        ],
+      ),
     );
   }
 }
 
-class AppSidebar extends StatelessWidget {
-  const AppSidebar({super.key});
+class _DrawerItem extends StatelessWidget {
+  final IconData icon;
+  final String title;
+  final bool isActive;
+  final String route;
+
+  const _DrawerItem({
+    required this.icon,
+    required this.title,
+    required this.isActive,
+    required this.route,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final authService = locator<AuthService>();
-    final userEmail = authService.currentUser?.email ?? '';
+    return ListTile(
+      leading: Icon(
+        icon,
+        color: isActive ? AppTheme.primaryGreen : AppTheme.baseGray500,
+      ),
+      title: Text(
+        title,
+        style: TextStyle(
+          fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+          color: isActive ? AppTheme.primaryGreen : AppTheme.baseGray600,
+        ),
+      ),
+      selected: isActive,
+      selectedColor: AppTheme.primaryGreen,
+      selectedTileColor: AppTheme.primaryGreenLight.withValues(alpha: 0.1),
+      hoverColor: AppTheme.primaryGreenLight.withValues(alpha: 0.08),
+      mouseCursor: SystemMouseCursors.click,
+      onTap: () {
+        Navigator.pop(context);
+        context.go(route);
+      },
+    );
+  }
+}
+
+// ============================================================================
+// Desktop sidebar
+// ============================================================================
+
+class _AppSidebar extends StatelessWidget {
+  const _AppSidebar();
+
+  @override
+  Widget build(BuildContext context) {
+    final session = locator<AdminSession>();
+    final userEmail = session.email ?? '';
     final currentRoute = GoRouterState.of(context).matchedLocation;
 
     return Container(
@@ -121,25 +318,29 @@ class AppSidebar extends StatelessWidget {
             child: ListView(
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
-                SidebarItem(
+                _SidebarItem(
                   icon: PhosphorIcons.users(),
                   title: 'Usuários',
                   isActive: currentRoute.startsWith('/user'),
                   route: '/users',
                 ),
-                SidebarItem(
+                _SidebarItem(
                   icon: PhosphorIcons.chartLine(),
                   title: 'Análises',
-                  isActive: currentRoute == '/analyses',
+                  isActive:
+                      currentRoute == '/analyses' ||
+                      currentRoute.startsWith('/analysis'),
                   route: '/analyses',
                 ),
-                SidebarItem(
+                _SidebarItem(
                   icon: PhosphorIcons.folder(),
                   title: 'Documentos',
-                  isActive: currentRoute == '/documents',
+                  isActive:
+                      currentRoute == '/documents' ||
+                      currentRoute.startsWith('/document'),
                   route: '/documents',
                 ),
-                SidebarItem(
+                _SidebarItem(
                   icon: PhosphorIcons.gear(),
                   title: 'Configurações',
                   isActive: currentRoute == '/settings',
@@ -199,7 +400,7 @@ class AppSidebar extends StatelessWidget {
                   ),
                   tooltip: 'Sair',
                   onPressed: () async {
-                    await authService.signOut();
+                    await session.signOut();
                     if (context.mounted) context.go('/login');
                   },
                 ),
@@ -212,14 +413,13 @@ class AppSidebar extends StatelessWidget {
   }
 }
 
-class SidebarItem extends StatelessWidget {
+class _SidebarItem extends StatelessWidget {
   final IconData icon;
   final String title;
   final bool isActive;
   final String route;
 
-  const SidebarItem({
-    super.key,
+  const _SidebarItem({
     required this.icon,
     required this.title,
     required this.isActive,
@@ -228,32 +428,85 @@ class SidebarItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-      child: ListTile(
-        leading: Icon(
-          icon,
-          size: 20,
-          color: isActive ? AppTheme.primaryGreen : AppTheme.baseGray500,
-        ),
-        title: Text(
-          title,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-            color: isActive ? AppTheme.primaryGreen : AppTheme.baseGray600,
+    final foreground = isActive ? AppTheme.primaryGreen : AppTheme.baseGray600;
+    final iconColor = isActive ? AppTheme.primaryGreen : AppTheme.baseGray500;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      child: Material(
+        color: isActive
+            ? AppTheme.primaryGreenLight.withValues(alpha: 0.12)
+            : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(8),
+          mouseCursor: isActive
+              ? SystemMouseCursors.basic
+              : SystemMouseCursors.click,
+          hoverColor: isActive ? Colors.transparent : AppTheme.baseGray100,
+          splashColor: AppTheme.primaryGreenLight.withValues(alpha: 0.08),
+          highlightColor: AppTheme.primaryGreenLight.withValues(alpha: 0.04),
+          onTap: isActive ? null : () => context.go(route),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                Icon(icon, size: 20, color: iconColor),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+                      color: foreground,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
-        selected: isActive,
-        selectedColor: AppTheme.primaryGreen,
-        selectedTileColor: AppTheme.primaryGreenLight.withValues(alpha: 0.1),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-        dense: true,
-        onTap: () {
-          context.go(route);
-        },
       ),
+    );
+  }
+}
+
+// ============================================================================
+// AppLayout (desktop navbar)
+// ============================================================================
+
+class AppLayout extends StatelessWidget {
+  final Widget body;
+  final String title;
+  final List<Widget>? actions;
+
+  const AppLayout({
+    super.key,
+    required this.body,
+    required this.title,
+    this.actions,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isMobile = MediaQuery.sizeOf(context).width < _kMobileBreakpoint;
+
+    if (isMobile) {
+      return Padding(padding: const EdgeInsets.all(16), child: body);
+    }
+
+    return Column(
+      children: [
+        AppNavbar(title: title, actions: actions),
+        Expanded(
+          child: Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(24),
+            child: body,
+          ),
+        ),
+      ],
     );
   }
 }
@@ -287,19 +540,8 @@ class AppNavbar extends StatelessWidget {
                 color: AppTheme.baseGray900,
               ),
             ),
-
             const Spacer(),
-
             if (actions != null) ...actions!,
-
-            IconButton(
-              onPressed: () {},
-              icon: Icon(PhosphorIcons.bell(), color: AppTheme.baseGray600),
-            ),
-            IconButton(
-              onPressed: () {},
-              icon: Icon(PhosphorIcons.gear(), color: AppTheme.baseGray600),
-            ),
           ],
         ),
       ),

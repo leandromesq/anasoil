@@ -2,9 +2,12 @@ import 'package:anasoil_admin/core/models/document_model.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/documents/viewmodels/document_list_viewmodel.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
 import '../../../core/service_locator.dart';
+
+const double _kTableBreakpoint = 700;
 
 class DocumentsDataTable extends StatelessWidget {
   final List<DocumentModel> documents;
@@ -128,90 +131,21 @@ class DocumentsDataTable extends StatelessWidget {
           Expanded(
             child: LayoutBuilder(
               builder: (context, constraints) {
-                return SingleChildScrollView(
-                  scrollDirection: Axis.vertical,
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    child: SizedBox(
-                      width: constraints.maxWidth > 800
-                          ? constraints.maxWidth
-                          : 800,
-                      child: DataTable(
-                        sortColumnIndex: sortColumn,
-                        sortAscending: sortAscending,
-                        columnSpacing: 16,
-                        horizontalMargin: 24,
-                        headingRowHeight: 56,
-                        dataRowMaxHeight: 72,
-                        dataRowMinHeight: 72,
-                        headingRowColor: const WidgetStatePropertyAll(
-                          AppTheme.baseWhite,
-                        ),
-                        columns: [
-                          DataColumn(
-                            label: const Text(
-                              'Arquivo',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.baseGray900,
-                              ),
-                            ),
-                            onSort: onSort != null
-                                ? (columnIndex, _) => onSort!(columnIndex)
-                                : null,
-                          ),
-                          DataColumn(
-                            label: const Text(
-                              'Usuário',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.baseGray900,
-                              ),
-                            ),
-                            onSort: onSort != null
-                                ? (columnIndex, _) => onSort!(columnIndex)
-                                : null,
-                          ),
-                          DataColumn(
-                            label: const Text(
-                              'Tamanho',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.baseGray900,
-                              ),
-                            ),
-                            onSort: onSort != null
-                                ? (columnIndex, _) => onSort!(columnIndex)
-                                : null,
-                          ),
-                          DataColumn(
-                            label: const Text(
-                              'Criado em',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.baseGray900,
-                              ),
-                            ),
-                            onSort: onSort != null
-                                ? (columnIndex, _) => onSort!(columnIndex)
-                                : null,
-                          ),
-                          const DataColumn(
-                            label: Text(
-                              'Ações',
-                              style: TextStyle(
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.baseGray900,
-                              ),
-                            ),
-                          ),
-                        ],
-                        rows: documents
-                            .map((doc) => _buildRow(doc, context))
-                            .toList(),
-                      ),
-                    ),
-                  ),
+                final isMobile = constraints.maxWidth < _kTableBreakpoint;
+                if (isMobile) {
+                  return _MobileList(
+                    documents: documents,
+                    userNames: userNames,
+                    onDelete: onDelete,
+                  );
+                }
+                return _DesktopTable(
+                  documents: documents,
+                  userNames: userNames,
+                  onDelete: onDelete,
+                  sortColumn: sortColumn,
+                  sortAscending: sortAscending,
+                  onSort: onSort,
                 );
               },
             ),
@@ -220,26 +154,309 @@ class DocumentsDataTable extends StatelessWidget {
       ),
     );
   }
+}
 
-  DataRow _buildRow(DocumentModel doc, BuildContext context) {
+// ============================================================================
+// Mobile card list
+// ============================================================================
+
+class _MobileList extends StatelessWidget {
+  final List<DocumentModel> documents;
+  final Map<String, String> userNames;
+  final Function(DocumentModel) onDelete;
+
+  const _MobileList({
+    required this.documents,
+    required this.userNames,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView.builder(
+      padding: const EdgeInsets.all(16),
+      itemCount: documents.length,
+      itemBuilder: (context, index) {
+        final doc = documents[index];
+        final userName = userNames[doc.userId] ?? doc.userId;
+
+        return Card(
+          margin: const EdgeInsets.only(bottom: 12),
+          child: InkWell(
+            onTap: () => context.go('/document/${doc.id}'),
+            borderRadius: BorderRadius.circular(12),
+            hoverColor: AppTheme.primaryGreenLight.withValues(alpha: 0.06),
+            mouseCursor: SystemMouseCursors.click,
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: AppTheme.primaryGreenSoft,
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Icon(
+                          PhosphorIcons.filePdf(),
+                          color: AppTheme.primaryGreen,
+                          size: 18,
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          doc.fileName,
+                          style: const TextStyle(
+                            fontWeight: FontWeight.w600,
+                            fontSize: 14,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      PopupMenuButton<String>(
+                        onSelected: (value) {
+                          if (value == 'view') {
+                            context.go('/document/${doc.id}');
+                          } else if (value == 'delete') {
+                            onDelete(doc);
+                          }
+                        },
+                        itemBuilder: (context) => [
+                          const PopupMenuItem(
+                            value: 'view',
+                            child: Row(
+                              children: [
+                                Icon(Icons.visibility, size: 18),
+                                SizedBox(width: 8),
+                                Text('Visualizar'),
+                              ],
+                            ),
+                          ),
+                          const PopupMenuItem(
+                            value: 'delete',
+                            child: Row(
+                              children: [
+                                Icon(Icons.delete, size: 18, color: Colors.red),
+                                SizedBox(width: 8),
+                                Text(
+                                  'Excluir',
+                                  style: TextStyle(color: Colors.red),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  _buildInfoRow('Usuário', userName),
+                  _buildInfoRow('Tamanho', _formatFileSize(doc.fileSize)),
+                  _buildInfoRow('Criado em', _formatDate(doc.createdAt)),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildInfoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4),
+      child: Row(
+        children: [
+          Text(
+            '$label: ',
+            style: TextStyle(fontSize: 12, color: AppTheme.baseGray500),
+          ),
+          Expanded(
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w500),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _formatFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(1)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  String _formatDate(DateTime date) {
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
+  }
+}
+
+// ============================================================================
+// Desktop data table
+// ============================================================================
+
+class _DesktopTable extends StatelessWidget {
+  final List<DocumentModel> documents;
+  final Map<String, String> userNames;
+  final Function(DocumentModel) onDelete;
+  final int? sortColumn;
+  final bool sortAscending;
+  final Function(int)? onSort;
+
+  const _DesktopTable({
+    required this.documents,
+    required this.userNames,
+    required this.onDelete,
+    this.sortColumn,
+    this.sortAscending = true,
+    this.onSort,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final availableWidth = constraints.maxWidth;
+        final margins = 24.0 * 2;
+        final spacing = 16.0 * 4;
+        final totalCellWidth = availableWidth > margins + spacing + 620
+            ? availableWidth - margins - spacing
+            : 620.0;
+
+        final colWidths = [
+          totalCellWidth * 0.36,
+          totalCellWidth * 0.24,
+          totalCellWidth * 0.12,
+          totalCellWidth * 0.13,
+          totalCellWidth * 0.15,
+        ];
+
+        return SingleChildScrollView(
+          scrollDirection: Axis.vertical,
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: availableWidth),
+              child: DataTable(
+                sortColumnIndex: sortColumn,
+                sortAscending: sortAscending,
+                showCheckboxColumn: false,
+                columnSpacing: 16,
+                horizontalMargin: 24,
+                headingRowHeight: 56,
+                dataRowMaxHeight: 72,
+                dataRowMinHeight: 72,
+                headingRowColor: const WidgetStatePropertyAll(
+                  AppTheme.baseWhite,
+                ),
+                columns: [
+                  DataColumn(
+                    label: const Text(
+                      'Arquivo',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
+                    ),
+                    onSort: onSort != null
+                        ? (columnIndex, _) => onSort!(columnIndex)
+                        : null,
+                  ),
+                  DataColumn(
+                    label: const Text(
+                      'Usuário',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
+                    ),
+                    onSort: onSort != null
+                        ? (columnIndex, _) => onSort!(columnIndex)
+                        : null,
+                  ),
+                  DataColumn(
+                    label: const Text(
+                      'Tamanho',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
+                    ),
+                    onSort: onSort != null
+                        ? (columnIndex, _) => onSort!(columnIndex)
+                        : null,
+                  ),
+                  DataColumn(
+                    label: const Text(
+                      'Criado em',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
+                    ),
+                    onSort: onSort != null
+                        ? (columnIndex, _) => onSort!(columnIndex)
+                        : null,
+                  ),
+                  const DataColumn(
+                    label: Text(
+                      'Ações',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
+                    ),
+                  ),
+                ],
+                rows: documents
+                    .map((doc) => _buildRow(doc, context, colWidths))
+                    .toList(),
+              ),
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  DataRow _buildRow(
+    DocumentModel doc,
+    BuildContext context,
+    List<double> colWidths,
+  ) {
     final userName = userNames[doc.userId] ?? doc.userId;
 
     return DataRow(
+      color: WidgetStateProperty.resolveWith((states) {
+        if (states.contains(WidgetState.hovered)) {
+          return AppTheme.primaryGreenLight.withValues(alpha: 0.05);
+        }
+        return null;
+      }),
+      mouseCursor: const WidgetStatePropertyAll(SystemMouseCursors.click),
+      onSelectChanged: (_) => context.go('/document/${doc.id}'),
       cells: [
         DataCell(
           SizedBox(
-            width: 280,
+            width: colWidths[0],
             child: Row(
               children: [
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF3B82F6).withValues(alpha: 0.1),
+                    color: AppTheme.primaryGreenSoft,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
                     PhosphorIcons.filePdf(),
-                    color: const Color(0xFF3B82F6),
+                    color: AppTheme.primaryGreen,
                     size: 18,
                   ),
                 ),
@@ -261,7 +478,7 @@ class DocumentsDataTable extends StatelessWidget {
         ),
         DataCell(
           SizedBox(
-            width: 180,
+            width: colWidths[1],
             child: Text(
               userName,
               style: const TextStyle(color: AppTheme.baseGray600, fontSize: 14),
@@ -271,7 +488,7 @@ class DocumentsDataTable extends StatelessWidget {
         ),
         DataCell(
           SizedBox(
-            width: 100,
+            width: colWidths[2],
             child: Text(
               _formatFileSize(doc.fileSize),
               style: const TextStyle(color: AppTheme.baseGray600, fontSize: 14),
@@ -280,7 +497,7 @@ class DocumentsDataTable extends StatelessWidget {
         ),
         DataCell(
           SizedBox(
-            width: 100,
+            width: colWidths[3],
             child: Text(
               _formatDate(doc.createdAt),
               style: const TextStyle(color: AppTheme.baseGray600, fontSize: 14),
@@ -289,16 +506,30 @@ class DocumentsDataTable extends StatelessWidget {
         ),
         DataCell(
           SizedBox(
-            width: 60,
-            child: IconButton(
-              onPressed: () => onDelete(doc),
-              icon: Icon(PhosphorIcons.trash(), size: 18),
-              color: AppTheme.secondaryRed,
-              tooltip: 'Excluir',
-              style: IconButton.styleFrom(
-                minimumSize: const Size(32, 32),
-                padding: EdgeInsets.zero,
-              ),
+            width: colWidths[4],
+            child: Row(
+              children: [
+                IconButton(
+                  onPressed: () => context.go('/document/${doc.id}'),
+                  icon: Icon(PhosphorIcons.eye(), size: 18),
+                  color: AppTheme.primaryGreen,
+                  tooltip: 'Visualizar',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(32, 32),
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+                IconButton(
+                  onPressed: () => onDelete(doc),
+                  icon: Icon(PhosphorIcons.trash(), size: 18),
+                  color: AppTheme.secondaryRed,
+                  tooltip: 'Excluir',
+                  style: IconButton.styleFrom(
+                    minimumSize: const Size(32, 32),
+                    padding: EdgeInsets.zero,
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -313,8 +544,6 @@ class DocumentsDataTable extends StatelessWidget {
   }
 
   String _formatDate(DateTime date) {
-    return '${date.day.toString().padLeft(2, '0')}/'
-        '${date.month.toString().padLeft(2, '0')}/'
-        '${date.year}';
+    return '${date.day.toString().padLeft(2, '0')}/${date.month.toString().padLeft(2, '0')}/${date.year}';
   }
 }

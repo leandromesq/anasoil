@@ -2,6 +2,7 @@ import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_relation_viewmodel.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
 
@@ -51,7 +52,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
           }
 
           if (user != null) {
-            if (user.role == 'agricultor') {
+            if (user.userRole == UserRole.farmer) {
               var linkedConsultors = _viewModel.linkedConsultors;
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -67,7 +68,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
                   ],
                 ),
               );
-            } else if (user.role == 'consultor') {
+            } else if (user.userRole == UserRole.consultant) {
               var linkedAgricultors = _viewModel.linkedAgricultors;
               return Padding(
                 padding: const EdgeInsets.all(16.0),
@@ -464,41 +465,26 @@ class _UserRelationPageState extends State<UserRelationPage> {
   }
 
   Color _getRoleColor(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
+    switch (UserRole.parse(role)) {
+      case UserRole.admin:
         return AppTheme.secondaryRed;
-      case 'consultor':
-        return const Color(0xFF3B82F6);
-      case 'agricultor':
+      case UserRole.consultant:
+        return AppTheme.primaryGreenLight;
+      case UserRole.farmer:
         return AppTheme.primaryGreen;
-      default:
-        return AppTheme.baseGray500;
     }
   }
 
   IconData _getRoleIcon(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
+    switch (UserRole.parse(role)) {
+      case UserRole.admin:
         return PhosphorIcons.shieldCheck();
-      case 'consultor':
+      case UserRole.consultant:
         return PhosphorIcons.userCircle();
-      case 'agricultor':
+      case UserRole.farmer:
         return PhosphorIcons.plant();
-      default:
-        return PhosphorIcons.user();
     }
   }
 
-  String _getRoleDisplayName(String role) {
-    switch (role.toLowerCase()) {
-      case 'admin':
-        return 'Administrador';
-      case 'consultor':
-        return 'Consultor';
-      case 'agricultor':
-        return 'Agricultor';
-      default:
-        return role;
-    }
-  }
+  String _getRoleDisplayName(String role) => UserRole.parse(role).displayName;
 }

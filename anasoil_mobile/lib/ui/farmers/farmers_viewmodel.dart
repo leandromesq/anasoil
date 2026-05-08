@@ -67,8 +67,9 @@ class FarmersViewModel extends ChangeNotifier {
   Future<void> loadAllFarmersAnalyses(String consultantId) async {
     // Garante que os agricultores já estejam carregados
     if (_farmers.isEmpty) {
-      final farmersResult =
-          await _firestoreService.getFarmersForConsultant(consultantId);
+      final farmersResult = await _firestoreService.getFarmersForConsultant(
+        consultantId,
+      );
       if (farmersResult is Ok<List<User>>) {
         _farmers = farmersResult.value;
       } else {

@@ -1,13 +1,34 @@
 import 'package:anasoil_admin/core/models/document_model.dart';
+import 'package:anasoil_admin/core/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 
 class DocumentRepository extends ChangeNotifier {
-  List<DocumentModel> _documents = [];
-  List<DocumentModel> get documents => _documents;
+  final FirestoreService _firestoreService;
 
-  void setDocuments(List<DocumentModel> list) {
-    _documents = list;
+  DocumentRepository(this._firestoreService);
+
+  List<DocumentModel> _documents = [];
+  List<DocumentModel> get documents => List.unmodifiable(_documents);
+
+  Future<List<DocumentModel>> getDocuments() async {
+    _documents = await _firestoreService.getDocuments().first;
     notifyListeners();
+    return _documents;
+  }
+
+  Future<void> deleteDocument(String documentId) async {
+    await _firestoreService.deleteDocument(documentId);
+    _documents.removeWhere((document) => document.id == documentId);
+    notifyListeners();
+  }
+
+  Future<DocumentModel?> getById(String id) async {
+    final docs = await _firestoreService.getDocuments().first;
+    try {
+      return docs.firstWhere((d) => d.id == id);
+    } catch (_) {
+      return null;
+    }
   }
 
   void clear() {

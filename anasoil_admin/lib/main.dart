@@ -1,14 +1,14 @@
 import 'package:anasoil_admin/core/app_router.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
-import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:anasoil_admin/core/theme/theme_provider.dart';
 import 'package:anasoil_admin/firebase_options.dart';
+import 'package:anasoil_admin/core/url_strategy/url_strategy.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_web_plugins/flutter_web_plugins.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  usePathUrlStrategy();
+  configureUrlStrategy();
   await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   setupLocator();
 
@@ -20,11 +20,20 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp.router(
-      debugShowCheckedModeBanner: false,
-      title: 'AnaSoil Admin',
-      theme: AppTheme.lightTheme,
-      routerConfig: AppRouter.router,
+    final themeProvider = locator<ThemeProvider>();
+
+    return ListenableBuilder(
+      listenable: themeProvider,
+      builder: (context, _) {
+        return MaterialApp.router(
+          debugShowCheckedModeBanner: false,
+          title: 'AnaSoil Admin',
+          theme: themeProvider.theme,
+          darkTheme: ThemeProvider.darkTheme,
+          themeMode: themeProvider.themeMode,
+          routerConfig: AppRouter.router,
+        );
+      },
     );
   }
 }

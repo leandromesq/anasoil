@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -75,131 +76,115 @@ class UsersFilters extends StatelessWidget {
           ),
           const SizedBox(height: 16),
 
-          Row(
-            children: [
-              Expanded(
-                flex: 3,
-                child: TextFormField(
-                  initialValue: searchText,
-                  decoration: InputDecoration(
-                    labelText: 'Pesquisar por nome ou email',
-                    prefixIcon: Icon(PhosphorIcons.magnifyingGlass()),
-                    border: const OutlineInputBorder(),
-                  ),
-                  onChanged: onSearchChanged,
-                ),
-              ),
-              const SizedBox(width: 16),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final isNarrow = constraints.maxWidth < 640;
 
-              Expanded(
-                flex: 2,
-                child: DropdownButtonFormField<String>(
-                  initialValue: statusFilter,
-                  decoration: InputDecoration(
-                    labelText: 'Status',
-                    prefixIcon: Icon(PhosphorIcons.toggleLeft()),
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    const DropdownMenuItem(
-                      value: 'todos',
-                      child: Text('Todos'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'ativo',
-                      child: Row(
-                        children: [
-                          Icon(
-                            PhosphorIcons.checkCircle(),
-                            color: AppTheme.primaryGreen,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Ativos'),
-                        ],
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'inativo',
-                      child: Row(
-                        children: [
-                          Icon(
-                            PhosphorIcons.xCircle(),
-                            color: AppTheme.secondaryRed,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Inativos'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) => onStatusFilterChanged(value ?? 'todos'),
+              final searchField = TextFormField(
+                initialValue: searchText,
+                decoration: InputDecoration(
+                  labelText: 'Pesquisar por nome ou email',
+                  prefixIcon: Icon(PhosphorIcons.magnifyingGlass()),
+                  border: const OutlineInputBorder(),
                 ),
-              ),
-              const SizedBox(width: 16),
+                onChanged: onSearchChanged,
+              );
 
-              Expanded(
-                flex: 2,
-                child: DropdownButtonFormField<String>(
-                  initialValue: roleFilter,
-                  decoration: InputDecoration(
-                    labelText: 'Função',
-                    prefixIcon: Icon(PhosphorIcons.briefcase()),
-                    border: const OutlineInputBorder(),
-                  ),
-                  items: [
-                    const DropdownMenuItem(
-                      value: 'todos',
-                      child: Text('Todas'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'admin',
-                      child: Row(
-                        children: [
-                          Icon(
-                            PhosphorIcons.shieldCheck(),
-                            color: AppTheme.secondaryRed,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Administrador'),
-                        ],
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'consultor',
-                      child: Row(
-                        children: [
-                          Icon(
-                            PhosphorIcons.userCircle(),
-                            color: const Color(0xFF3B82F6),
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Consultor'),
-                        ],
-                      ),
-                    ),
-                    DropdownMenuItem(
-                      value: 'agricultor',
-                      child: Row(
-                        children: [
-                          Icon(
-                            PhosphorIcons.plant(),
-                            color: AppTheme.primaryGreen,
-                            size: 16,
-                          ),
-                          const SizedBox(width: 8),
-                          const Text('Agricultor'),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) => onRoleFilterChanged(value ?? 'todos'),
+              final statusDropdown = DropdownButtonFormField<String>(
+                isExpanded: true,
+                initialValue: statusFilter,
+                decoration: InputDecoration(
+                  labelText: 'Status',
+                  prefixIcon: Icon(PhosphorIcons.toggleLeft()),
+                  border: const OutlineInputBorder(),
                 ),
-              ),
-            ],
+                items: [
+                  const DropdownMenuItem(value: 'todos', child: Text('Todos')),
+                  DropdownMenuItem(
+                    value: 'ativo',
+                    child: Row(
+                      children: [
+                        Icon(
+                          PhosphorIcons.checkCircle(),
+                          color: AppTheme.primaryGreen,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Ativos'),
+                      ],
+                    ),
+                  ),
+                  DropdownMenuItem(
+                    value: 'inativo',
+                    child: Row(
+                      children: [
+                        Icon(
+                          PhosphorIcons.xCircle(),
+                          color: AppTheme.secondaryRed,
+                          size: 16,
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('Inativos'),
+                      ],
+                    ),
+                  ),
+                ],
+                onChanged: (value) => onStatusFilterChanged(value ?? 'todos'),
+              );
+
+              final roleDropdown = DropdownButtonFormField<String>(
+                isExpanded: true,
+                initialValue: roleFilter,
+                decoration: InputDecoration(
+                  labelText: 'Função',
+                  prefixIcon: Icon(PhosphorIcons.briefcase()),
+                  border: const OutlineInputBorder(),
+                ),
+                items: [
+                  const DropdownMenuItem(value: 'todos', child: Text('Todas')),
+                  ...UserRole.assignable.map(
+                    (role) => DropdownMenuItem(
+                      value: role.firestoreValue,
+                      child: Row(
+                        children: [
+                          Icon(
+                            _getRoleIcon(role),
+                            color: _getRoleColor(role),
+                            size: 16,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(role.displayName),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+                onChanged: (value) => onRoleFilterChanged(value ?? 'todos'),
+              );
+
+              if (isNarrow) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    searchField,
+                    const SizedBox(height: 12),
+                    statusDropdown,
+                    const SizedBox(height: 12),
+                    roleDropdown,
+                  ],
+                );
+              }
+
+              return Row(
+                children: [
+                  Expanded(flex: 3, child: searchField),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 2, child: statusDropdown),
+                  const SizedBox(width: 16),
+                  Expanded(flex: 2, child: roleDropdown),
+                ],
+              );
+            },
           ),
 
           if (hasActiveFilters) ...[
@@ -250,15 +235,29 @@ class UsersFilters extends StatelessWidget {
   }
 
   String _getRoleDisplayName(String role) {
+    if (role == 'todos') return 'Todas';
+    return UserRole.parse(role).displayName;
+  }
+
+  IconData _getRoleIcon(UserRole role) {
     switch (role) {
-      case 'admin':
-        return 'Administrador';
-      case 'consultor':
-        return 'Consultor';
-      case 'agricultor':
-        return 'Agricultor';
-      default:
-        return 'Todas';
+      case UserRole.admin:
+        return PhosphorIcons.shieldCheck();
+      case UserRole.consultant:
+        return PhosphorIcons.userCircle();
+      case UserRole.farmer:
+        return PhosphorIcons.plant();
+    }
+  }
+
+  Color _getRoleColor(UserRole role) {
+    switch (role) {
+      case UserRole.admin:
+        return AppTheme.secondaryRed;
+      case UserRole.consultant:
+        return AppTheme.primaryGreenLight;
+      case UserRole.farmer:
+        return AppTheme.primaryGreen;
     }
   }
 }

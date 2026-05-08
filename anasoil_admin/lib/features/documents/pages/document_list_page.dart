@@ -6,6 +6,7 @@ import 'package:anasoil_admin/features/documents/viewmodels/document_list_viewmo
 import 'package:anasoil_admin/features/documents/widgets/documents_data_table.dart';
 import 'package:anasoil_admin/features/documents/widgets/documents_filters.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
+import 'package:anasoil_admin/shared/widgets/deferred_table.dart';
 import 'package:flutter/material.dart';
 
 class DocumentListPage extends StatefulWidget {
@@ -24,7 +25,6 @@ class _DocumentListPageState extends State<DocumentListPage> {
   @override
   void initState() {
     super.initState();
-    widget.viewModel.fetchDocumentsCommand.execute();
   }
 
   @override
@@ -161,32 +161,44 @@ class _DocumentListPageState extends State<DocumentListPage> {
             child: ListenableBuilder(
               listenable: Listenable.merge([
                 widget.viewModel,
+                widget.viewModel.fetchDocumentsCommand,
                 widget.viewModel.deleteDocumentCommand,
               ]),
               builder: (context, _) {
-                final isLoading =
-                    widget.viewModel.fetchDocumentsCommand.value.isRunning &&
-                    widget.viewModel.documents.isEmpty;
+                return DeferredTable(
+                  onReady: widget.viewModel.documents.isEmpty
+                      ? () => widget.viewModel.fetchDocumentsCommand.execute()
+                      : null,
+                  builder: () {
+                    final isLoading =
+                        widget
+                            .viewModel
+                            .fetchDocumentsCommand
+                            .value
+                            .isRunning &&
+                        widget.viewModel.documents.isEmpty;
 
-                final filtered = _applyFilters(widget.viewModel.documents);
+                    final filtered = _applyFilters(widget.viewModel.documents);
 
-                return DocumentsDataTable(
-                  documents: filtered,
-                  userNames: _buildUserNameMap(),
-                  isLoading: isLoading,
-                  sortColumn: sortColumn,
-                  sortAscending: sortAscending,
-                  onSort: (columnIndex) {
-                    setState(() {
-                      if (sortColumn == columnIndex) {
-                        sortAscending = !sortAscending;
-                      } else {
-                        sortColumn = columnIndex;
-                        sortAscending = true;
-                      }
-                    });
+                    return DocumentsDataTable(
+                      documents: filtered,
+                      userNames: _buildUserNameMap(),
+                      isLoading: isLoading,
+                      sortColumn: sortColumn,
+                      sortAscending: sortAscending,
+                      onSort: (columnIndex) {
+                        setState(() {
+                          if (sortColumn == columnIndex) {
+                            sortAscending = !sortAscending;
+                          } else {
+                            sortColumn = columnIndex;
+                            sortAscending = true;
+                          }
+                        });
+                      },
+                      onDelete: _handleDelete,
+                    );
                   },
-                  onDelete: _handleDelete,
                 );
               },
             ),

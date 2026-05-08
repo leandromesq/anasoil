@@ -1,9 +1,9 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../../domain/models/user.dart';
 import '../../../domain/models/profile_type.dart';
 import '../../../domain/models/document.dart';
 import '../../../domain/models/soil_analysis.dart';
-import '../../../utils/result.dart';
 
 /// Serviço de acesso ao Firestore
 class FirestoreService {
@@ -19,9 +19,9 @@ class FirestoreService {
   late final CollectionReference<Map<String, dynamic>> _soilAnalysesRef;
 
   FirestoreService() {
-    _usersRef = _db.collection('users');
-    _documentsRef = _db.collection('documents');
-    _soilAnalysesRef = _db.collection('soilAnalyses');
+    _usersRef = _db.collection(AnaSoilCollections.users);
+    _documentsRef = _db.collection(AnaSoilCollections.documents);
+    _soilAnalysesRef = _db.collection(AnaSoilCollections.analyses);
   }
 
   /// Busca usuário por ID do Firebase Auth
@@ -48,7 +48,7 @@ class FirestoreService {
   Future<Result<User?>> getUserByEmail(String email) async {
     try {
       final querySnapshot = await _usersRef
-          .where('email', isEqualTo: email)
+          .where(UserFields.email, isEqualTo: email.trim().toLowerCase())
           .limit(1)
           .get();
 
@@ -111,7 +111,7 @@ class FirestoreService {
       }
 
       final data = doc.data();
-      return Result.ok(data?['active'] == true);
+      return Result.ok(data?[UserFields.active] == true);
     } catch (e) {
       return Result.error(Exception('Erro ao verificar status do usuário: $e'));
     }
@@ -119,53 +119,31 @@ class FirestoreService {
 
   /// Converte documento Firestore para User
   User _userFromFirestore(String id, Map<String, dynamic> data) {
-    // Mapeia 'role' do Firestore para 'profileType' do app
-    final roleStr = data['role'] as String? ?? 'farmer';
-    ProfileType profileType;
-
-    switch (roleStr.toLowerCase()) {
-      case 'consultant':
-      case 'consultor':
-        profileType = ProfileType.consultant;
-        break;
-      case 'farmer':
-      case 'agricultor':
-      default:
-        profileType = ProfileType.farmer;
-    }
+    final profileType = ProfileType.fromRole(
+      UserRole.parse(data[UserFields.role] as String?),
+    );
 
     return User(
       id: id,
-      name: data['name'] as String? ?? '',
-      email: data['email'] as String? ?? '',
+      name: data[UserFields.name] as String? ?? '',
+      email: data[UserFields.email] as String? ?? '',
       profileType: profileType,
-      phone: data['phone'] as String?,
-      avatarUrl: data['avatarUrl'] as String?,
+      phone: data[UserFields.phone] as String?,
+      avatarUrl: data[UserFields.avatarUrl] as String?,
     );
   }
 
   /// Converte User para Map do Firestore
   Map<String, dynamic> _userToFirestore(User user) {
-    // Mapeia 'profileType' do app para 'role' do Firestore
-    String role;
-    switch (user.profileType) {
-      case ProfileType.consultant:
-        role = 'consultant';
-        break;
-      case ProfileType.farmer:
-        role = 'farmer';
-        break;
-    }
-
     return {
-      'name': user.name,
-      'email': user.email,
-      'role': role,
-      'phone': user.phone,
-      'active': true,
-      'createdAt': FieldValue.serverTimestamp(),
-      'consultorIds': [],
-      'agricultorIds': [],
+      UserFields.name: user.name,
+      UserFields.email: user.email.trim().toLowerCase(),
+      UserFields.role: user.profileType.firestoreValue,
+      UserFields.phone: user.phone,
+      UserFields.active: true,
+      UserFields.createdAt: FieldValue.serverTimestamp(),
+      UserFields.consultorIds: [],
+      UserFields.agricultorIds: [],
     };
   }
 
@@ -174,19 +152,9 @@ class FirestoreService {
     ProfileType profileType,
   ) async {
     try {
-      String role;
-      switch (profileType) {
-        case ProfileType.consultant:
-          role = 'consultant';
-          break;
-        case ProfileType.farmer:
-          role = 'farmer';
-          break;
-      }
-
       final querySnapshot = await _usersRef
-          .where('role', isEqualTo: role)
-          .where('active', isEqualTo: true)
+          .where(UserFields.role, isEqualTo: profileType.firestoreValue)
+          .where(UserFields.active, isEqualTo: true)
           .get();
 
       final users = querySnapshot.docs
@@ -209,7 +177,9 @@ class FirestoreService {
       }
 
       final data = farmerDoc.data();
-      final consultorIds = List<String>.from(data?['consultorIds'] ?? []);
+      final consultorIds = List<String>.from(
+        data?[UserFields.consultorIds] ?? [],
+      );
 
       if (consultorIds.isEmpty) {
         return Result.ok([]);
@@ -246,7 +216,9 @@ class FirestoreService {
       }
 
       final data = consultantDoc.data();
-      final agricultorIds = List<String>.from(data?['agricultorIds'] ?? []);
+      final agricultorIds = List<String>.from(
+        data?[UserFields.agricultorIds] ?? [],
+      );
 
       if (agricultorIds.isEmpty) {
         return Result.ok([]);
@@ -284,11 +256,12 @@ class FirestoreService {
     }
   }
 
-  /// Busca documentos de um usuário
+  /// Busca documentos de um usuário (apenas ativos)
   Future<Result<List<SoilDocument>>> getDocumentsByUser(String userId) async {
     try {
       final querySnapshot = await _documentsRef
-          .where('userId', isEqualTo: userId)
+          .where(DocumentFields.userId, isEqualTo: userId)
+          .where(DocumentFields.active, isEqualTo: true)
           .get();
 
       final documents = querySnapshot.docs
@@ -304,10 +277,10 @@ class FirestoreService {
     }
   }
 
-  /// Deleta um documento da coleção
+  /// Soft-deleta um documento (marca como inativo)
   Future<Result<void>> deleteDocument(String docId) async {
     try {
-      await _documentsRef.doc(docId).delete();
+      await _documentsRef.doc(docId).update({DocumentFields.active: false});
       return Result.ok(null);
     } catch (e) {
       return Result.error(Exception('Erro ao deletar documento: $e'));
@@ -327,11 +300,14 @@ class FirestoreService {
     }
   }
 
-  /// Busca análises de solo de um usuário
-  Future<Result<List<SoilAnalysis>>> getSoilAnalysesByUser(String userId) async {
+  /// Busca análises de solo de um usuário (apenas ativas)
+  Future<Result<List<SoilAnalysis>>> getSoilAnalysesByUser(
+    String userId,
+  ) async {
     try {
       final querySnapshot = await _soilAnalysesRef
-          .where('userId', isEqualTo: userId)
+          .where(AnalysisFields.userId, isEqualTo: userId)
+          .where(AnalysisFields.active, isEqualTo: true)
           .get();
 
       final analyses = querySnapshot.docs
@@ -361,13 +337,14 @@ class FirestoreService {
     }
   }
 
-  /// Busca análises vinculadas a um documento
+  /// Busca análises vinculadas a um documento (apenas ativas)
   Future<Result<List<SoilAnalysis>>> getSoilAnalysesByDocument(
     String documentId,
   ) async {
     try {
       final querySnapshot = await _soilAnalysesRef
-          .where('documentId', isEqualTo: documentId)
+          .where(AnalysisFields.documentId, isEqualTo: documentId)
+          .where(AnalysisFields.active, isEqualTo: true)
           .get();
 
       final analyses = querySnapshot.docs
@@ -384,10 +361,31 @@ class FirestoreService {
     }
   }
 
-  /// Deleta uma análise de solo
+  Future<Result<bool>> soilAnalysisExistsForDocumentSample({
+    required String userId,
+    required String documentId,
+    required String labNumber,
+  }) async {
+    try {
+      final querySnapshot = await _soilAnalysesRef
+          .where(AnalysisFields.userId, isEqualTo: userId)
+          .where(AnalysisFields.documentId, isEqualTo: documentId)
+          .where(AnalysisFields.labNumber, isEqualTo: labNumber)
+          .limit(1)
+          .get();
+
+      return Result.ok(querySnapshot.docs.isNotEmpty);
+    } catch (e) {
+      return Result.error(Exception('Erro ao verificar análise duplicada: $e'));
+    }
+  }
+
+  /// Soft-deleta uma análise de solo (marca como inativa)
   Future<Result<void>> deleteSoilAnalysis(String analysisId) async {
     try {
-      await _soilAnalysesRef.doc(analysisId).delete();
+      await _soilAnalysesRef.doc(analysisId).update({
+        AnalysisFields.active: false,
+      });
       return Result.ok(null);
     } catch (e) {
       return Result.error(Exception('Erro ao deletar análise: $e'));

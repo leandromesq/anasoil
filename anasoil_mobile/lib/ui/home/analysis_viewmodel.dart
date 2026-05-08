@@ -1,16 +1,24 @@
 import 'dart:io';
-import 'package:flutter/foundation.dart';
-import '../../../data/repositories/document/document_repository.dart';
-import '../../../data/repositories/soil_analysis/soil_analysis_repository.dart';
-import '../../../domain/models/document.dart';
-import '../../../domain/models/soil_analysis.dart';
-import '../../../utils/command.dart';
-import '../../../utils/result.dart';
 
-/// ViewModel para gerenciar a importação de documentos, extração e análise
+import 'package:flutter/foundation.dart';
+
+import '../../data/repositories/document/document_repository.dart';
+import '../../data/repositories/soil_analysis/soil_analysis_repository.dart';
+import '../../domain/models/analysis_intake_state.dart';
+import '../../domain/models/document.dart';
+import '../../domain/models/soil_analysis.dart';
+import '../../domain/upload_flow.dart';
+import '../../utils/command.dart';
+import '../../utils/result.dart';
+
+/// ViewModel for the analysis page.
+///
+/// Delegates the Upload Flow to a dedicated [UploadFlow] module and keeps
+/// ownership of the document and saved-analysis lists.
 class AnalysisViewModel extends ChangeNotifier {
   final DocumentRepository _documentRepository;
   final SoilAnalysisRepository _soilAnalysisRepository;
+  late final UploadFlow _uploadFlow;
 
   AnalysisViewModel({
     required DocumentRepository documentRepository,
@@ -20,11 +28,17 @@ class AnalysisViewModel extends ChangeNotifier {
     _documentRepository.addListener(notifyListeners);
     _soilAnalysisRepository.addListener(notifyListeners);
 
+    _uploadFlow = UploadFlow(
+      documentRepository: documentRepository,
+      soilAnalysisRepository: soilAnalysisRepository,
+    );
+    _uploadFlow.addListener(notifyListeners);
+
     uploadDocumentCommand = Command1(_uploadDocument);
     loadDocumentsCommand = Command0(_documentRepository.getDocuments);
     deleteDocumentCommand = Command1(_documentRepository.deleteDocument);
     extractPdfCommand = Command1(_extractFromPdf);
-    saveAnalysisCommand = Command1(_saveAnalysis);
+    saveAnalysisCommand = Command1(_uploadFlow.saveSingle);
     loadAnalysesCommand = Command0(_soilAnalysisRepository.getAnalyses);
   }
 
@@ -36,125 +50,77 @@ class AnalysisViewModel extends ChangeNotifier {
   late final Command1<SoilAnalysis, SoilAnalysis> saveAnalysisCommand;
   late final Command0<List<SoilAnalysis>> loadAnalysesCommand;
 
-  /// Documento selecionado para análise
+  // --- Upload Flow delegation ---
+
+  AnalysisIntakeState get intakeState => _uploadFlow.intakeState;
+
   SoilDocument? _selectedDocument;
   SoilDocument? get selectedDocument => _selectedDocument;
 
-  /// Nome do arquivo selecionado localmente (antes do upload)
-  String? _selectedFileName;
-  String? get selectedFileName => _selectedFileName;
+  String? get selectedFileName => _uploadFlow.selectedFileName;
+  String? get uploadedDocumentId => _uploadFlow.uploadedDocumentId;
 
-  /// Lista de documentos do usuário
+  List<SoilAnalysis> get extractedAnalyses => _uploadFlow.extractedAnalyses;
+  List<SoilAnalysis> get lastSavedAnalyses => _uploadFlow.lastSavedAnalyses;
+
+  // --- Document list ---
+
   List<SoilDocument> get documents => _documentRepository.documents;
 
-  /// ID do documento salvo no Firestore (obtido após upload)
-  String? _uploadedDocumentId;
-  String? get uploadedDocumentId => _uploadedDocumentId;
-
-  /// Lista de análises extraídas (antes de salvar)
-  List<SoilAnalysis> _extractedAnalyses = [];
-  List<SoilAnalysis> get extractedAnalyses =>
-      List.unmodifiable(_extractedAnalyses);
-
-  /// Lista de análises salvas do usuário
-  List<SoilAnalysis> get savedAnalyses => _soilAnalysisRepository.analyses;
-
-  /// Define o nome do arquivo selecionado localmente
-  void setSelectedFileName(String? name) {
-    _selectedFileName = name;
-    notifyListeners();
-  }
-
-  /// Define o documento selecionado
   void setSelectedDocument(SoilDocument? doc) {
     _selectedDocument = doc;
     notifyListeners();
   }
 
-  /// Limpa a seleção atual
+  // --- Saved analysis list ---
+
+  List<SoilAnalysis> get savedAnalyses => _soilAnalysisRepository.analyses;
+
+  Future<Result<void>> deleteAnalysis(String analysisId) async {
+    return _soilAnalysisRepository.deleteAnalysis(analysisId);
+  }
+
+  // --- Upload Flow operations ---
+
+  void setSelectedFileName(String? name) {
+    if (name != null) {
+      _uploadFlow.setSelectedFile(name);
+    }
+  }
+
   void clearSelection() {
     _selectedDocument = null;
-    _selectedFileName = null;
-    _uploadedDocumentId = null;
-    _extractedAnalyses = [];
+    _uploadFlow.clearAll();
+    uploadDocumentCommand.clear();
+    extractPdfCommand.clear();
+    saveAnalysisCommand.clear();
     notifyListeners();
   }
 
-  /// Limpa as análises extraídas
   void clearExtractedAnalyses() {
-    _extractedAnalyses = [];
-    notifyListeners();
+    _uploadFlow.clearExtracted();
   }
 
   Future<Result<SoilDocument>> _uploadDocument(File file) async {
-    final fileName =
-        _selectedFileName ?? file.path.split('/').last.split('\\').last;
-    final result = await _documentRepository.uploadDocument(file, fileName);
-
-    if (result is Ok<SoilDocument>) {
-      _uploadedDocumentId = result.value.id;
-    }
-
+    final result = await _uploadFlow.upload(file);
+    // Notify is handled by UploadFlow's listener; the command triggers notifyListeners
+    // via the ChangeNotifier chain. But we need to propagate result for Command.
     return result;
   }
 
   Future<Result<List<SoilAnalysis>>> _extractFromPdf(File file) async {
-    final result = await _soilAnalysisRepository.extractFromPdf(
-      file,
-      documentId: _uploadedDocumentId,
-    );
-
-    if (result is Ok<List<SoilAnalysis>>) {
-      _extractedAnalyses = result.value;
-      notifyListeners();
-    }
-
-    return result;
+    return _uploadFlow.extract(file);
   }
 
-  Future<Result<SoilAnalysis>> _saveAnalysis(SoilAnalysis analysis) async {
-    final result = await _soilAnalysisRepository.saveAnalysis(analysis);
-
-    if (result is Ok<SoilAnalysis>) {
-      _extractedAnalyses.removeWhere(
-        (a) => a.sampleCode == analysis.sampleCode,
-      );
-      notifyListeners();
-    }
-
-    return result;
-  }
-
-  /// Salva todas as análises extraídas de uma vez
   Future<Result<int>> saveAllExtractedAnalyses() async {
-    int savedCount = 0;
-
-    for (final analysis in List.of(_extractedAnalyses)) {
-      final result = await _soilAnalysisRepository.saveAnalysis(analysis);
-      if (result is Ok<SoilAnalysis>) {
-        savedCount++;
-      } else {
-        return Result.error(
-          Exception('Erro ao salvar análise ${analysis.sampleCode}'),
-        );
-      }
-    }
-
-    _extractedAnalyses = [];
-    notifyListeners();
-
-    return Result.ok(savedCount);
-  }
-
-  /// Deleta uma análise pelo ID
-  Future<Result<void>> deleteAnalysis(String analysisId) async {
-    return _soilAnalysisRepository.deleteAnalysis(analysisId);
+    return _uploadFlow.saveAll();
   }
 
   @override
   void dispose() {
     _documentRepository.removeListener(notifyListeners);
     _soilAnalysisRepository.removeListener(notifyListeners);
+    _uploadFlow.removeListener(notifyListeners);
     super.dispose();
   }
 }

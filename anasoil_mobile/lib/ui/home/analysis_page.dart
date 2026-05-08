@@ -1,7 +1,10 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../core/dependency_injection.dart';
+import '../../core/theme/app_theme.dart';
+import '../../domain/models/analysis_intake_state.dart';
 import '../../domain/models/soil_analysis.dart';
 import '../../domain/models/soil_parameter_classifier.dart';
 import '../../utils/result.dart';
@@ -9,7 +12,9 @@ import 'analysis_viewmodel.dart';
 
 /// Página de nova análise
 class AnalysisPage extends StatefulWidget {
-  const AnalysisPage({super.key});
+  final VoidCallback? onNavigateToHistory;
+
+  const AnalysisPage({super.key, this.onNavigateToHistory});
 
   @override
   State<AnalysisPage> createState() => _AnalysisPageState();
@@ -154,6 +159,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     if (!mounted) return;
 
     if (result is Ok<int>) {
+      setState(() {});
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('${result.value} análise(s) salva(s) com sucesso!'),
@@ -176,6 +182,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
     final isExtracting = _viewModel.extractPdfCommand.running;
     final isProcessing = isUploading || isExtracting;
     final hasExtractedData = _viewModel.extractedAnalyses.isNotEmpty;
+    final hasCompletedImport =
+        _viewModel.intakeState.step == AnalysisIntakeStep.complete;
 
     return Scaffold(
       backgroundColor: Colors.grey[50],
@@ -196,12 +204,16 @@ class _AnalysisPageState extends State<AnalysisPage> {
             const SizedBox(height: 32),
 
             // Card de importar documento ou arquivo selecionado
-            if (_selectedFile == null && !hasExtractedData)
+            if (!hasCompletedImport &&
+                _selectedFile == null &&
+                !hasExtractedData)
               _buildImportCard()
-            else if (_selectedFile != null && !hasExtractedData)
+            else if (!hasCompletedImport &&
+                _selectedFile != null &&
+                !hasExtractedData)
               _buildSelectedFileCard(),
 
-            if (!hasExtractedData) ...[
+            if (!hasCompletedImport && !hasExtractedData) ...[
               const SizedBox(height: 32),
 
               // Botão Iniciar
@@ -252,6 +264,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
               ),
             ],
 
+            if (hasCompletedImport) ...[_buildSaveSuccessCard()],
+
             // Resultados da extração
             if (hasExtractedData) ...[
               _buildExtractedDataSection(),
@@ -286,7 +300,11 @@ class _AnalysisPageState extends State<AnalysisPage> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: _saveAllAnalyses,
+                      onPressed:
+                          _viewModel.intakeState.step ==
+                              AnalysisIntakeStep.saving
+                          ? null
+                          : _saveAllAnalyses,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Colors.green[700],
                         foregroundColor: Colors.white,
@@ -312,6 +330,98 @@ class _AnalysisPageState extends State<AnalysisPage> {
             const SizedBox(height: 32),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildSaveSuccessCard() {
+    final savedAnalyses = _viewModel.lastSavedAnalyses;
+    final count = savedAnalyses.length;
+    final hasSingleAnalysis = count == 1;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.green[200]!),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.check_circle, color: Colors.green[700], size: 24),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  count == 0 ? 'Análises salvas' : '$count análise(s) salva(s)',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.black87,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            hasSingleAnalysis
+                ? 'A análise já está disponível para consulta.'
+                : 'As análises já estão disponíveis no histórico.',
+            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () {
+                    _viewModel.clearSelection();
+                    setState(() {
+                      _selectedFile = null;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: Colors.grey[700],
+                    side: BorderSide(color: Colors.grey[400]!),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: const Text('Importar outro'),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: ElevatedButton(
+                  onPressed: hasSingleAnalysis
+                      ? () => context.pushNamed(
+                          'analysis-detail',
+                          extra: savedAnalyses.first,
+                        )
+                      : widget.onNavigateToHistory,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.green[700],
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  child: Text(
+                    hasSingleAnalysis ? 'Ver análise' : 'Ver histórico',
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -436,15 +546,15 @@ class _AnalysisPageState extends State<AnalysisPage> {
       children: [
         // Infos do documento
         if (firstAnalysis != null &&
-            (firstAnalysis.solicitante != null ||
-                firstAnalysis.interessado != null ||
+            (firstAnalysis.requester != null ||
+                firstAnalysis.stakeholder != null ||
                 firstAnalysis.dataEntrada != null ||
                 firstAnalysis.material != null))
           _buildDocumentInfoCard(firstAnalysis),
 
         if (firstAnalysis != null &&
-            (firstAnalysis.solicitante != null ||
-                firstAnalysis.interessado != null ||
+            (firstAnalysis.requester != null ||
+                firstAnalysis.stakeholder != null ||
                 firstAnalysis.dataEntrada != null ||
                 firstAnalysis.material != null))
           const SizedBox(height: 16),
@@ -478,32 +588,38 @@ class _AnalysisPageState extends State<AnalysisPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.blue[50],
+        color: AppTheme.primaryGreenSoft,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.blue[200]!),
+        border: Border.all(
+          color: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Icon(Icons.description, color: Colors.blue[700], size: 20),
+              const Icon(
+                Icons.description,
+                color: AppTheme.primaryGreen,
+                size: 20,
+              ),
               const SizedBox(width: 8),
               Text(
                 'Informações do Documento',
                 style: TextStyle(
                   fontSize: 15,
                   fontWeight: FontWeight.w600,
-                  color: Colors.blue[800],
+                  color: AppTheme.primaryGreenDark,
                 ),
               ),
             ],
           ),
           const SizedBox(height: 12),
-          if (analysis.solicitante != null)
-            _buildDocInfoRow('Solicitante', analysis.solicitante!),
-          if (analysis.interessado != null)
-            _buildDocInfoRow('Interessado', analysis.interessado!),
+          if (analysis.requester != null)
+            _buildDocInfoRow('Solicitante', analysis.requester!),
+          if (analysis.stakeholder != null)
+            _buildDocInfoRow('Interessado', analysis.stakeholder!),
           if (analysis.dataEntrada != null)
             _buildDocInfoRow('Data de Entrada', analysis.dataEntrada!),
           if (analysis.material != null)
@@ -525,7 +641,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
               label,
               style: TextStyle(
                 fontSize: 13,
-                color: Colors.blue[700],
+                color: AppTheme.primaryGreenDark,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -567,116 +683,119 @@ class _AnalysisPageState extends State<AnalysisPage> {
         .map((p) => p.$1)
         .toList();
 
-    return Container(
-      width: double.infinity,
+    return Card(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
+      elevation: 0,
+      color: Colors.white,
+      shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        side: BorderSide(color: Colors.grey[200]!),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => context.pushNamed('analysis-detail', extra: analysis),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Amostra ${index + 1}',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.green[800],
+              // Header
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
+                    decoration: BoxDecoration(
+                      color: Colors.green[50],
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Text(
+                      'Amostra ${index + 1}',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.green[800],
+                      ),
+                    ),
                   ),
-                ),
+                  const Spacer(),
+                  Text(
+                    analysis.labNumber.isNotEmpty ? analysis.labNumber : 'N/A',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: Colors.grey[600],
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
+                ],
               ),
-              const Spacer(),
-              Text(
-                analysis.sampleCode.isNotEmpty ? analysis.sampleCode : 'N/A',
+              const SizedBox(height: 12),
+
+              // Fazenda e DMLab
+              _buildDataRow(
+                'Fazenda',
+                analysis.propertyName.isNotEmpty
+                    ? analysis.propertyName
+                    : 'N/A',
+              ),
+              _buildDataRow(
+                'Nº DMLab',
+                analysis.labNumber.isNotEmpty ? analysis.labNumber : 'N/A',
+              ),
+
+              const Divider(height: 20),
+
+              // Legenda de classificação
+              _buildLegend(),
+              const SizedBox(height: 12),
+
+              // Parâmetros da Análise
+              const Text(
+                'Parâmetros da Análise',
                 style: TextStyle(
-                  fontSize: 13,
-                  color: Colors.grey[600],
-                  fontWeight: FontWeight.w500,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.black87,
                 ),
+              ),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  ...classifications.map((c) => _buildClassifiedChip(c)),
+                  ...missingParams.map((label) => _buildNaChip(label)),
+                ],
               ),
             ],
           ),
-          const SizedBox(height: 12),
-
-          // Fazenda e DMLab
-          _buildDataRow(
-            'Fazenda',
-            analysis.farmName.isNotEmpty ? analysis.farmName : 'N/A',
-          ),
-          _buildDataRow(
-            'Nº DMLab',
-            analysis.dmlabNumber.isNotEmpty ? analysis.dmlabNumber : 'N/A',
-          ),
-
-          const Divider(height: 20),
-
-          // Legenda de classificação
-          _buildLegend(),
-          const SizedBox(height: 12),
-
-          // Parâmetros da Análise
-          const Text(
-            'Parâmetros da Análise',
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: Colors.black87,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              ...classifications.map((c) => _buildClassifiedChip(c)),
-              ...missingParams.map((label) => _buildNaChip(label)),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
 
   Color _levelColor(SoilLevel level) {
     switch (level) {
-      case SoilLevel.baixo:
+      case SoilLevel.low:
         return const Color(0xFFE53935); // vermelho
-      case SoilLevel.medio:
+      case SoilLevel.medium:
         return const Color(0xFFFFA726); // laranja
-      case SoilLevel.alto:
+      case SoilLevel.high:
         return const Color(0xFF43A047); // verde
     }
   }
 
   Color _levelBgColor(SoilLevel level) {
     switch (level) {
-      case SoilLevel.baixo:
+      case SoilLevel.low:
         return const Color(0xFFFFEBEE);
-      case SoilLevel.medio:
+      case SoilLevel.medium:
         return const Color(0xFFFFF3E0);
-      case SoilLevel.alto:
+      case SoilLevel.high:
         return const Color(0xFFE8F5E9);
     }
   }
@@ -684,11 +803,11 @@ class _AnalysisPageState extends State<AnalysisPage> {
   Widget _buildLegend() {
     return Row(
       children: [
-        _buildLegendItem(SoilLevel.baixo, 'Baixo'),
+        _buildLegendItem(SoilLevel.low, 'Baixo'),
         const SizedBox(width: 12),
-        _buildLegendItem(SoilLevel.medio, 'Médio'),
+        _buildLegendItem(SoilLevel.medium, 'Médio'),
         const SizedBox(width: 12),
-        _buildLegendItem(SoilLevel.alto, 'Alto'),
+        _buildLegendItem(SoilLevel.high, 'Alto'),
       ],
     );
   }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/password_update_data.dart';
 import '../../utils/result.dart';
 import 'profile_viewmodel.dart';
@@ -216,19 +217,21 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue[50],
+                  color: AppTheme.primaryGreenSoft,
                   borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: Colors.blue[100]!),
+                  border: Border.all(
+                    color: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
+                  ),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
                       children: [
-                        Icon(
+                        const Icon(
                           Icons.info_outline,
                           size: 20,
-                          color: Colors.blue[700],
+                          color: AppTheme.primaryGreen,
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -236,7 +239,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: Colors.blue[700],
+                            color: AppTheme.primaryGreenDark,
                           ),
                         ),
                       ],
@@ -261,7 +264,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                   return ElevatedButton(
                     onPressed: running ? null : _handleChangePassword,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.green[700],
+                      backgroundColor: AppTheme.primaryGreen,
                       foregroundColor: Colors.white,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       minimumSize: const Size.fromHeight(50),
@@ -299,7 +302,11 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       padding: const EdgeInsets.only(top: 4),
       child: Row(
         children: [
-          Icon(Icons.check_circle, size: 16, color: Colors.blue[700]),
+          const Icon(
+            Icons.check_circle,
+            size: 16,
+            color: AppTheme.primaryGreen,
+          ),
           const SizedBox(width: 8),
           Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
         ],

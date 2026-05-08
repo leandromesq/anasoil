@@ -1,4 +1,5 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_form_viewmodel.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
@@ -21,7 +22,7 @@ class _UserFormPageState extends State<UserFormPage> {
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  String _selectedRole = 'agricultor';
+  String _selectedRole = UserRole.farmer.firestoreValue;
   bool _isActive = true;
 
   bool get isEditing => widget.userId != null;
@@ -44,7 +45,7 @@ class _UserFormPageState extends State<UserFormPage> {
       _nameController.text = user.name;
       _emailController.text = user.email;
       setState(() {
-        _selectedRole = user.role;
+        _selectedRole = user.userRole.firestoreValue;
         _isActive = user.active;
       });
     }
@@ -186,20 +187,14 @@ class _UserFormPageState extends State<UserFormPage> {
                         labelText: 'Função',
                         prefixIcon: Icon(PhosphorIcons.briefcase()),
                       ),
-                      items: const [
-                        DropdownMenuItem(
-                          value: 'agricultor',
-                          child: Text('Agricultor'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'consultor',
-                          child: Text('Consultor'),
-                        ),
-                        DropdownMenuItem(
-                          value: 'admin',
-                          child: Text('Administrador'),
-                        ),
-                      ],
+                      items: UserRole.assignable
+                          .map(
+                            (role) => DropdownMenuItem(
+                              value: role.firestoreValue,
+                              child: Text(role.displayName),
+                            ),
+                          )
+                          .toList(),
                       onChanged: (value) {
                         if (value != null) {
                           setState(() => _selectedRole = value);

@@ -10,6 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
 
+  anasoil_shared:
+    path: ../packages/anasoil_shared
+
   # State Management
   # ChangeNotifier já é built-in do Flutter
 
@@ -55,7 +58,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
 
 flutter:
   uses-material-design: true

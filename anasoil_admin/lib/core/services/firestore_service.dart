@@ -1,5 +1,6 @@
 import 'dart:developer';
 
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:anasoil_admin/core/models/document_model.dart';
 import 'package:anasoil_admin/core/models/soil_analysis_model.dart';
 import 'package:anasoil_admin/core/models/user_model.dart';
@@ -14,14 +15,14 @@ class FirestoreService {
 
   FirestoreService() {
     _usersRef = _db
-        .collection('users')
+        .collection(AnaSoilCollections.users)
         .withConverter<UserModel>(
           fromFirestore: (snapshots, _) => UserModel.fromFirestore(snapshots),
           toFirestore: (user, _) => user.toFirestore(),
         );
 
     _documentsRef = _db
-        .collection('documents')
+        .collection(AnaSoilCollections.documents)
         .withConverter<DocumentModel>(
           fromFirestore: (snapshots, _) =>
               DocumentModel.fromFirestore(snapshots),
@@ -29,7 +30,7 @@ class FirestoreService {
         );
 
     _analysesRef = _db
-        .collection('soilAnalyses')
+        .collection(AnaSoilCollections.analyses)
         .withConverter<SoilAnalysisModel>(
           fromFirestore: (snapshots, _) =>
               SoilAnalysisModel.fromFirestore(snapshots),
@@ -52,10 +53,21 @@ class FirestoreService {
     });
   }
 
+  Future<UserModel?> getUserByEmail(String email) async {
+    final snapshot = await _usersRef
+        .where(UserFields.email, isEqualTo: email.trim().toLowerCase())
+        .limit(1)
+        .get();
+
+    if (snapshot.docs.isEmpty) return null;
+    return snapshot.docs.first.data();
+  }
+
   Future<void> addUser(String uid, UserModel user) async {
     // validação de email único
+    final normalizedEmail = user.email.trim().toLowerCase();
     final existingUsers = await _usersRef
-        .where('email', isEqualTo: user.email)
+        .where(UserFields.email, isEqualTo: normalizedEmail)
         .limit(1)
         .get();
 
@@ -68,8 +80,11 @@ class FirestoreService {
 
   Future<void> updateUser(String userId, UserModel user) async {
     // validação de email único
+    await _ensureCanChangeAdminRole(userId, user.userRole);
+
+    final normalizedEmail = user.email.trim().toLowerCase();
     final existingUsers = await _usersRef
-        .where('email', isEqualTo: user.email)
+        .where(UserFields.email, isEqualTo: normalizedEmail)
         .limit(2)
         .get();
 
@@ -84,17 +99,22 @@ class FirestoreService {
   }
 
   Future<void> updateUserStatus(String userId, bool active) async {
-    await _usersRef.doc(userId).update({'active': active});
+    if (!active) {
+      await _ensureCanDeactivateUser(userId);
+    }
+
+    await _usersRef.doc(userId).update({UserFields.active: active});
   }
 
   Future<void> deleteUser(String userId) async {
-    await _usersRef.doc(userId).update({'active': false});
+    await _ensureCanDeactivateUser(userId);
+    await _usersRef.doc(userId).update({UserFields.active: false});
   }
 
   /// Método para verificar se um email já existe no sistema
   Future<bool> emailExists(String email, {String? excludeUserId}) async {
     final query = await _usersRef
-        .where('email', isEqualTo: email)
+        .where(UserFields.email, isEqualTo: email.trim().toLowerCase())
         .limit(2)
         .get();
 
@@ -106,13 +126,12 @@ class FirestoreService {
   }
 
   Future<bool> canDeleteUser(String userId) async {
-    // simulação: verifica se o usuário não é um administrador
-    final userDoc = await _usersRef.doc(userId).get();
-    if (userDoc.exists) {
-      final user = userDoc.data()!;
-      return user.role != 'admin';
+    try {
+      await _ensureCanDeactivateUser(userId);
+      return true;
+    } catch (_) {
+      return false;
     }
-    return false;
   }
 
   Future<void> linkFarmerToConsultant(
@@ -128,21 +147,23 @@ class FirestoreService {
         final consultantDoc = await transaction.get(consultantRef);
 
         if (!farmerDoc.exists || !consultantDoc.exists) {
-          throw Exception("Usuário (agricultor ou consultor) não encontrado.");
+          throw Exception('Usuário (agricultor ou consultor) não encontrado.');
         }
 
+        _ensureRelationRoles(farmerDoc.data(), consultantDoc.data());
+
         transaction.update(farmerRef, {
-          'consultorIds': FieldValue.arrayUnion([consultantId]),
+          UserFields.consultorIds: FieldValue.arrayUnion([consultantId]),
         });
 
         transaction.update(consultantRef, {
-          'agricultorIds': FieldValue.arrayUnion([farmerId]),
+          UserFields.agricultorIds: FieldValue.arrayUnion([farmerId]),
         });
       });
 
-      log("Vínculo entre agricultor e consultor realizado com sucesso!");
+      log('Vínculo entre agricultor e consultor realizado com sucesso!');
     } catch (e) {
-      log("Erro ao tentar vincular usuários: $e");
+      log('Erro ao tentar vincular usuários: $e');
       rethrow;
     }
   }
@@ -160,21 +181,23 @@ class FirestoreService {
         final consultantDoc = await transaction.get(consultantRef);
 
         if (!farmerDoc.exists || !consultantDoc.exists) {
-          throw Exception("Usuário (agricultor ou consultor) não encontrado.");
+          throw Exception('Usuário (agricultor ou consultor) não encontrado.');
         }
 
+        _ensureRelationRoles(farmerDoc.data(), consultantDoc.data());
+
         transaction.update(farmerRef, {
-          'consultorIds': FieldValue.arrayRemove([consultantId]),
+          UserFields.consultorIds: FieldValue.arrayRemove([consultantId]),
         });
 
         transaction.update(consultantRef, {
-          'agricultorIds': FieldValue.arrayRemove([farmerId]),
+          UserFields.agricultorIds: FieldValue.arrayRemove([farmerId]),
         });
       });
 
-      log("Vínculo entre agricultor e consultor removido com sucesso!");
+      log('Vínculo entre agricultor e consultor removido com sucesso!');
     } catch (e) {
-      log("Erro ao tentar desvincular usuários: $e");
+      log('Erro ao tentar desvincular usuários: $e');
       rethrow;
     }
   }
@@ -189,29 +212,95 @@ class FirestoreService {
     return snapshot.docs.map((doc) => doc.data()).toList();
   }
 
+  Future<void> _ensureCanDeactivateUser(String userId) async {
+    final userDoc = await _usersRef.doc(userId).get();
+    if (!userDoc.exists || userDoc.data() == null) {
+      throw Exception('Usuário não encontrado.');
+    }
+
+    final user = userDoc.data()!;
+    if (user.userRole == UserRole.admin) {
+      final activeAdmins = await _activeAdminCount();
+      if (activeAdmins <= 1) {
+        throw Exception(
+          'Não é possível desativar o último administrador ativo.',
+        );
+      }
+    }
+  }
+
+  Future<void> _ensureCanChangeAdminRole(
+    String userId,
+    UserRole nextRole,
+  ) async {
+    final userDoc = await _usersRef.doc(userId).get();
+    if (!userDoc.exists || userDoc.data() == null) return;
+
+    final current = userDoc.data()!;
+    if (current.userRole == UserRole.admin && nextRole != UserRole.admin) {
+      final activeAdmins = await _activeAdminCount();
+      if (activeAdmins <= 1) {
+        throw Exception(
+          'Não é possível remover o papel do último administrador ativo.',
+        );
+      }
+    }
+  }
+
+  Future<int> _activeAdminCount() async {
+    final snapshot = await _usersRef
+        .where(UserFields.role, isEqualTo: UserRole.admin.firestoreValue)
+        .where(UserFields.active, isEqualTo: true)
+        .get();
+    return snapshot.docs.length;
+  }
+
+  void _ensureRelationRoles(UserModel? farmer, UserModel? consultant) {
+    if (farmer == null || consultant == null) {
+      throw Exception('Usuário (agricultor ou consultor) não encontrado.');
+    }
+    if (!farmer.active || !consultant.active) {
+      throw Exception('Não é possível vincular usuários inativos.');
+    }
+    if (farmer.userRole != UserRole.farmer ||
+        consultant.userRole != UserRole.consultant) {
+      throw Exception('Vínculo deve ser entre Agricultor e Consultor.');
+    }
+  }
+
   // ==================== DOCUMENTS ====================
 
   Stream<List<DocumentModel>> getDocuments() {
-    return _documentsRef
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    return _documentsRef.snapshots().map((snapshot) {
+      final documents = snapshot.docs
+          .map((doc) => doc.data())
+          .where((doc) => doc.active)
+          .toList();
+
+      documents.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return documents;
+    });
   }
 
   Future<void> deleteDocument(String documentId) async {
-    await _documentsRef.doc(documentId).delete();
+    await _documentsRef.doc(documentId).update({'active': false});
   }
 
   // ==================== SOIL ANALYSES ====================
 
   Stream<List<SoilAnalysisModel>> getAnalyses() {
-    return _analysesRef
-        .orderBy('createdAt', descending: true)
-        .snapshots()
-        .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
+    return _analysesRef.snapshots().map((snapshot) {
+      final analyses = snapshot.docs
+          .map((doc) => doc.data())
+          .where((analysis) => analysis.active)
+          .toList();
+
+      analyses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
+      return analyses;
+    });
   }
 
   Future<void> deleteAnalysis(String analysisId) async {
-    await _analysesRef.doc(analysisId).delete();
+    await _analysesRef.doc(analysisId).update({'active': false});
   }
 }

@@ -2,8 +2,7 @@ import 'dart:developer';
 
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
-import 'package:anasoil_admin/core/utils/command.dart';
-import 'package:anasoil_admin/core/utils/result.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 
 class UserRelationViewModel extends ChangeNotifier {
@@ -35,7 +34,7 @@ class UserRelationViewModel extends ChangeNotifier {
         _updateLinkedUsers(user);
         return Result.ok(user);
       } else {
-        return Result.error(Exception("Usuário não encontrado"));
+        return Result.error(Exception('Usuário não encontrado'));
       }
     } catch (e) {
       return Result.error(Exception(e.toString()));
@@ -44,17 +43,21 @@ class UserRelationViewModel extends ChangeNotifier {
 
   void _updateLinkedUsers(UserModel user) {
     log('All users: ${_allUsers.toString()}');
-    if (user.role == 'agricultor') {
+    if (user.userRole == UserRole.farmer) {
       linkedConsultors = _allUsers
           .where(
-            (u) => u.role == 'consultor' && user.consultorIds.contains(u.id),
+            (u) =>
+                u.userRole == UserRole.consultant &&
+                user.consultorIds.contains(u.id),
           )
           .toList();
       log('Linked consultors: ${linkedConsultors.length}');
-    } else if (user.role == 'consultor') {
+    } else if (user.userRole == UserRole.consultant) {
       linkedAgricultors = _allUsers
           .where(
-            (u) => u.role == 'agricultor' && user.agricultorIds.contains(u.id),
+            (u) =>
+                u.userRole == UserRole.farmer &&
+                user.agricultorIds.contains(u.id),
           )
           .toList();
       log('Linked agricultors: ${linkedAgricultors.length}');
@@ -116,7 +119,7 @@ class UserRelationViewModel extends ChangeNotifier {
     return allUsers
         .where(
           (user) =>
-              user.role == 'consultor' &&
+              user.userRole == UserRole.consultant &&
               user.active &&
               !agricultor.consultorIds.contains(user.id),
         )
@@ -128,7 +131,7 @@ class UserRelationViewModel extends ChangeNotifier {
     return allUsers
         .where(
           (user) =>
-              user.role == 'agricultor' &&
+              user.userRole == UserRole.farmer &&
               user.active &&
               !consultor.agricultorIds.contains(user.id),
         )

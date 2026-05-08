@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/dependency_injection.dart';
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/soil_analysis.dart';
 import '../../utils/result.dart';
 import 'analysis_viewmodel.dart';
@@ -37,7 +38,7 @@ class _HistoryPageState extends State<HistoryPage> {
         title: const Text('Excluir Análise'),
         content: Text(
           'Deseja realmente excluir a análise '
-          '${analysis.farmName.isNotEmpty ? analysis.farmName : analysis.sampleCode}?',
+          '${analysis.propertyName.isNotEmpty ? analysis.propertyName : analysis.labNumber}?',
         ),
         actions: [
           TextButton(
@@ -146,89 +147,92 @@ class _HistoryPageState extends State<HistoryPage> {
     return GestureDetector(
       onTap: () => context.push('/analysis/detail', extra: analysis),
       child: Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.grey[200]!),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(8),
-            blurRadius: 4,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Header
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: Colors.green[50],
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(Icons.grass, color: Colors.green[700], size: 24),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      analysis.farmName.isNotEmpty
-                          ? analysis.farmName
-                          : 'Análise ${analysis.sampleCode}',
-                      style: const TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.black87,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      dateStr,
-                      style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                    ),
-                  ],
-                ),
-              ),
-              IconButton(
-                icon: Icon(Icons.delete_outline, color: Colors.red[400]),
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
-                onPressed: () => _deleteAnalysis(analysis),
-              ),
-            ],
-          ),
-          // const SizedBox(height: 12),
-
-          // Info rows
-          // _buildInfoChips(analysis),
-
-          // Document info
-          if (analysis.solicitante != null || analysis.interessado != null) ...[
-            const SizedBox(height: 10),
-            if (analysis.solicitante != null)
-              _buildInfoRow(Icons.business, analysis.solicitante!),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.grey[200]!),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withAlpha(8),
+              blurRadius: 4,
+              offset: const Offset(0, 2),
+            ),
           ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Header
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: Colors.green[50],
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Icon(Icons.grass, color: Colors.green[700], size: 24),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        analysis.propertyName.isNotEmpty
+                            ? analysis.propertyName
+                            : 'Análise ${analysis.labNumber}',
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.black87,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        dateStr,
+                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  icon: Icon(Icons.delete_outline, color: Colors.red[400]),
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  onPressed: () => _deleteAnalysis(analysis),
+                ),
+              ],
+            ),
+            // const SizedBox(height: 12),
 
-          const SizedBox(height: 10),
+            // Info rows
+            // _buildInfoChips(analysis),
 
-          // DMLab + Amostra
-          Row(
-            children: [
-              _buildTag('DMLab ${analysis.dmlabNumber}', Colors.blue),
-              const SizedBox(width: 8),
-              _buildTag('Amostra ${analysis.sampleNumber}', Colors.grey),
+            // Document info
+            if (analysis.requester != null || analysis.stakeholder != null) ...[
+              const SizedBox(height: 10),
+              if (analysis.requester != null)
+                _buildInfoRow(Icons.business, analysis.requester!),
             ],
-          ),
-        ],
-      ),
+
+            const SizedBox(height: 10),
+
+            // Amostra
+            Row(
+              children: [
+                _buildTag(
+                  'Amostra ${analysis.labNumber}',
+                  foreground: AppTheme.primaryGreenDark,
+                  background: AppTheme.primaryGreenSoft,
+                  border: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -249,20 +253,25 @@ class _HistoryPageState extends State<HistoryPage> {
     );
   }
 
-  Widget _buildTag(String text, MaterialColor color) {
+  Widget _buildTag(
+    String text, {
+    required Color foreground,
+    required Color background,
+    required Color border,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        color: color[50],
+        color: background,
         borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: color[200]!),
+        border: Border.all(color: border),
       ),
       child: Text(
         text,
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.w500,
-          color: color[700],
+          color: foreground,
         ),
       ),
     );

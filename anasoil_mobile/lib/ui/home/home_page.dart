@@ -300,9 +300,9 @@ class HomePage extends StatelessWidget {
                 for (var i = 0; i < recent.length; i++) ...[
                   if (i > 0) const SizedBox(height: 8),
                   _buildActivityItem(
-                    title: recent[i].farmName.isNotEmpty
-                        ? 'Análise de Solo - ${recent[i].farmName}'
-                        : 'Análise de Solo - ${recent[i].sampleCode}',
+                    title: recent[i].propertyName.isNotEmpty
+                        ? 'Análise de Solo - ${recent[i].propertyName}'
+                        : 'Análise de Solo - ${recent[i].labNumber}',
                     subtitle: _buildActivitySubtitle(
                       recent[i],
                       currentUserId,
@@ -310,7 +310,8 @@ class HomePage extends StatelessWidget {
                       farmersViewModel,
                     ),
                     icon: Icons.grass,
-                    onTap: () => context.push('/analysis/detail', extra: recent[i]),
+                    onTap: () =>
+                        context.push('/analysis/detail', extra: recent[i]),
                   ),
                 ],
               ],

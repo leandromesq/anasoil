@@ -71,6 +71,30 @@ class SoilAnalysisRepositoryRemote extends SoilAnalysisRepository {
         return Result.error(Exception('Usuário não autenticado'));
       }
 
+      if (analysis.documentId == null || analysis.documentId!.isEmpty) {
+        return Result.error(
+          Exception('Análise precisa estar vinculada a um documento.'),
+        );
+      }
+
+      final duplicateResult = await _firestoreService
+          .soilAnalysisExistsForDocumentSample(
+            userId: user.uid,
+            documentId: analysis.documentId!,
+            labNumber: analysis.labNumber,
+          );
+
+      if (duplicateResult is Error<bool>) {
+        return Result.error(duplicateResult.error);
+      }
+      if (duplicateResult is Ok<bool> && duplicateResult.value) {
+        return Result.error(
+          Exception(
+            'Análise ${analysis.labNumber} já foi salva para este documento.',
+          ),
+        );
+      }
+
       final toSave = analysis.copyWith(userId: user.uid);
       final result = await _firestoreService.createSoilAnalysis(toSave);
 

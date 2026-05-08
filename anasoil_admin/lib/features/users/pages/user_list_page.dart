@@ -3,6 +3,7 @@ import 'package:anasoil_admin/features/users/viewmodels/user_list_viewmodel.dart
 import 'package:anasoil_admin/features/users/widgets/users_data_table.dart';
 import 'package:anasoil_admin/features/users/widgets/users_filters.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
+import 'package:anasoil_admin/shared/widgets/deferred_table.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -26,7 +27,6 @@ class _UserListPageState extends State<UserListPage> {
   @override
   void initState() {
     super.initState();
-    widget.viewModel.fetchUsersCommand.execute();
   }
 
   @override
@@ -185,35 +185,45 @@ class _UserListPageState extends State<UserListPage> {
             child: ListenableBuilder(
               listenable: Listenable.merge([
                 widget.viewModel,
+                widget.viewModel.fetchUsersCommand,
                 widget.viewModel.deleteUserCommand,
               ]),
               builder: (context, _) {
-                final isLoading =
-                    widget.viewModel.fetchUsersCommand.value.isRunning &&
-                    widget.viewModel.users.isEmpty;
+                return DeferredTable(
+                  onReady: widget.viewModel.users.isEmpty
+                      ? () => widget.viewModel.fetchUsersCommand.execute()
+                      : null,
+                  builder: () {
+                    final isLoading =
+                        widget.viewModel.fetchUsersCommand.value.isRunning &&
+                        widget.viewModel.users.isEmpty;
 
-                final filteredUsers = _applyFilters(widget.viewModel.users);
+                    final filteredUsers = _applyFilters(widget.viewModel.users);
 
-                return UsersDataTable(
-                  users: filteredUsers,
-                  isLoading: isLoading,
-                  sortColumn: sortColumn,
-                  sortAscending: sortAscending,
-                  onSort: (columnIndex) {
-                    setState(() {
-                      if (sortColumn == columnIndex) {
-                        sortAscending = !sortAscending;
-                      } else {
-                        sortColumn = columnIndex;
-                        sortAscending = true;
-                      }
-                    });
+                    return UsersDataTable(
+                      users: filteredUsers,
+                      isLoading: isLoading,
+                      sortColumn: sortColumn,
+                      sortAscending: sortAscending,
+                      onSort: (columnIndex) {
+                        setState(() {
+                          if (sortColumn == columnIndex) {
+                            sortAscending = !sortAscending;
+                          } else {
+                            sortColumn = columnIndex;
+                            sortAscending = true;
+                          }
+                        });
+                      },
+                      onEdit: (user) => context.go('/user/edit/${user.id}'),
+                      onStatusChanged: (user, newStatus) =>
+                          _handleStatusChange(user, newStatus),
+                      onManageRelations: (user) =>
+                          context.go('/user/${user.id}/relations'),
+                      onRefresh: widget.viewModel.fetchUsersCommand.execute,
+                      isRefreshing: widget.viewModel.fetchUsersCommand.running,
+                    );
                   },
-                  onEdit: (user) => context.go('/user/edit/${user.id}'),
-                  onStatusChanged: (user, newStatus) =>
-                      _handleStatusChange(user, newStatus),
-                  onManageRelations: (user) =>
-                      context.go('/user/${user.id}/relations'),
                 );
               },
             ),

@@ -1,6 +1,7 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-/// Modelo de análise de solo extraída do certificado DMLab.
+/// Modelo de análise de solo extraída do certificado de laboratório.
 ///
 /// Parâmetros avaliados:
 /// - Matéria Orgânica (dag/kg)
@@ -19,17 +20,17 @@ class SoilAnalysis {
   final String? documentId;
   final String userId;
 
-  // Identificação da amostra
-  final String dmlabNumber;
+  // Identificação do laboratório
+  final String labNumber;
   final DateTime analysisDate;
-  final String sampleNumber;
-  final String sampleCode;
-  final String farmName;
+
+  // Contexto da propriedade
+  final String propertyName;
   final double? depthCm;
 
-  // Informações do documento
-  final String? solicitante;
-  final String? interessado;
+  // Metadados do laudo
+  final String? requester;
+  final String? stakeholder;
   final String? dataEntrada;
   final String? material;
 
@@ -46,20 +47,19 @@ class SoilAnalysis {
   final double? pst; // PST (%)
   final double? mPercent; // Saturação por Al m (%)
 
+  final bool active;
   final DateTime createdAt;
 
   const SoilAnalysis({
     required this.id,
     required this.userId,
     this.documentId,
-    required this.dmlabNumber,
+    required this.labNumber,
     required this.analysisDate,
-    required this.sampleNumber,
-    required this.sampleCode,
-    required this.farmName,
+    required this.propertyName,
     this.depthCm,
-    this.solicitante,
-    this.interessado,
+    this.requester,
+    this.stakeholder,
     this.dataEntrada,
     this.material,
     this.organicMatter,
@@ -73,66 +73,68 @@ class SoilAnalysis {
     this.vPercent,
     this.pst,
     this.mPercent,
+    this.active = true,
     required this.createdAt,
   });
 
   factory SoilAnalysis.fromFirestore(String id, Map<String, dynamic> data) {
     return SoilAnalysis(
       id: id,
-      userId: data['userId'] as String? ?? '',
-      documentId: data['documentId'] as String?,
-      dmlabNumber: data['dmlabNumber'] as String? ?? '',
+      userId: data[AnalysisFields.userId] as String? ?? '',
+      documentId: data[AnalysisFields.documentId] as String?,
+      labNumber: data[AnalysisFields.labNumber] as String? ?? '',
       analysisDate:
-          (data['analysisDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
-      sampleNumber: data['sampleNumber'] as String? ?? '',
-      sampleCode: data['sampleCode'] as String? ?? '',
-      farmName: data['farmName'] as String? ?? '',
-      depthCm: (data['depthCm'] as num?)?.toDouble(),
-      solicitante: data['solicitante'] as String?,
-      interessado: data['interessado'] as String?,
-      dataEntrada: data['dataEntrada'] as String?,
-      material: data['material'] as String?,
-      organicMatter: (data['organicMatter'] as num?)?.toDouble(),
-      phCacl2: (data['phCacl2'] as num?)?.toDouble(),
-      al3Plus: (data['al3Plus'] as num?)?.toDouble(),
-      ca2Plus: (data['ca2Plus'] as num?)?.toDouble(),
-      mg2Plus: (data['mg2Plus'] as num?)?.toDouble(),
-      kPlus: (data['kPlus'] as num?)?.toDouble(),
-      ctcEfetiva: (data['ctcEfetiva'] as num?)?.toDouble(),
-      ctcPh7: (data['ctcPh7'] as num?)?.toDouble(),
-      vPercent: (data['vPercent'] as num?)?.toDouble(),
-      pst: (data['pst'] as num?)?.toDouble(),
-      mPercent: (data['mPercent'] as num?)?.toDouble(),
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
+          (data[AnalysisFields.analysisDate] as Timestamp?)?.toDate() ??
+          DateTime.now(),
+      propertyName: data[AnalysisFields.propertyName] as String? ?? '',
+      depthCm: (data[AnalysisFields.depthCm] as num?)?.toDouble(),
+      requester: data[AnalysisFields.requester] as String?,
+      stakeholder: data[AnalysisFields.stakeholder] as String?,
+      dataEntrada: data[AnalysisFields.dataEntrada] as String?,
+      material: data[AnalysisFields.material] as String?,
+      organicMatter: (data[AnalysisFields.organicMatter] as num?)?.toDouble(),
+      phCacl2: (data[AnalysisFields.phCacl2] as num?)?.toDouble(),
+      al3Plus: (data[AnalysisFields.al3Plus] as num?)?.toDouble(),
+      ca2Plus: (data[AnalysisFields.ca2Plus] as num?)?.toDouble(),
+      mg2Plus: (data[AnalysisFields.mg2Plus] as num?)?.toDouble(),
+      kPlus: (data[AnalysisFields.kPlus] as num?)?.toDouble(),
+      ctcEfetiva: (data[AnalysisFields.ctcEfetiva] as num?)?.toDouble(),
+      ctcPh7: (data[AnalysisFields.ctcPh7] as num?)?.toDouble(),
+      vPercent: (data[AnalysisFields.vPercent] as num?)?.toDouble(),
+      pst: (data[AnalysisFields.pst] as num?)?.toDouble(),
+      mPercent: (data[AnalysisFields.mPercent] as num?)?.toDouble(),
+      active: data[AnalysisFields.active] as bool? ?? true,
+      createdAt:
+          (data[AnalysisFields.createdAt] as Timestamp?)?.toDate() ??
+          DateTime.now(),
     );
   }
 
   Map<String, dynamic> toFirestore() {
     return {
-      'userId': userId,
-      'documentId': documentId,
-      'dmlabNumber': dmlabNumber,
-      'analysisDate': Timestamp.fromDate(analysisDate),
-      'sampleNumber': sampleNumber,
-      'sampleCode': sampleCode,
-      'farmName': farmName,
-      'depthCm': depthCm,
-      'solicitante': solicitante,
-      'interessado': interessado,
-      'dataEntrada': dataEntrada,
-      'material': material,
-      'organicMatter': organicMatter,
-      'phCacl2': phCacl2,
-      'al3Plus': al3Plus,
-      'ca2Plus': ca2Plus,
-      'mg2Plus': mg2Plus,
-      'kPlus': kPlus,
-      'ctcEfetiva': ctcEfetiva,
-      'ctcPh7': ctcPh7,
-      'vPercent': vPercent,
-      'pst': pst,
-      'mPercent': mPercent,
-      'createdAt': FieldValue.serverTimestamp(),
+      AnalysisFields.userId: userId,
+      AnalysisFields.documentId: documentId,
+      AnalysisFields.labNumber: labNumber,
+      AnalysisFields.analysisDate: Timestamp.fromDate(analysisDate),
+      AnalysisFields.propertyName: propertyName,
+      AnalysisFields.depthCm: depthCm,
+      AnalysisFields.requester: requester,
+      AnalysisFields.stakeholder: stakeholder,
+      AnalysisFields.dataEntrada: dataEntrada,
+      AnalysisFields.material: material,
+      AnalysisFields.organicMatter: organicMatter,
+      AnalysisFields.phCacl2: phCacl2,
+      AnalysisFields.al3Plus: al3Plus,
+      AnalysisFields.ca2Plus: ca2Plus,
+      AnalysisFields.mg2Plus: mg2Plus,
+      AnalysisFields.kPlus: kPlus,
+      AnalysisFields.ctcEfetiva: ctcEfetiva,
+      AnalysisFields.ctcPh7: ctcPh7,
+      AnalysisFields.vPercent: vPercent,
+      AnalysisFields.pst: pst,
+      AnalysisFields.mPercent: mPercent,
+      AnalysisFields.active: active,
+      AnalysisFields.createdAt: FieldValue.serverTimestamp(),
     };
   }
 
@@ -140,14 +142,12 @@ class SoilAnalysis {
     String? id,
     String? userId,
     String? documentId,
-    String? dmlabNumber,
+    String? labNumber,
     DateTime? analysisDate,
-    String? sampleNumber,
-    String? sampleCode,
-    String? farmName,
+    String? propertyName,
     double? depthCm,
-    String? solicitante,
-    String? interessado,
+    String? requester,
+    String? stakeholder,
     String? dataEntrada,
     String? material,
     double? organicMatter,
@@ -161,20 +161,19 @@ class SoilAnalysis {
     double? vPercent,
     double? pst,
     double? mPercent,
+    bool? active,
     DateTime? createdAt,
   }) {
     return SoilAnalysis(
       id: id ?? this.id,
       userId: userId ?? this.userId,
       documentId: documentId ?? this.documentId,
-      dmlabNumber: dmlabNumber ?? this.dmlabNumber,
+      labNumber: labNumber ?? this.labNumber,
       analysisDate: analysisDate ?? this.analysisDate,
-      sampleNumber: sampleNumber ?? this.sampleNumber,
-      sampleCode: sampleCode ?? this.sampleCode,
-      farmName: farmName ?? this.farmName,
+      propertyName: propertyName ?? this.propertyName,
       depthCm: depthCm ?? this.depthCm,
-      solicitante: solicitante ?? this.solicitante,
-      interessado: interessado ?? this.interessado,
+      requester: requester ?? this.requester,
+      stakeholder: stakeholder ?? this.stakeholder,
       dataEntrada: dataEntrada ?? this.dataEntrada,
       material: material ?? this.material,
       organicMatter: organicMatter ?? this.organicMatter,
@@ -188,6 +187,7 @@ class SoilAnalysis {
       vPercent: vPercent ?? this.vPercent,
       pst: pst ?? this.pst,
       mPercent: mPercent ?? this.mPercent,
+      active: active ?? this.active,
       createdAt: createdAt ?? this.createdAt,
     );
   }
