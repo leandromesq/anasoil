@@ -2,6 +2,7 @@ import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/core/services/auth_service.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
+import 'package:anasoil_admin/shared/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -81,12 +82,9 @@ class SettingsPage extends StatelessWidget {
                     ),
                     Divider(height: 1),
                     ListTile(
-                      leading: Icon(
-                        PhosphorIcons.leaf(),
-                        color: AppTheme.primaryGreen,
-                      ),
-                      title: Text('Sistema de Análise de Solo'),
-                      subtitle: Text(
+                      leading: const AppLogo(size: 24),
+                      title: const Text('Sistema de Análise de Solo'),
+                      subtitle: const Text(
                         'Gestão de usuários, documentos e análises',
                       ),
                     ),
@@ -116,9 +114,6 @@ class SettingsPage extends StatelessWidget {
   }
 
   Widget _buildCard(BuildContext context, {required Widget child}) {
-    return Card(
-      margin: EdgeInsets.zero,
-      child: child,
-    );
+    return Card(margin: EdgeInsets.zero, child: child);
   }
 }

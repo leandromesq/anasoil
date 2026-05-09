@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../domain/models/login_credentials.dart';
+import '../shared/app_logo.dart';
 import '../../utils/result.dart';
 import 'auth_viewmodel.dart';
 
@@ -69,7 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Logo
-                  Icon(Icons.eco, size: 80, color: Colors.green[700]),
+                  const AppLogo(size: 80),
                   const SizedBox(height: 16),
 
                   // Título

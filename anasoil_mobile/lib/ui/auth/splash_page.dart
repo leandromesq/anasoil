@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../shared/app_logo.dart';
 
 /// Tela de splash screen inicial
 class SplashPage extends StatelessWidget {
@@ -13,7 +14,7 @@ class SplashPage extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // Logo do AnaSoil
-            Icon(Icons.eco, size: 120, color: Colors.green[700]),
+            const AppLogo(size: 120),
             const SizedBox(height: 24),
             Text(
               'AnaSoil',

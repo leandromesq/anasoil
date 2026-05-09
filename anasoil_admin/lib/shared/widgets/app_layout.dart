@@ -1,6 +1,7 @@
 import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:anasoil_admin/shared/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -101,19 +102,7 @@ class _AppDrawer extends StatelessWidget {
             decoration: const BoxDecoration(color: AppTheme.primaryGreen),
             child: Row(
               children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: AppTheme.baseWhite,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    PhosphorIcons.leaf(),
-                    color: AppTheme.primaryGreen,
-                    size: 28,
-                  ),
-                ),
+                const AppLogo(size: 48),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -274,19 +263,7 @@ class _AppSidebar extends StatelessWidget {
             padding: const EdgeInsets.all(24),
             child: Row(
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(
-                    PhosphorIcons.leaf(),
-                    color: AppTheme.baseWhite,
-                    size: 24,
-                  ),
-                ),
+                const AppLogo(size: 40),
                 const SizedBox(width: 12),
                 const Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

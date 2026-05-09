@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:get_it/get_it.dart';
 import '../profile/profile_viewmodel.dart';
+import 'app_logo.dart';
 
 /// AppBar comum do aplicativo com logo, notificações e avatar
 class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -34,14 +35,7 @@ class CommonAppBar extends StatelessWidget implements PreferredSizeWidget {
               // Logo e nome do app
               Row(
                 children: [
-                  Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color: Colors.green[700],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.eco, color: Colors.white, size: 20),
-                  ),
+                  const AppLogo(size: 32),
                   const SizedBox(width: 8),
                   const Text(
                     'AnaSoil',

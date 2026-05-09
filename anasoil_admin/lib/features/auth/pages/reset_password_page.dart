@@ -1,6 +1,7 @@
 import 'package:anasoil_admin/core/services/auth_service.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:anasoil_admin/shared/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:phosphor_flutter/phosphor_flutter.dart';
@@ -71,19 +72,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // Logo
-                Container(
-                  width: 56,
-                  height: 56,
-                  decoration: BoxDecoration(
-                    color: AppTheme.primaryGreen,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(
-                    PhosphorIcons.leaf(),
-                    color: AppTheme.baseWhite,
-                    size: 32,
-                  ),
-                ),
+                const AppLogo(size: 56),
                 const SizedBox(height: 16),
                 const Text(
                   'Redefinir Senha',

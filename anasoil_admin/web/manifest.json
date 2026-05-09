@@ -1,11 +1,11 @@
 {
-    "name": "anasoil_admin",
-    "short_name": "anasoil_admin",
+    "name": "AnaSoil Admin",
+    "short_name": "AnaSoil",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#2D5A32",
+    "theme_color": "#2D5A32",
+    "description": "AnaSoil Admin",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
