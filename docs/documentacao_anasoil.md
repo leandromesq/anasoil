@@ -623,7 +623,7 @@ sequenceDiagram
 
 ## 4. Diagrama de Caso de Uso
 
-O AnaSoil possui três atores e dezesseis casos de uso distribuídos
+O AnaSoil possui três atores e seis casos de uso principais, distribuídos
 entre o aplicativo móvel e a plataforma web administrativa.
 
 ```mermaid
@@ -633,53 +633,29 @@ graph TD
     A3((Administrador))
 
     subgraph "Aplicativo Móvel"
-        UC01["Autenticar usuário"]
-        UC02["Recuperar senha"]
-        UC03["Gerenciar perfil"]
-        UC04["Importar documento PDF"]
-        UC05["Gerar análise de solo"]
-        UC06["Consultar histórico"]
-        UC07["Visualizar detalhes da análise"]
-        UC08["Gerenciar documentos"]
-        UC09["Consultar agricultores vinculados"]
+        UC01["Importar Documento"]
+        UC02["Extrair e Salvar Análises"]
+        UC03["Consultar Histórico"]
+        UC05["Gerenciar Perfil"]
     end
 
     subgraph "Plataforma Web Administrativa"
-        UC10["Autenticar administrador"]
-        UC11["Gerenciar usuários"]
-        UC12["Vincular agricultor e consultor"]
-        UC13["Consultar documentos"]
-        UC14["Consultar análises"]
-        UC15["Remover documentos"]
-        UC16["Remover análises"]
+        UC04["Gerenciar Relações"]
+        UC06["Gerenciar Usuários"]
     end
 
     A1 --> UC01
     A1 --> UC02
     A1 --> UC03
-    A1 --> UC04
     A1 --> UC05
-    A1 --> UC06
-    A1 --> UC07
-    A1 --> UC08
 
     A2 --> UC01
     A2 --> UC02
     A2 --> UC03
-    A2 --> UC04
     A2 --> UC05
-    A2 --> UC06
-    A2 --> UC07
-    A2 --> UC08
-    A2 --> UC09
 
-    A3 --> UC10
-    A3 --> UC11
-    A3 --> UC12
-    A3 --> UC13
-    A3 --> UC14
-    A3 --> UC15
-    A3 --> UC16
+    A3 --> UC04
+    A3 --> UC06
 ```
 
 ---
