@@ -94,16 +94,16 @@ class ParameterClassifier {
     }
 
     add('M.O.', 'dag/kg', values.organicMatter, 1.5, 3.0);
-    add('pH', '', values.phCacl2, 4.5, 5.5);
-    add('Al³⁺', 'cmolc/dm³', values.al3Plus, 0.2, 0.5);
-    add('Ca²⁺', 'cmolc/dm³', values.ca2Plus, 2.0, 4.0);
-    add('Mg²⁺', 'cmolc/dm³', values.mg2Plus, 0.5, 1.0);
-    add('K⁺', 'cmolc/dm³', values.kPlus, 0.15, 0.30);
-    add('CTC efetiva', 'cmolc/dm³', values.ctcEfetiva, 2.5, 5.0);
-    add('CTC pH 7,0', 'cmolc/dm³', values.ctcPh7, 5.0, 10.0);
-    add('V%', '%', values.vPercent, 40, 60);
-    add('PST', '%', values.pst, 5, 10);
-    add('Sat. Al', '%', values.mPercent, 10, 30);
+    add('pH', '', values.phCacl2, 5.0, 6.0);
+    add('Al³⁺', 'cmolc/dm³', values.al3Plus, 0.5, 1.0);
+    add('Ca²⁺', 'cmolc/dm³', values.ca2Plus, 1.6, 3.0);
+    add('Mg²⁺', 'cmolc/dm³', values.mg2Plus, 0.4, 1.0);
+    add('K⁺', 'mg/dm³', values.kPlus, 30, 60);
+    add('CTC efetiva', 'cmolc/dm³', values.ctcEfetiva, 2.0, 4.0);
+    add('CTC pH 7,0', 'cmolc/dm³', values.ctcPh7, 5.0, 15.0);
+    add('V%', '%', values.vPercent, 50, 70);
+    add('PST', '%', values.pst, 6, 15);
+    add('Sat. Al', '%', values.mPercent, 30, 50);
 
     return results;
   }

@@ -157,7 +157,7 @@ class PdfExtractionService {
   ///
   /// Parâmetros que precisamos extrair (11 de análise + identificação):
   /// Mat.Org., pH, K, Ca, Mg, Al, SB (≈CTC efetiva), CTC (pH7), V%, m%
-  /// PST não aparece na tabela DMLab.
+  /// PST é preenchido com o valor de P (Resina), conforme orientação de domínio.
   List<SoilAnalysis> _parseAnalysesFromText(
     String text, {
     required String userId,
@@ -372,7 +372,7 @@ class PdfExtractionService {
           ctcEfetiva: ctcEfetiva,
           ctcPh7: _parseValue(at(12)),
           vPercent: _parseValue(at(13)),
-          pst: null,
+          pst: _parseValue(at(3)),
           mPercent: _parseValue(at(14)),
           createdAt: DateTime.now(),
         ),
