@@ -86,23 +86,36 @@ class HomePage extends StatelessWidget {
       child: InkWell(
         onTap: () => onNavigateToTab(1),
         borderRadius: BorderRadius.circular(AnaSoilRadius.lg),
-        child: AnaSoilSurface(
+        child: Container(
           width: double.infinity,
           padding: const EdgeInsets.all(32),
-          radius: AnaSoilRadius.lg,
-          borderColor: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              colors: [Color(0xFF2D5A32), Color(0xFF1B3A1F)],
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+            ),
+            borderRadius: BorderRadius.circular(AnaSoilRadius.lg),
+            boxShadow: [
+              BoxShadow(
+                color: AppTheme.primaryGreen.withValues(alpha: 0.25),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
           child: Column(
             children: [
               Container(
                 padding: const EdgeInsets.all(AnaSoilSpacing.lg),
-                decoration: const BoxDecoration(
-                  color: AppTheme.primaryGreen,
+                decoration: BoxDecoration(
+                  color: AppTheme.baseWhite.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
                   Icons.add,
                   color: AppTheme.baseWhite,
-                  size: 40,
+                  size: 44,
                 ),
               ),
               const SizedBox(height: AnaSoilSpacing.lg),
@@ -111,14 +124,17 @@ class HomePage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w700,
-                  color: AppTheme.baseGray900,
+                  color: AppTheme.baseWhite,
                 ),
               ),
               const SizedBox(height: AnaSoilSpacing.xs),
-              const Text(
+              Text(
                 'Importe um PDF com análise de solo para extrair e salvar amostras.',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 13, color: AppTheme.baseGray600),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: AppTheme.baseWhite.withValues(alpha: 0.75),
+                ),
               ),
             ],
           ),

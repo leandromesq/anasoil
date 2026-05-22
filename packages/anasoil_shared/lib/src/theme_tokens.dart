@@ -49,12 +49,12 @@ abstract final class AnaSoilSemanticColors {
   static const statusDanger = AnaSoilColors.secondaryRed;
   static const statusDangerSoft = AnaSoilColors.secondaryRedLight;
 
-  static const soilLow = Color(0xFFE53935);
-  static const soilLowSoft = Color(0xFFFFEBEE);
-  static const soilMedium = Color(0xFFFFA726);
-  static const soilMediumSoft = Color(0xFFFFF3E0);
-  static const soilHigh = Color(0xFF43A047);
-  static const soilHighSoft = Color(0xFFE8F5E9);
+  static const soilLow = Color(0xFFC0392B);
+  static const soilLowSoft = Color(0xFFF5E4E1);
+  static const soilMedium = Color(0xFFD4880C);
+  static const soilMediumSoft = Color(0xFFFCF0DB);
+  static const soilHigh = Color(0xFF2E7D32);
+  static const soilHighSoft = Color(0xFFE6F4E6);
 }
 
 abstract final class AnaSoilSpacing {

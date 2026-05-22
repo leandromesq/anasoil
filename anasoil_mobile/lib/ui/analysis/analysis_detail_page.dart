@@ -446,12 +446,13 @@ class AnalysisDetailPage extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 4,
-            height: 40,
+            width: 36,
+            height: 36,
             decoration: BoxDecoration(
-              color: color,
-              borderRadius: BorderRadius.circular(2),
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
             ),
+            child: Icon(Icons.circle, size: 10, color: color),
           ),
           const SizedBox(width: AnaSoilSpacing.md),
           Expanded(

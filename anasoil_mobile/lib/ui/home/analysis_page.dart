@@ -203,7 +203,17 @@ class _AnalysisPageState extends State<AnalysisPage> {
               ),
             ),
             const SizedBox(height: 16),
-            AnalysisWorkflowPanel(step: _viewModel.intakeState.step),
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              switchInCurve: Curves.easeOut,
+              switchOutCurve: Curves.easeIn,
+              transitionBuilder: (child, animation) =>
+                  FadeTransition(opacity: animation, child: child),
+              child: AnalysisWorkflowPanel(
+                key: ValueKey(_viewModel.intakeState.step),
+                step: _viewModel.intakeState.step,
+              ),
+            ),
             if (_inlineError != null) ...[
               const SizedBox(height: 12),
               AnaSoilInlineMessage(
