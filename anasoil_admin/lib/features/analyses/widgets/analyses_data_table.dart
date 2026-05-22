@@ -336,13 +336,11 @@ class _DesktopTable extends StatelessWidget {
         ];
 
         return SingleChildScrollView(
-          scrollDirection: Axis.horizontal,
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minWidth: availableWidth,
-              maxHeight: constraints.maxHeight,
-            ),
-            child: DataTable(
+          child: SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: ConstrainedBox(
+              constraints: BoxConstraints(minWidth: availableWidth),
+              child: DataTable(
                 sortColumnIndex: sortColumn,
                 sortAscending: sortAscending,
                 showCheckboxColumn: false,
@@ -418,6 +416,7 @@ class _DesktopTable extends StatelessWidget {
                     .toList(),
               ),
             ),
+          ),
         );
       },
     );
