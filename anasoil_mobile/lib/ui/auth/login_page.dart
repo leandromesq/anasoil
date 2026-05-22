@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -44,12 +45,7 @@ class _LoginPageState extends State<LoginPage> {
     final result = widget.viewModel.loginCommand.result;
     if (result is Error) {
       final error = result as Error;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, error.error.toString());
     } else if (result is Ok) {
       // Login bem-sucedido, redirecionar para a home
       context.go('/home');

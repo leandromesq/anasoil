@@ -1,3 +1,4 @@
+import 'dart:async' show unawaited;
 import 'package:flutter/material.dart';
 
 /// Wraps a table builder so the first frame renders a loading indicator,
@@ -22,8 +23,10 @@ class _DeferredTableState extends State<DeferredTable> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       await Future<void>.delayed(const Duration(milliseconds: 80));
       if (!mounted) return;
-      await widget.onReady?.call();
-      if (!mounted) return;
+      // Fire the fetch without awaiting — the skeleton inside the builder
+      // covers the loading window. Awaiting here would keep the spinner up
+      // until data arrives, bypassing the skeleton entirely.
+      unawaited(widget.onReady?.call());
       setState(() => _ready = true);
     });
   }

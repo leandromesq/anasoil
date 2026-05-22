@@ -256,17 +256,19 @@ class _MobileList extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Text(
-                          user.active ? 'Ativo' : 'Inativo',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            color: user.active
-                                ? AppTheme.primaryGreen
-                                : AppTheme.baseGray500,
+                        SizedBox(
+                          width: 52,
+                          child: Text(
+                            user.active ? 'Ativo' : 'Inativo',
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w500,
+                              color: user.active
+                                  ? AppTheme.primaryGreen
+                                  : AppTheme.baseGray500,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 8),
                         Switch(
                           value: user.active,
                           onChanged: (value) => onStatusChanged(user, value),
@@ -544,17 +546,19 @@ class _DesktopTable extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(
-                  user.active ? 'Ativo' : 'Inativo',
-                  style: TextStyle(
-                    color: user.active
-                        ? AppTheme.primaryGreen
-                        : AppTheme.baseGray500,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
+                SizedBox(
+                  width: 52,
+                  child: Text(
+                    user.active ? 'Ativo' : 'Inativo',
+                    style: TextStyle(
+                      color: user.active
+                          ? AppTheme.primaryGreen
+                          : AppTheme.baseGray500,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 8),
                 Switch(
                   value: user.active,
                   onChanged: (value) => onStatusChanged(user, value),

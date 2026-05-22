@@ -91,22 +91,12 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
     try {
       await locator<DocumentRepository>().deleteDocument(widget.documentId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Documento excluído com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-          ),
-        );
+        AnaSoilToast.success(context, 'Documento excluído com sucesso!');
         context.go('/documents');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao excluir: $e'),
-            backgroundColor: AppTheme.secondaryRed,
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro ao excluir: $e');
       }
     }
   }

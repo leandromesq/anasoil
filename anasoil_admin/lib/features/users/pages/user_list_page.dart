@@ -5,6 +5,7 @@ import 'package:anasoil_admin/features/users/widgets/users_filters.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_admin/shared/widgets/deferred_table.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
@@ -110,26 +111,16 @@ class _UserListPageState extends State<UserListPage> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Status do usuário ${newStatus ? 'ativado' : 'desativado'} com sucesso!',
-            ),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: const Duration(seconds: 1),
-          ),
+        AnaSoilToast.success(
+          context,
+          'Status do usuário ${newStatus ? 'ativado' : 'desativado'} com sucesso!',
         );
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Erro ao alterar status: ${e.toString().replaceFirst('Exception: ', '')}',
-            ),
-            backgroundColor: AppTheme.secondaryRed,
-            duration: const Duration(seconds: 1),
-          ),
+        AnaSoilToast.error(
+          context,
+          'Erro ao alterar status: ${e.toString().replaceFirst('Exception: ', '')}',
         );
       }
     }

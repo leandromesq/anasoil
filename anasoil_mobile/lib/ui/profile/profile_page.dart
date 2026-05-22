@@ -113,12 +113,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     final result = widget.viewModel.updateAvatarCommand.result;
     if (result is Error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text((result as Error).error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, (result as Error).error.toString());
     }
   }
 
@@ -128,12 +123,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
     final result = widget.viewModel.removeAvatarCommand.result;
     if (result is Error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text((result as Error).error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, (result as Error).error.toString());
     }
   }
 

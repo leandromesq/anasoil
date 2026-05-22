@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
@@ -113,19 +114,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     final result = widget.viewModel.updateAvatarCommand.result;
     if (result is Error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text((result as Error).error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, (result as Error).error.toString());
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Foto atualizada com sucesso'),
-          backgroundColor: AppTheme.primaryGreen,
-        ),
-      );
+      AnaSoilToast.success(context, 'Foto atualizada com sucesso');
     }
   }
 
@@ -136,12 +127,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     final result = widget.viewModel.removeAvatarCommand.result;
     if (result is Error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text((result as Error).error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, (result as Error).error.toString());
     }
   }
 
@@ -161,19 +147,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
     final result = widget.viewModel.updateProfileCommand.result;
     if (result is Error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text((result as Error).error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, (result as Error).error.toString());
     } else if (result is Ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Perfil atualizado com sucesso'),
-          backgroundColor: AppTheme.primaryGreen,
-        ),
-      );
+      AnaSoilToast.success(context, 'Perfil atualizado com sucesso');
       context.pop();
     }
   }

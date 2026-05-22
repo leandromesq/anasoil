@@ -7,6 +7,7 @@ import 'package:anasoil_admin/features/analyses/widgets/analyses_data_table.dart
 import 'package:anasoil_admin/features/analyses/widgets/analyses_filters.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_admin/shared/widgets/deferred_table.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 
 class AnalysisListPage extends StatefulWidget {
@@ -122,23 +123,11 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
     try {
       await widget.viewModel.deleteAnalysisCommand.execute(analysis.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Análise excluída com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.success(context, 'Análise excluída com sucesso!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao excluir: ${e.toString()}'),
-            backgroundColor: AppTheme.secondaryRed,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro ao excluir: ${e.toString()}');
       }
     }
   }

@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
@@ -47,19 +48,9 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
 
     final result = widget.viewModel.updatePasswordCommand.result;
     if (result is Error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(result.error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, result.error.toString());
     } else if (result is Ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Senha alterada com sucesso'),
-          backgroundColor: AppTheme.primaryGreen,
-        ),
-      );
+      AnaSoilToast.success(context, 'Senha alterada com sucesso');
       context.pop();
     }
   }

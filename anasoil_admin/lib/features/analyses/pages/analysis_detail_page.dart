@@ -86,22 +86,12 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
     try {
       await locator<AnalysisRepository>().deleteAnalysis(widget.analysisId);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Análise excluída com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-          ),
-        );
+        AnaSoilToast.success(context, 'Análise excluída com sucesso!');
         context.go('/analyses');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao excluir: $e'),
-            backgroundColor: AppTheme.secondaryRed,
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro ao excluir: $e');
       }
     }
   }

@@ -360,23 +360,11 @@ class _UserRelationPageState extends State<UserRelationPage> {
       ]);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Consultor adicionado com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.success(context, 'Consultor adicionado com sucesso!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro: ${e.toString()}'),
-            backgroundColor: AppTheme.secondaryRed,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro: ${e.toString()}');
       }
     }
   }
@@ -389,23 +377,11 @@ class _UserRelationPageState extends State<UserRelationPage> {
       ]);
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Agricultor adicionado com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.success(context, 'Agricultor adicionado com sucesso!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro: ${e.toString()}'),
-            backgroundColor: AppTheme.secondaryRed,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro: ${e.toString()}');
       }
     }
   }
@@ -417,23 +393,11 @@ class _UserRelationPageState extends State<UserRelationPage> {
         consultorId,
       ]);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Consultor removido com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.success(context, 'Consultor removido com sucesso!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro: ${e.toString()}'),
-            backgroundColor: AppTheme.secondaryRed,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro: ${e.toString()}');
       }
     }
   }
@@ -445,23 +409,11 @@ class _UserRelationPageState extends State<UserRelationPage> {
         consultorId,
       ]);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Agricultor removido com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.success(context, 'Agricultor removido com sucesso!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro: ${e.toString()}'),
-            backgroundColor: AppTheme.secondaryRed,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro: ${e.toString()}');
       }
     }
   }

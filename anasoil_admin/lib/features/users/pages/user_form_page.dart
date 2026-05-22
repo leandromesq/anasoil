@@ -74,29 +74,19 @@ class _UserFormPageState extends State<UserFormPage> {
       try {
         await _viewModel.saveUserCommand.execute(userToSave);
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                isEditing
-                    ? 'Usuário atualizado com sucesso!'
-                    : 'Usuário criado com sucesso!',
-              ),
-              backgroundColor: AppTheme.primaryGreen,
-              duration: const Duration(seconds: 1),
-            ),
+          AnaSoilToast.success(
+            context,
+            isEditing
+                ? 'Usuário atualizado com sucesso!'
+                : 'Usuário criado com sucesso!',
           );
           context.go('/users');
         }
       } catch (e) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(
-                'Erro: ${e.toString().replaceFirst('Exception: ', '')}',
-              ),
-              backgroundColor: AppTheme.secondaryRed,
-              duration: const Duration(seconds: 1),
-            ),
+          AnaSoilToast.error(
+            context,
+            'Erro: ${e.toString().replaceFirst('Exception: ', '')}',
           );
         }
       }

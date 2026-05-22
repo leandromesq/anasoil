@@ -7,6 +7,7 @@ import 'package:anasoil_admin/features/documents/widgets/documents_data_table.da
 import 'package:anasoil_admin/features/documents/widgets/documents_filters.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_admin/shared/widgets/deferred_table.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 
 class DocumentListPage extends StatefulWidget {
@@ -116,23 +117,11 @@ class _DocumentListPageState extends State<DocumentListPage> {
     try {
       await widget.viewModel.deleteDocumentCommand.execute(doc.id);
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Documento excluído com sucesso!'),
-            backgroundColor: AppTheme.primaryGreen,
-            duration: Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.success(context, 'Documento excluído com sucesso!');
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Erro ao excluir: ${e.toString()}'),
-            backgroundColor: AppTheme.secondaryRed,
-            duration: const Duration(seconds: 1),
-          ),
-        );
+        AnaSoilToast.error(context, 'Erro ao excluir: ${e.toString()}');
       }
     }
   }

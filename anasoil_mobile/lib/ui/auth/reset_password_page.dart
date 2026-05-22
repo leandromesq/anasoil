@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
@@ -34,21 +35,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
     final result = widget.viewModel.resetPasswordCommand.result;
     if (result is Ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Instruções enviadas para seu e-mail'),
-          backgroundColor: AppTheme.primaryGreen,
-        ),
-      );
+      AnaSoilToast.success(context, 'Instruções enviadas para seu e-mail');
       context.go('/login');
     } else if (result is Error) {
       final error = result;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(error.error.toString()),
-          backgroundColor: AppTheme.secondaryRed,
-        ),
-      );
+      AnaSoilToast.error(context, error.error.toString());
     }
   }
 
