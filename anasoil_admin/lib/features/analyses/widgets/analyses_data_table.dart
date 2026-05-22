@@ -1,5 +1,6 @@
 import 'package:anasoil_admin/core/models/soil_analysis_model.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:anasoil_admin/features/analyses/viewmodels/analysis_list_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -34,7 +35,7 @@ class AnalysesDataTable extends StatelessWidget {
     final viewModel = locator<AnalysisListViewModel>();
 
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AnaSoilLoadingState(message: 'Carregando registros...');
     }
 
     if (analyses.isEmpty) {
@@ -61,10 +62,10 @@ class AnalysesDataTable extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppTheme.baseWhite,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AnaSoilRadius.md),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppTheme.baseGray900.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -77,8 +78,8 @@ class AnalysesDataTable extends StatelessWidget {
             decoration: const BoxDecoration(
               color: AppTheme.baseGray50,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+                topLeft: Radius.circular(AnaSoilRadius.md),
+                topRight: Radius.circular(AnaSoilRadius.md),
               ),
             ),
             child: Row(
@@ -184,7 +185,7 @@ class _MobileList extends StatelessWidget {
           margin: const EdgeInsets.only(bottom: 12),
           child: InkWell(
             onTap: () => context.go('/analysis/${analysis.id}'),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AnaSoilRadius.md),
             hoverColor: AppTheme.primaryGreenLight.withValues(alpha: 0.06),
             mouseCursor: SystemMouseCursors.click,
             child: Padding(

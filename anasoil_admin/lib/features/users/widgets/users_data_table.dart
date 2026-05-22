@@ -35,7 +35,7 @@ class UsersDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AnaSoilLoadingState(message: 'Carregando registros...');
     }
 
     if (users.isEmpty) {
@@ -67,10 +67,10 @@ class UsersDataTable extends StatelessWidget {
       width: double.infinity,
       decoration: BoxDecoration(
         color: AppTheme.baseWhite,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AnaSoilRadius.md),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: AppTheme.baseGray900.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 2),
           ),
@@ -83,8 +83,8 @@ class UsersDataTable extends StatelessWidget {
             decoration: const BoxDecoration(
               color: AppTheme.baseGray50,
               borderRadius: BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+                topLeft: Radius.circular(AnaSoilRadius.md),
+                topRight: Radius.circular(AnaSoilRadius.md),
               ),
             ),
             child: Row(

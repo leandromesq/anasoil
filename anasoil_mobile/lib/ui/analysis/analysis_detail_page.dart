@@ -450,9 +450,17 @@ class AnalysisDetailPage extends StatelessWidget {
             height: 36,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.12),
-              borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
+              borderRadius:
+                  BorderRadius.circular(AnaSoilRadius.sm),
             ),
-            child: Icon(Icons.circle, size: 10, color: color),
+            child: Container(
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: color,
+                shape: BoxShape.circle,
+              ),
+            ),
           ),
           const SizedBox(width: AnaSoilSpacing.md),
           Expanded(

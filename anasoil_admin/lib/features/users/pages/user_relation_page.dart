@@ -46,7 +46,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
             return Center(
               child: Text(
                 'Erro ao carregar dados: ${command.getCachedFailure()}',
-                style: const TextStyle(color: Colors.red),
+                style: const TextStyle(color: AppTheme.secondaryRed),
               ),
             );
           }
@@ -108,7 +108,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
           children: [
             CircleAvatar(
               backgroundColor: _getRoleColor(user.role),
-              child: Icon(_getRoleIcon(user.role), color: Colors.white),
+              child: Icon(_getRoleIcon(user.role), color: AppTheme.baseWhite),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -136,7 +136,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
                     child: Text(
                       _getRoleDisplayName(user.role),
                       style: const TextStyle(
-                        color: Colors.white,
+                        color: AppTheme.baseWhite,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -230,7 +230,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
       return Center(
         child: Text(
           emptyMessage,
-          style: TextStyle(fontSize: 16, color: Colors.grey[600]),
+          style: TextStyle(fontSize: 16, color: AppTheme.baseGray600),
         ),
       );
     }
@@ -243,13 +243,13 @@ class _UserRelationPageState extends State<UserRelationPage> {
           child: ListTile(
             leading: CircleAvatar(
               backgroundColor: _getRoleColor(user.role),
-              child: Icon(_getRoleIcon(user.role), color: Colors.white),
+              child: Icon(_getRoleIcon(user.role), color: AppTheme.baseWhite),
             ),
             title: Text(user.name),
             subtitle: Text(user.email),
             trailing: IconButton(
               icon: Icon(Symbols.remove_circle),
-              color: Colors.red,
+              color: AppTheme.secondaryRed,
               onPressed: () =>
                   _showRemoveConfirmation(user, () => onRemove(user.id)),
             ),
@@ -304,7 +304,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
                         backgroundColor: _getRoleColor(user.role),
                         child: Icon(
                           _getRoleIcon(user.role),
-                          color: Colors.white,
+                          color: AppTheme.baseWhite,
                         ),
                       ),
                       title: Text(user.name),

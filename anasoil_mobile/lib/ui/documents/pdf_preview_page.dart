@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_pdfview/flutter_pdfview.dart';
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/document.dart';
 
 /// Tela de preview de PDF
@@ -48,14 +49,14 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[200],
+      backgroundColor: AppTheme.baseGray200,
       appBar: AppBar(
         title: Text(
           widget.document.fileName,
           style: const TextStyle(fontSize: 16),
         ),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: AppTheme.baseWhite,
+        foregroundColor: AppTheme.baseGray900,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         actions: [
@@ -65,7 +66,7 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                 padding: const EdgeInsets.only(right: 16),
                 child: Text(
                   '${_currentPage + 1} / $_totalPages',
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 14, color: AppTheme.baseGray600),
                 ),
               ),
             ),
@@ -96,12 +97,12 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
+              Icon(Icons.error_outline, size: 64, color: AppTheme.secondaryRed),
               const SizedBox(height: 16),
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 14, color: AppTheme.baseGray600),
               ),
               const SizedBox(height: 24),
               ElevatedButton(
@@ -113,8 +114,8 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                   _downloadPdf();
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.green[700],
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppTheme.primaryGreen,
+                  foregroundColor: AppTheme.baseWhite,
                 ),
                 child: const Text('Tentar novamente'),
               ),

@@ -2,6 +2,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/profile_update_data.dart';
 import '../../utils/result.dart';
 import 'profile_viewmodel.dart';
@@ -53,7 +54,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppTheme.baseGray300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -76,10 +77,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             if (profile?.avatarUrl != null)
               ListTile(
-                leading: Icon(Icons.delete_outline, color: Colors.red[700]),
+                leading: Icon(
+                  Icons.delete_outline,
+                  color: AppTheme.secondaryRed,
+                ),
                 title: Text(
                   'Remover foto',
-                  style: TextStyle(color: Colors.red[700]),
+                  style: TextStyle(color: AppTheme.secondaryRed),
                 ),
                 onTap: () {
                   Navigator.pop(context);
@@ -112,14 +116,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text((result as Error).error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Foto atualizada com sucesso'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.primaryGreen,
         ),
       );
     }
@@ -135,7 +139,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text((result as Error).error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
     }
@@ -160,14 +164,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text((result as Error).error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
     } else if (result is Ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Perfil atualizado com sucesso'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.primaryGreen,
         ),
       );
       context.pop();
@@ -177,7 +181,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.baseWhite,
       appBar: AppBar(
         title: const Text('Editar Perfil'),
         actions: [
@@ -224,19 +228,19 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           children: [
                             CircleAvatar(
                               radius: 50,
-                              backgroundColor: Colors.green[700],
+                              backgroundColor: AppTheme.primaryGreen,
                               backgroundImage: profile?.avatarUrl != null
                                   ? NetworkImage(profile!.avatarUrl!)
                                   : null,
                               child: isUploading
                                   ? const CircularProgressIndicator(
-                                      color: Colors.white,
+                                      color: AppTheme.baseWhite,
                                     )
                                   : profile?.avatarUrl == null
                                   ? const Icon(
                                       Icons.person,
                                       size: 50,
-                                      color: Colors.white,
+                                      color: AppTheme.baseWhite,
                                     )
                                   : null,
                             ),
@@ -285,7 +289,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   labelText: 'Email',
                   prefixIcon: const Icon(Icons.email_outlined),
                   filled: true,
-                  fillColor: Colors.grey[100],
+                  fillColor: AppTheme.baseGray100,
                 ),
               ),
               const SizedBox(height: 16),
@@ -316,12 +320,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: AppTheme.baseGray100,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Row(
                   children: [
-                    Icon(Icons.badge_outlined, color: Colors.grey[600]),
+                    Icon(Icons.badge_outlined, color: AppTheme.baseGray600),
                     const SizedBox(width: 12),
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -330,7 +334,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           'Tipo de Perfil',
                           style: TextStyle(
                             fontSize: 12,
-                            color: Colors.grey[600],
+                            color: AppTheme.baseGray600,
                           ),
                         ),
                         const SizedBox(height: 2),

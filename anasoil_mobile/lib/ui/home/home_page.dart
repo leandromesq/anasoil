@@ -90,11 +90,7 @@ class HomePage extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(32),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFF2D5A32), Color(0xFF1B3A1F)],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
+            color: AppTheme.primaryGreenDark,
             borderRadius: BorderRadius.circular(AnaSoilRadius.lg),
             boxShadow: [
               BoxShadow(
