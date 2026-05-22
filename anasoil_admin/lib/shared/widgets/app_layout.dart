@@ -457,12 +457,16 @@ class AppLayout extends StatelessWidget {
   final Widget body;
   final String title;
   final List<Widget>? actions;
+  final String? backRoute;
+  final String? backTooltip;
 
   const AppLayout({
     super.key,
     required this.body,
     required this.title,
     this.actions,
+    this.backRoute,
+    this.backTooltip,
   });
 
   @override
@@ -470,12 +474,29 @@ class AppLayout extends StatelessWidget {
     final isMobile = MediaQuery.sizeOf(context).width < _kMobileBreakpoint;
 
     if (isMobile) {
-      return Padding(padding: const EdgeInsets.all(16), child: body);
+      return Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            if (backRoute != null) ...[
+              _BackButton(route: backRoute!, tooltip: backTooltip),
+              const SizedBox(height: AnaSoilSpacing.md),
+            ],
+            Expanded(child: body),
+          ],
+        ),
+      );
     }
 
     return Column(
       children: [
-        AppNavbar(title: title, actions: actions),
+        AppNavbar(
+          title: title,
+          actions: actions,
+          backRoute: backRoute,
+          backTooltip: backTooltip,
+        ),
         Expanded(
           child: Container(
             width: double.infinity,
@@ -488,11 +509,43 @@ class AppLayout extends StatelessWidget {
   }
 }
 
+class _BackButton extends StatelessWidget {
+  final String route;
+  final String? tooltip;
+
+  const _BackButton({required this.route, this.tooltip});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton.filledTonal(
+      tooltip: tooltip ?? 'Voltar',
+      onPressed: () => context.go(route),
+      icon: const Icon(Symbols.arrow_back, size: 20),
+      style: IconButton.styleFrom(
+        foregroundColor: AppTheme.baseGray600,
+        backgroundColor: AppTheme.baseGray100,
+        hoverColor: AppTheme.baseGray200,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
+        ),
+      ),
+    );
+  }
+}
+
 class AppNavbar extends StatelessWidget {
   final String title;
   final List<Widget>? actions;
+  final String? backRoute;
+  final String? backTooltip;
 
-  const AppNavbar({super.key, required this.title, this.actions});
+  const AppNavbar({
+    super.key,
+    required this.title,
+    this.actions,
+    this.backRoute,
+    this.backTooltip,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -509,6 +562,10 @@ class AppNavbar extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           children: [
+            if (backRoute != null) ...[
+              _BackButton(route: backRoute!, tooltip: backTooltip),
+              const SizedBox(width: AnaSoilSpacing.md),
+            ],
             Text(
               title,
               style: const TextStyle(

@@ -111,6 +111,8 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
     if (_isLoading) {
       return const AppLayout(
         title: 'Análise',
+        backRoute: '/analyses',
+        backTooltip: 'Voltar para Análises',
         body: AnaSoilLoadingState(message: 'Carregando análise...'),
       );
     }
@@ -118,6 +120,8 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
     if (_error != null || _analysis == null) {
       return AppLayout(
         title: 'Análise',
+        backRoute: '/analyses',
+        backTooltip: 'Voltar para Análises',
         body: AnaSoilEmptyState(
           icon: Symbols.monitoring,
           title: _error ?? 'Análise não encontrada',
@@ -133,6 +137,8 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
 
     return AppLayout(
       title: 'Análise',
+      backRoute: '/analyses',
+      backTooltip: 'Voltar para Análises',
       actions: [
         TextButton.icon(
           onPressed: _deleteAnalysis,

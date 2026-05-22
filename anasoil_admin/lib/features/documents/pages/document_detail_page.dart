@@ -116,6 +116,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
     if (_isLoading) {
       return const AppLayout(
         title: 'Documento',
+        backRoute: '/documents',
+        backTooltip: 'Voltar para Documentos',
         body: AnaSoilLoadingState(message: 'Carregando documento...'),
       );
     }
@@ -123,6 +125,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
     if (_error != null || _document == null) {
       return AppLayout(
         title: 'Documento',
+        backRoute: '/documents',
+        backTooltip: 'Voltar para Documentos',
         body: AnaSoilEmptyState(
           icon: Symbols.folder,
           title: _error ?? 'Documento não encontrado',
@@ -138,6 +142,8 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
 
     return AppLayout(
       title: 'Documento',
+      backRoute: '/documents',
+      backTooltip: 'Voltar para Documentos',
       actions: [
         TextButton.icon(
           onPressed: _deleteDocument,

@@ -107,6 +107,8 @@ class _UserFormPageState extends State<UserFormPage> {
   Widget build(BuildContext context) {
     return AppLayout(
       title: isEditing ? 'Editar Usuário' : 'Novo Usuário',
+      backRoute: '/users',
+      backTooltip: 'Voltar para Usuários',
       body: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 600),

@@ -32,6 +32,8 @@ class _UserRelationPageState extends State<UserRelationPage> {
   Widget build(BuildContext context) {
     return AppLayout(
       title: 'Gerenciar Relações',
+      backRoute: '/users',
+      backTooltip: 'Voltar para Usuários',
       body: ListenableBuilder(
         listenable: Listenable.merge([_viewModel, _viewModel.fetchUserCommand]),
         builder: (context, _) {
