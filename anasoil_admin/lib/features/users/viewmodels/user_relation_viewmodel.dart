@@ -1,16 +1,13 @@
-import 'dart:developer';
-
 import 'package:anasoil_admin/core/models/user_model.dart';
-import 'package:anasoil_admin/core/services/firestore_service.dart';
+import 'package:anasoil_admin/core/repositories/user_repository.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 
 class UserRelationViewModel extends ChangeNotifier {
-  final FirestoreService _firestoreService;
+  final UserRepository _userRepository;
 
   List<UserModel> linkedConsultors = [];
   List<UserModel> linkedAgricultors = [];
-  List<UserModel> _allUsers = [];
   String? _currentUserId;
 
   late final fetchUserCommand = Command1(_fetchUser);
@@ -22,53 +19,41 @@ class UserRelationViewModel extends ChangeNotifier {
     _unlinkAgricultorConsultor,
   );
 
-  UserRelationViewModel(this._firestoreService);
+  UserRelationViewModel(this._userRepository);
 
   Future<Result<UserModel>> _fetchUser(String userId) async {
     _currentUserId = userId;
     try {
-      final user = await _firestoreService.getUser(userId);
-      _allUsers = await _firestoreService.getAllUsers();
+      final user = await _userRepository.getUser(userId);
 
-      if (user != null) {
-        _updateLinkedUsers(user);
-        return Result.ok(user);
-      } else {
+      if (user == null) {
         return Result.error(Exception('Usuário não encontrado'));
       }
+
+      await _updateLinkedUsers(user);
+      return Result.ok(user);
     } catch (e) {
       return Result.error(Exception(e.toString()));
     }
   }
 
-  void _updateLinkedUsers(UserModel user) {
-    log('All users: ${_allUsers.toString()}');
+  Future<void> _updateLinkedUsers(UserModel user) async {
     if (user.userRole == UserRole.farmer) {
-      linkedConsultors = _allUsers
-          .where(
-            (u) =>
-                u.userRole == UserRole.consultant &&
-                user.consultorIds.contains(u.id),
-          )
-          .toList();
-      log('Linked consultors: ${linkedConsultors.length}');
+      linkedConsultors = await _userRepository.getLinkedConsultants(user);
+      linkedAgricultors = [];
     } else if (user.userRole == UserRole.consultant) {
-      linkedAgricultors = _allUsers
-          .where(
-            (u) =>
-                u.userRole == UserRole.farmer &&
-                user.agricultorIds.contains(u.id),
-          )
-          .toList();
-      log('Linked agricultors: ${linkedAgricultors.length}');
+      linkedAgricultors = await _userRepository.getLinkedFarmers(user);
+      linkedConsultors = [];
+    } else {
+      linkedConsultors = [];
+      linkedAgricultors = [];
     }
     notifyListeners();
   }
 
   Future<Result<List<UserModel>>> _fetchAllUsers() async {
     try {
-      final users = await _firestoreService.getAllUsers();
-      _allUsers = users;
+      final users = await _userRepository.getAllUsers();
       return Result.ok(users);
     } catch (e) {
       return Result.error(Exception(e.toString()));
@@ -80,13 +65,8 @@ class UserRelationViewModel extends ChangeNotifier {
       final agricultorId = ids[0];
       final consultorId = ids[1];
 
-      await _firestoreService.linkFarmerToConsultant(agricultorId, consultorId);
-
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      if (_currentUserId != null) {
-        await fetchUserCommand.execute(_currentUserId!);
-      }
+      await _userRepository.linkFarmerToConsultant(agricultorId, consultorId);
+      await _refreshCurrentUser();
 
       return Result.ok(null);
     } catch (e) {
@@ -99,14 +79,11 @@ class UserRelationViewModel extends ChangeNotifier {
       final agricultorId = ids[0];
       final consultorId = ids[1];
 
-      await _firestoreService.unlinkFarmerFromConsultant(
+      await _userRepository.unlinkFarmerFromConsultant(
         agricultorId,
         consultorId,
       );
-
-      if (_currentUserId != null) {
-        await fetchUserCommand.execute(_currentUserId!);
-      }
+      await _refreshCurrentUser();
 
       return Result.ok(null);
     } catch (e) {
@@ -114,27 +91,17 @@ class UserRelationViewModel extends ChangeNotifier {
     }
   }
 
-  Future<List<UserModel>> getAvailableConsultors(UserModel agricultor) async {
-    var allUsers = await _firestoreService.getAllUsers();
-    return allUsers
-        .where(
-          (user) =>
-              user.userRole == UserRole.consultant &&
-              user.active &&
-              !agricultor.consultorIds.contains(user.id),
-        )
-        .toList();
+  Future<void> _refreshCurrentUser() async {
+    if (_currentUserId != null) {
+      await fetchUserCommand.execute(_currentUserId!);
+    }
   }
 
-  Future<List<UserModel>> getAvailableAgricultors(UserModel consultor) async {
-    var allUsers = await _firestoreService.getAllUsers();
-    return allUsers
-        .where(
-          (user) =>
-              user.userRole == UserRole.farmer &&
-              user.active &&
-              !consultor.agricultorIds.contains(user.id),
-        )
-        .toList();
+  Future<List<UserModel>> getAvailableConsultors(UserModel agricultor) {
+    return _userRepository.getAvailableConsultants(agricultor);
+  }
+
+  Future<List<UserModel>> getAvailableAgricultors(UserModel consultor) {
+    return _userRepository.getAvailableFarmers(consultor);
   }
 }

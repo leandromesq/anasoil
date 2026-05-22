@@ -3,7 +3,7 @@
     "short_name": "AnaSoil",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#2D5A32",
+    "background_color": "#FFFFFF",
     "theme_color": "#2D5A32",
     "description": "AnaSoil Admin",
     "orientation": "portrait-primary",

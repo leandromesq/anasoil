@@ -244,6 +244,12 @@ class _LoginPageState extends State<LoginPage> {
                           height: 44,
                           child: ElevatedButton(
                             onPressed: _isLoading ? null : _signIn,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: AppTheme.primaryGreen,
+                              foregroundColor: AppTheme.baseWhite,
+                              disabledBackgroundColor: AppTheme.primaryGreen,
+                              disabledForegroundColor: AppTheme.baseWhite,
+                            ),
                             child: _isLoading
                                 ? const SizedBox(
                                     width: 20,

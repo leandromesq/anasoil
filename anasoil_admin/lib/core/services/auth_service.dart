@@ -1,15 +1,18 @@
 import 'dart:convert';
 import 'dart:math';
 
+import 'package:anasoil_admin/core/auth/user_auth_gateway.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 
-class AuthService extends ChangeNotifier {
+class AuthService extends ChangeNotifier implements UserAuthGateway {
   final FirebaseAuth _auth = FirebaseAuth.instance;
 
   User? get currentUser => _auth.currentUser;
+  @override
+  String? get currentUserId => _auth.currentUser?.uid;
   bool get isAuthenticated => _auth.currentUser != null;
   Stream<User?> get authStateChanges => _auth.authStateChanges();
 
@@ -37,6 +40,7 @@ class AuthService extends ChangeNotifier {
 
   /// Cria um usuário no Firebase Auth via REST API, sem afetar a sessão do admin.
   /// Retorna o UID do novo usuário e envia email de redefinição de senha.
+  @override
   Future<String> createAuthUser(String email) async {
     final apiKey = Firebase.app().options.apiKey;
     final tempPassword = _generateTempPassword();

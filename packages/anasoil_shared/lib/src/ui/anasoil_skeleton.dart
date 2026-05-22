@@ -141,6 +141,7 @@ class AnaSoilSkeletonTable extends StatelessWidget {
   final int columns;
   final String? title;
   final IconData? titleIcon;
+  final List<double>? columnFractions;
 
   const AnaSoilSkeletonTable({
     super.key,
@@ -148,10 +149,14 @@ class AnaSoilSkeletonTable extends StatelessWidget {
     this.columns = 5,
     this.title,
     this.titleIcon,
+    this.columnFractions,
   });
 
   @override
   Widget build(BuildContext context) {
+    final fractions = columnFractions ??
+        List.generate(columns, (i) => i == 0 ? 2.0 : 1.0);
+
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
@@ -166,6 +171,7 @@ class AnaSoilSkeletonTable extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // Title bar
           Padding(
             padding: const EdgeInsets.all(AnaSoilSpacing.xl),
             child: Row(
@@ -184,6 +190,30 @@ class AnaSoilSkeletonTable extends StatelessWidget {
             ),
           ),
           const Divider(height: 1),
+          // Column headers
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AnaSoilSpacing.xl,
+              vertical: AnaSoilSpacing.md,
+            ),
+            child: Row(
+              children: [
+                for (var i = 0; i < columns; i++) ...[
+                  Expanded(
+                    flex: fractions[i].round().clamp(1, 10),
+                    child: AnaSoilSkeletonLine(
+                      width: null,
+                      height: 12,
+                    ),
+                  ),
+                  if (i != columns - 1)
+                    const SizedBox(width: AnaSoilSpacing.lg),
+                ],
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // Data rows
           Padding(
             padding: const EdgeInsets.all(AnaSoilSpacing.xl),
             child: Column(
@@ -191,15 +221,15 @@ class AnaSoilSkeletonTable extends StatelessWidget {
                 for (var row = 0; row < rows; row++) ...[
                   Row(
                     children: [
-                      for (var column = 0; column < columns; column++) ...[
+                      for (var i = 0; i < columns; i++) ...[
                         Expanded(
-                          flex: column == 0 ? 2 : 1,
+                          flex: fractions[i].round().clamp(1, 10),
                           child: AnaSoilSkeletonLine(
-                            width: column == columns - 1 ? 72 : null,
+                            width: i == columns - 1 ? 72 : null,
                             height: 12,
                           ),
                         ),
-                        if (column != columns - 1)
+                        if (i != columns - 1)
                           const SizedBox(width: AnaSoilSpacing.lg),
                       ],
                     ],

@@ -1,3 +1,5 @@
+> **Nota de manutenção:** este documento contém material legado e exemplos de fases anteriores. Para a arquitetura mobile atual, comece por `../README.md`, `ARCHITECTURE_CURRENT.md` e `../../CONTEXT.md`.
+
 # 🏗️ Arquitetura do Projeto - App Architecture (Google/Flutter)
 
 ## 📋 Visão Geral

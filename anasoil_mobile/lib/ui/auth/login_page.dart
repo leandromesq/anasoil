@@ -181,6 +181,8 @@ class _LoginPageState extends State<LoginPage> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
+                          disabledBackgroundColor: AppTheme.primaryGreen,
+                          disabledForegroundColor: AppTheme.baseWhite,
                         ),
                         child: isLoading
                             ? const SizedBox(

@@ -63,45 +63,52 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: CommonAppBar(onProfileTap: () => _onItemTapped(3)),
-      body: _pages[_selectedIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: AppTheme.baseWhite,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.08),
-              blurRadius: AnaSoilElevation.subtleBlur,
-              offset: const Offset(0, -2),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AnaSoilSpacing.lg,
-              vertical: AnaSoilSpacing.md,
-            ),
-            child: GNav(
-              gap: 8,
-              activeColor: AppTheme.baseWhite,
-              iconSize: 24,
+    return PopScope(
+      canPop: _selectedIndex == 0,
+      onPopInvokedWithResult: (didPop, result) {
+        if (didPop || _selectedIndex == 0) return;
+        _onItemTapped(0);
+      },
+      child: Scaffold(
+        appBar: CommonAppBar(onProfileTap: () => _onItemTapped(3)),
+        body: _pages[_selectedIndex],
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: AppTheme.baseWhite,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.08),
+                blurRadius: AnaSoilElevation.subtleBlur,
+                offset: const Offset(0, -2),
+              ),
+            ],
+          ),
+          child: SafeArea(
+            child: Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: AnaSoilSpacing.xl,
+                horizontal: AnaSoilSpacing.lg,
                 vertical: AnaSoilSpacing.md,
               ),
-              duration: const Duration(milliseconds: 400),
-              tabBackgroundColor: AppTheme.primaryGreen,
-              color: AppTheme.baseGray600,
-              tabs: const [
-                GButton(icon: Icons.home, text: 'Home'),
-                GButton(icon: Icons.analytics, text: 'Análise'),
-                GButton(icon: Icons.history, text: 'Histórico'),
-                GButton(icon: Icons.person, text: 'Perfil'),
-              ],
-              selectedIndex: _selectedIndex,
-              onTabChange: _onItemTapped,
+              child: GNav(
+                gap: 8,
+                activeColor: AppTheme.baseWhite,
+                iconSize: 24,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AnaSoilSpacing.xl,
+                  vertical: AnaSoilSpacing.md,
+                ),
+                duration: const Duration(milliseconds: 400),
+                tabBackgroundColor: AppTheme.primaryGreen,
+                color: AppTheme.baseGray600,
+                tabs: const [
+                  GButton(icon: Icons.home, text: 'Home'),
+                  GButton(icon: Icons.analytics, text: 'Análise'),
+                  GButton(icon: Icons.history, text: 'Histórico'),
+                  GButton(icon: Icons.person, text: 'Perfil'),
+                ],
+                selectedIndex: _selectedIndex,
+                onTabChange: _onItemTapped,
+              ),
             ),
           ),
         ),

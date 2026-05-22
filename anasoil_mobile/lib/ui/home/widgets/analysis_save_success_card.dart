@@ -58,6 +58,18 @@ class AnalysisSaveSuccessCard extends StatelessWidget {
               Expanded(
                 child: OutlinedButton(
                   onPressed: onImportAnother,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: AppTheme.primaryGreen,
+                    side: const BorderSide(color: AppTheme.primaryGreen),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AnaSoilRadius.md),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   child: const Text('Importar outro'),
                 ),
               ),
@@ -70,6 +82,19 @@ class AnalysisSaveSuccessCard extends StatelessWidget {
                           extra: savedAnalyses.first,
                         )
                       : onNavigateToHistory,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: AppTheme.baseWhite,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AnaSoilRadius.md),
+                    ),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
                   child: Text(
                     hasSingleAnalysis ? 'Ver análise' : 'Ver histórico',
                     textAlign: TextAlign.center,
