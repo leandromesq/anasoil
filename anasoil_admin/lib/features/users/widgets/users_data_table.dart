@@ -35,7 +35,7 @@ class UsersDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
-      return const AnaSoilLoadingState(message: 'Carregando registros...');
+      return const AnaSoilSkeletonTable();
     }
 
     if (users.isEmpty) {

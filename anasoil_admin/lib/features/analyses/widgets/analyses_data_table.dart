@@ -35,7 +35,7 @@ class AnalysesDataTable extends StatelessWidget {
     final viewModel = locator<AnalysisListViewModel>();
 
     if (isLoading) {
-      return const AnaSoilLoadingState(message: 'Carregando registros...');
+      return const AnaSoilSkeletonTable();
     }
 
     if (analyses.isEmpty) {

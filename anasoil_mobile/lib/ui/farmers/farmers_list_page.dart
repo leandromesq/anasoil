@@ -71,9 +71,7 @@ class _FarmersListPageState extends State<FarmersListPage> {
         listenable: _viewModel,
         builder: (context, _) {
           if (_isLoading) {
-            return const AnaSoilLoadingState(
-              message: 'Carregando agricultores...',
-            );
+            return const AnaSoilSkeletonList(itemCount: 5);
           }
 
           if (_error != null) {

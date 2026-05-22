@@ -44,7 +44,11 @@ class ResponsiveDataTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (!tableReady || isLoading) {
-      return const AnaSoilLoadingState(message: 'Carregando registros...');
+      return AnaSoilSkeletonTable(
+        title: title,
+        titleIcon: titleIcon,
+        columns: columns.length,
+      );
     }
 
     if (rows.isEmpty) {

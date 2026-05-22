@@ -103,7 +103,7 @@ class _DocumentsPageState extends State<DocumentsPage> {
         surfaceTintColor: Colors.transparent,
       ),
       body: isLoading
-          ? const AnaSoilLoadingState(message: 'Carregando documentos...')
+          ? const AnaSoilSkeletonList(itemCount: 5)
           : hasError
           ? AnaSoilEmptyState(
               icon: Icons.error_outline,

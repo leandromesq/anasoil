@@ -281,6 +281,9 @@ class HomePage extends StatelessWidget {
                 ? farmersViewModel.allFarmersAnalyses
                 : <SoilAnalysis>[];
 
+            final isLoadingRecent =
+                viewModel.loadAnalysesCommand.running ||
+                farmersViewModel.isLoading;
             final allAnalyses = [...userAnalyses, ...farmerAnalyses];
             allAnalyses.sort((a, b) => b.createdAt.compareTo(a.createdAt));
 
@@ -296,7 +299,17 @@ class HomePage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: AnaSoilSpacing.md),
-                if (allAnalyses.isEmpty)
+                if (isLoadingRecent)
+                  const Column(
+                    children: [
+                      AnaSoilSkeletonCard(height: 84),
+                      SizedBox(height: AnaSoilSpacing.sm),
+                      AnaSoilSkeletonCard(height: 84),
+                      SizedBox(height: AnaSoilSpacing.sm),
+                      AnaSoilSkeletonCard(height: 84),
+                    ],
+                  )
+                else if (allAnalyses.isEmpty)
                   AnaSoilEmptyState(
                     icon: Icons.history,
                     title: 'Nenhuma análise realizada',

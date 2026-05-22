@@ -82,7 +82,7 @@ class _HistoryPageState extends State<HistoryPage> {
         listenable: _viewModel,
         builder: (context, _) {
           if (_isLoading) {
-            return const AnaSoilLoadingState(message: 'Carregando análises...');
+            return const AnaSoilSkeletonList(itemCount: 5);
           }
 
           final analyses = _viewModel.savedAnalyses;

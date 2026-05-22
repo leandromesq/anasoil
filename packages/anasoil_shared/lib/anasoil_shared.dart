@@ -7,6 +7,7 @@ export 'src/ui/anasoil_confirm_dialog.dart';
 export 'src/ui/anasoil_empty_state.dart';
 export 'src/ui/anasoil_inline_message.dart';
 export 'src/ui/anasoil_loading_state.dart';
+export 'src/ui/anasoil_skeleton.dart';
 export 'src/ui/anasoil_status_chip.dart';
 export 'src/ui/anasoil_surface.dart';
 export 'src/user_role.dart';

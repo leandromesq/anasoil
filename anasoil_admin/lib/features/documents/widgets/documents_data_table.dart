@@ -35,7 +35,7 @@ class DocumentsDataTable extends StatelessWidget {
     final viewModel = locator<DocumentListViewModel>();
 
     if (isLoading) {
-      return const AnaSoilLoadingState(message: 'Carregando registros...');
+      return const AnaSoilSkeletonTable();
     }
 
     if (documents.isEmpty) {

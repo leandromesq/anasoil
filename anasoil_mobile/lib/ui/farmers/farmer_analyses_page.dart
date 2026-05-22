@@ -62,7 +62,7 @@ class _FarmerAnalysesPageState extends State<FarmerAnalysesPage> {
         listenable: _viewModel,
         builder: (context, _) {
           if (_isLoading) {
-            return const AnaSoilLoadingState(message: 'Carregando análises...');
+            return const AnaSoilSkeletonList(itemCount: 5);
           }
 
           if (_error != null) {
