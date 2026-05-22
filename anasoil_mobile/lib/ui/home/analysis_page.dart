@@ -164,14 +164,15 @@ class _AnalysisPageState extends State<AnalysisPage> {
       context,
       title: 'Descartar amostras extraídas?',
       message:
-          'As amostras desta revisão serão removidas. O documento continuará importado para uma nova extração.',
+          'As amostras desta revisão serão removidas. Para iniciar novamente, importe o PDF outra vez.',
       confirmLabel: 'Descartar',
       destructive: true,
     );
     if (!confirmed || !mounted) return;
 
-    _viewModel.clearExtractedAnalyses();
+    _viewModel.clearSelection();
     setState(() {
+      _selectedFile = null;
       _inlineNotice = null;
       _inlineError = null;
     });
