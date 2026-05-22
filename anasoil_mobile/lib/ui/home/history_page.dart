@@ -25,13 +25,36 @@ class _HistoryPageState extends State<HistoryPage> {
   void initState() {
     super.initState();
     _viewModel = getIt<AnalysisViewModel>();
+    _viewModel.deleteAnalysisCommand.addListener(_onDeleteChanged);
     _loadAnalyses();
+  }
+
+  @override
+  void dispose() {
+    _viewModel.deleteAnalysisCommand.removeListener(_onDeleteChanged);
+    super.dispose();
   }
 
   Future<void> _loadAnalyses() async {
     setState(() => _isLoading = true);
     await _viewModel.loadAnalysesCommand.execute();
     if (mounted) setState(() => _isLoading = false);
+  }
+
+  void _onDeleteChanged() {
+    if (!mounted) return;
+
+    if (_viewModel.deleteAnalysisCommand.completed) {
+      setState(() {
+        _inlineMessage = null;
+      });
+    } else if (_viewModel.deleteAnalysisCommand.error) {
+      setState(() {
+        _inlineTone = AnaSoilStatusTone.danger;
+        _inlineMessage =
+            'Erro ao excluir: ${_viewModel.deleteAnalysisCommand.getCachedFailure()}';
+      });
+    }
   }
 
   Future<void> _deleteAnalysis(SoilAnalysis analysis) async {
@@ -48,21 +71,7 @@ class _HistoryPageState extends State<HistoryPage> {
 
     if (!confirmed || !mounted) return;
 
-    final deleteResult = await _viewModel.deleteAnalysis(analysis.id);
-    if (!mounted) return;
-
-    if (deleteResult is Ok) {
-      setState(() {
-        _inlineTone = AnaSoilStatusTone.success;
-        _inlineMessage = 'Análise excluída.';
-      });
-      _loadAnalyses();
-    } else {
-      setState(() {
-        _inlineTone = AnaSoilStatusTone.danger;
-        _inlineMessage = 'Erro ao excluir: ${(deleteResult as Error).error}';
-      });
-    }
+    _viewModel.deleteAnalysisCommand.execute(analysis.id);
   }
 
   @override

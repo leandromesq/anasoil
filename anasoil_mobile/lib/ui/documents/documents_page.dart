@@ -52,11 +52,8 @@ class _DocumentsPageState extends State<DocumentsPage> {
 
     if (_viewModel.deleteDocumentCommand.completed) {
       setState(() {
-        _inlineTone = AnaSoilStatusTone.success;
-        _inlineMessage = 'Documento removido.';
+        _inlineMessage = null;
       });
-      _viewModel.loadDocumentsCommand.clear();
-      _viewModel.loadDocumentsCommand.execute();
     } else if (_viewModel.deleteDocumentCommand.error) {
       setState(() {
         _inlineTone = AnaSoilStatusTone.danger;

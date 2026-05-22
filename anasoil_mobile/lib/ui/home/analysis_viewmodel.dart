@@ -40,6 +40,7 @@ class AnalysisViewModel extends ChangeNotifier {
     extractPdfCommand = Command1(_extractFromPdf);
     saveAnalysisCommand = Command1(_uploadFlow.saveSingle);
     loadAnalysesCommand = Command0(_soilAnalysisRepository.getAnalyses);
+    deleteAnalysisCommand = Command1(_soilAnalysisRepository.deleteAnalysis);
   }
 
   // Commands
@@ -49,6 +50,7 @@ class AnalysisViewModel extends ChangeNotifier {
   late final Command1<List<SoilAnalysis>, File> extractPdfCommand;
   late final Command1<SoilAnalysis, SoilAnalysis> saveAnalysisCommand;
   late final Command0<List<SoilAnalysis>> loadAnalysesCommand;
+  late final Command1<void, String> deleteAnalysisCommand;
 
   // --- Upload Flow delegation ---
 
@@ -75,10 +77,6 @@ class AnalysisViewModel extends ChangeNotifier {
   // --- Saved analysis list ---
 
   List<SoilAnalysis> get savedAnalyses => _soilAnalysisRepository.analyses;
-
-  Future<Result<void>> deleteAnalysis(String analysisId) async {
-    return _soilAnalysisRepository.deleteAnalysis(analysisId);
-  }
 
   // --- Upload Flow operations ---
 
