@@ -182,6 +182,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
     final isUploading = _viewModel.uploadDocumentCommand.running;
     final isExtracting = _viewModel.extractPdfCommand.running;
     final isProcessing = isUploading || isExtracting;
+    final isSaving = _viewModel.intakeState.step == AnalysisIntakeStep.saving;
     final hasExtractedData = _viewModel.extractedAnalyses.isNotEmpty;
     final hasCompletedImport =
         _viewModel.intakeState.step == AnalysisIntakeStep.complete;
@@ -258,7 +259,8 @@ class _AnalysisPageState extends State<AnalysisPage> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AnaSoilRadius.md),
                     ),
-                    disabledBackgroundColor: AppTheme.primaryGreenLight,
+                    disabledBackgroundColor: AppTheme.primaryGreen,
+                    disabledForegroundColor: AppTheme.baseWhite,
                   ),
                   child: isProcessing
                       ? Row(
@@ -331,11 +333,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
                   const SizedBox(width: 16),
                   Expanded(
                     child: ElevatedButton(
-                      onPressed:
-                          _viewModel.intakeState.step ==
-                              AnalysisIntakeStep.saving
-                          ? null
-                          : _saveAllAnalyses,
+                      onPressed: isSaving ? null : _saveAllAnalyses,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: AppTheme.primaryGreen,
                         foregroundColor: AppTheme.baseWhite,
@@ -344,14 +342,39 @@ class _AnalysisPageState extends State<AnalysisPage> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AnaSoilRadius.md),
                         ),
+                        disabledBackgroundColor: AppTheme.primaryGreen,
+                        disabledForegroundColor: AppTheme.baseWhite,
                       ),
-                      child: const Text(
-                        'Salvar Dados',
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
+                      child: isSaving
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    color: AppTheme.baseWhite,
+                                    strokeWidth: 2.2,
+                                  ),
+                                ),
+                                const SizedBox(width: AnaSoilSpacing.sm),
+                                Text(
+                                  'Salvando...',
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.baseWhite,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : const Text(
+                              'Salvar Dados',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                     ),
                   ),
                 ],
