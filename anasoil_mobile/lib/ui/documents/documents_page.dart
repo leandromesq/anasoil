@@ -1,6 +1,9 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../core/dependency_injection.dart';
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/document.dart';
 import '../home/analysis_viewmodel.dart';
 
@@ -14,6 +17,8 @@ class DocumentsPage extends StatefulWidget {
 
 class _DocumentsPageState extends State<DocumentsPage> {
   late final AnalysisViewModel _viewModel;
+  String? _inlineMessage;
+  AnaSoilStatusTone _inlineTone = AnaSoilStatusTone.neutral;
 
   @override
   void initState() {
@@ -46,46 +51,31 @@ class _DocumentsPageState extends State<DocumentsPage> {
     setState(() {});
 
     if (_viewModel.deleteDocumentCommand.completed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Documento removido'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() {
+        _inlineTone = AnaSoilStatusTone.success;
+        _inlineMessage = 'Documento removido.';
+      });
       _viewModel.loadDocumentsCommand.clear();
       _viewModel.loadDocumentsCommand.execute();
     } else if (_viewModel.deleteDocumentCommand.error) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erro ao remover documento'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _inlineTone = AnaSoilStatusTone.danger;
+        _inlineMessage = 'Não foi possível remover o documento.';
+      });
     }
   }
 
-  void _confirmDelete(SoilDocument doc) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Remover documento'),
-        content: Text('Deseja remover "${doc.fileName}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              _viewModel.deleteDocumentCommand.execute(doc.id);
-            },
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
-            child: const Text('Remover'),
-          ),
-        ],
-      ),
+  Future<void> _confirmDelete(SoilDocument doc) async {
+    final confirmed = await AnaSoilConfirmDialog.show(
+      context,
+      title: 'Remover documento?',
+      message:
+          'Deseja remover "${doc.fileName}"? Esta ação não remove análises já salvas.',
+      confirmLabel: 'Remover',
+      destructive: true,
     );
+    if (!confirmed || !mounted) return;
+    _viewModel.deleteDocumentCommand.execute(doc.id);
   }
 
   String _formatDate(DateTime date) {
@@ -107,150 +97,150 @@ class _DocumentsPageState extends State<DocumentsPage> {
     final documents = _viewModel.documents;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppTheme.baseGray50,
       appBar: AppBar(
         title: const Text('Meus Documentos'),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: AppTheme.baseWhite,
+        foregroundColor: AppTheme.baseGray900,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
       body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const AnaSoilLoadingState(message: 'Carregando documentos...')
           : hasError
-          ? _buildErrorState()
+          ? AnaSoilEmptyState(
+              icon: Icons.error_outline,
+              title: 'Erro ao carregar documentos',
+              message:
+                  'Verifique a conexão e tente buscar os documentos novamente.',
+              actionLabel: 'Tentar novamente',
+              onAction: _loadDocuments,
+            )
           : documents.isEmpty
-          ? _buildEmptyState()
+          ? const AnaSoilEmptyState(
+              icon: Icons.folder_open,
+              title: 'Nenhum documento encontrado',
+              message:
+                  'Importe um PDF na tela de análise para manter seus documentos aqui.',
+            )
           : _buildDocumentList(documents),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-          const SizedBox(height: 16),
-          Text(
-            'Erro ao carregar documentos',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton(
-            onPressed: _loadDocuments,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green[700],
-              foregroundColor: Colors.white,
-            ),
-            child: const Text('Tentar novamente'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.folder_open, size: 80, color: Colors.grey[300]),
-          const SizedBox(height: 16),
-          Text(
-            'Nenhum documento encontrado',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Importe documentos na tela de análise',
-            style: TextStyle(fontSize: 14, color: Colors.grey[400]),
-          ),
-        ],
-      ),
     );
   }
 
   Widget _buildDocumentList(List<SoilDocument> documents) {
     return RefreshIndicator(
       onRefresh: _loadDocuments,
+      color: AppTheme.primaryGreen,
       child: ListView.separated(
-        padding: const EdgeInsets.all(16),
-        itemCount: documents.length,
-        separatorBuilder: (context, index) => const SizedBox(height: 12),
+        padding: const EdgeInsets.all(AnaSoilSpacing.lg),
+        itemCount: documents.length + (_inlineMessage == null ? 0 : 1),
+        separatorBuilder: (context, index) =>
+            const SizedBox(height: AnaSoilSpacing.md),
         itemBuilder: (context, index) {
-          final doc = documents[index];
-          return _buildDocumentCard(doc);
+          if (_inlineMessage != null && index == 0) {
+            return AnaSoilInlineMessage(
+              message: _inlineMessage!,
+              icon: _inlineTone == AnaSoilStatusTone.danger
+                  ? Icons.error_outline
+                  : Icons.check_circle_outline,
+              tone: _inlineTone,
+            );
+          }
+          final docIndex = _inlineMessage == null ? index : index - 1;
+          return _DocumentCard(
+            doc: documents[docIndex],
+            fileSize: _formatFileSize(documents[docIndex].fileSize),
+            date: _formatDate(documents[docIndex].createdAt),
+            onOpen: () =>
+                context.push('/documents/preview', extra: documents[docIndex]),
+            onDelete: () => _confirmDelete(documents[docIndex]),
+          );
         },
       ),
     );
   }
+}
 
-  Widget _buildDocumentCard(SoilDocument doc) {
-    return InkWell(
-      onTap: () {
-        context.push('/documents/preview', extra: doc);
-      },
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: Colors.grey[200]!),
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                borderRadius: BorderRadius.circular(10),
+class _DocumentCard extends StatelessWidget {
+  final SoilDocument doc;
+  final String fileSize;
+  final String date;
+  final VoidCallback onOpen;
+  final VoidCallback onDelete;
+
+  const _DocumentCard({
+    required this.doc,
+    required this.fileSize,
+    required this.date,
+    required this.onOpen,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(AnaSoilRadius.md),
+        child: AnaSoilSurface(
+          padding: const EdgeInsets.all(AnaSoilSpacing.lg),
+          radius: AnaSoilRadius.md,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(AnaSoilSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryRedLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.picture_as_pdf,
+                  color: AppTheme.secondaryRed,
+                  size: 28,
+                ),
               ),
-              child: Icon(
-                Icons.picture_as_pdf,
-                color: Colors.red[700],
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    doc.fileName,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+              const SizedBox(width: AnaSoilSpacing.lg),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      doc.fileName,
+                      style: const TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${_formatFileSize(doc.fileSize)}  •  ${_formatDate(doc.createdAt)}',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
-                  ),
-                ],
+                    const SizedBox(height: AnaSoilSpacing.xs),
+                    Text(
+                      '$fileSize  •  $date',
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.baseGray500,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            IconButton(
-              onPressed: () => _confirmDelete(doc),
-              icon: Icon(Icons.delete_outline, color: Colors.grey[400]),
-              tooltip: 'Remover',
-            ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
-          ],
+              IconButton(
+                onPressed: onDelete,
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: AppTheme.baseGray400,
+                ),
+                tooltip: 'Remover',
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: AppTheme.baseGray400,
+                size: 16,
+              ),
+            ],
+          ),
         ),
       ),
     );

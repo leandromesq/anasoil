@@ -3,7 +3,7 @@ import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/analyses/viewmodels/analysis_list_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/service_locator.dart';
 
@@ -42,11 +42,7 @@ class AnalysesDataTable extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              PhosphorIcons.chartLine(),
-              size: 64,
-              color: AppTheme.baseGray400,
-            ),
+            Icon(Symbols.monitoring, size: 64, color: AppTheme.baseGray400),
             const SizedBox(height: 16),
             Text(
               'Nenhuma análise encontrada',
@@ -91,7 +87,7 @@ class AnalysesDataTable extends StatelessWidget {
                 Row(
                   children: [
                     Icon(
-                      PhosphorIcons.chartLine(),
+                      Symbols.monitoring,
                       size: 20,
                       color: AppTheme.baseGray600,
                     ),
@@ -123,7 +119,7 @@ class AnalysesDataTable extends StatelessWidget {
                       );
                     }
                     return IconButton(
-                      icon: Icon(PhosphorIcons.arrowClockwise()),
+                      icon: Icon(Symbols.refresh),
                       onPressed: viewModel.fetchAnalysesCommand.execute,
                       tooltip: 'Atualizar',
                     );
@@ -205,7 +201,7 @@ class _MobileList extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          PhosphorIcons.plant(),
+                          Symbols.eco,
                           color: AppTheme.primaryGreen,
                           size: 18,
                         ),
@@ -455,7 +451,7 @@ class _DesktopTable extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    PhosphorIcons.plant(),
+                    Symbols.eco,
                     color: AppTheme.primaryGreen,
                     size: 18,
                   ),
@@ -531,7 +527,7 @@ class _DesktopTable extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: () => context.go('/analysis/${analysis.id}'),
-                  icon: Icon(PhosphorIcons.eye(), size: 18),
+                  icon: Icon(Symbols.visibility, size: 18),
                   color: AppTheme.primaryGreen,
                   tooltip: 'Visualizar',
                   style: IconButton.styleFrom(
@@ -541,7 +537,7 @@ class _DesktopTable extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: () => onDelete(analysis),
-                  icon: Icon(PhosphorIcons.trash(), size: 18),
+                  icon: Icon(Symbols.delete, size: 18),
                   color: AppTheme.secondaryRed,
                   tooltip: 'Excluir',
                   style: IconButton.styleFrom(

@@ -1,14 +1,14 @@
 import 'dart:io';
+
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
+
 import '../../core/dependency_injection.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/analysis_intake_state.dart';
-import '../../domain/models/soil_analysis.dart';
-import '../../domain/models/soil_parameter_classifier.dart';
-import '../../utils/result.dart';
 import 'analysis_viewmodel.dart';
+import 'widgets/analysis_flow_widgets.dart';
 
 /// Página de nova análise
 class AnalysisPage extends StatefulWidget {
@@ -23,6 +23,8 @@ class AnalysisPage extends StatefulWidget {
 class _AnalysisPageState extends State<AnalysisPage> {
   late final AnalysisViewModel _viewModel;
   File? _selectedFile;
+  String? _inlineError;
+  String? _inlineNotice;
 
   @override
   void initState() {
@@ -44,24 +46,15 @@ class _AnalysisPageState extends State<AnalysisPage> {
     setState(() {});
 
     final command = _viewModel.uploadDocumentCommand;
-
     if (command.completed) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Documento importado com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _inlineError = null;
+      _inlineNotice = 'Documento enviado. Agora estamos extraindo as amostras.';
     } else if (command.error) {
       final errorMsg = command.result is Error
           ? (command.result as Error).error.toString()
           : 'Erro desconhecido';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao importar: $errorMsg'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _inlineNotice = null;
+      _inlineError = 'Não foi possível importar o documento. $errorMsg';
     }
   }
 
@@ -70,25 +63,17 @@ class _AnalysisPageState extends State<AnalysisPage> {
     setState(() {});
 
     final command = _viewModel.extractPdfCommand;
-
     if (command.completed) {
       final count = _viewModel.extractedAnalyses.length;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('$count amostra(s) extraída(s) do PDF!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      _inlineError = null;
+      _inlineNotice =
+          '$count amostra(s) extraída(s). Revise os dados antes de salvar.';
     } else if (command.error) {
       final errorMsg = command.result is Error
           ? (command.result as Error).error.toString()
           : 'Erro desconhecido';
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro na extração: $errorMsg'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      _inlineNotice = null;
+      _inlineError = 'Não foi possível extrair as amostras do PDF. $errorMsg';
     }
   }
 
@@ -105,75 +90,91 @@ class _AnalysisPageState extends State<AnalysisPage> {
 
         setState(() {
           _selectedFile = file;
+          _inlineError = null;
+          _inlineNotice =
+              'PDF selecionado. Inicie a análise para enviar e extrair as amostras.';
         });
 
         _viewModel.setSelectedFileName(fileName);
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao selecionar arquivo: $e'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _inlineNotice = null;
+        _inlineError = 'Não foi possível selecionar o arquivo. $e';
+      });
     }
   }
 
   void _removeSelection() {
     setState(() {
       _selectedFile = null;
+      _inlineError = null;
+      _inlineNotice = null;
     });
     _viewModel.clearSelection();
   }
 
+  void _importAnother() {
+    _viewModel.clearSelection();
+    setState(() {
+      _selectedFile = null;
+      _inlineError = null;
+      _inlineNotice = null;
+    });
+  }
+
   Future<void> _startAnalysis() async {
     if (_selectedFile == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Por favor, importe um documento primeiro'),
-          backgroundColor: Colors.orange,
-        ),
-      );
+      setState(() {
+        _inlineNotice = null;
+        _inlineError = 'Importe um PDF de análise de solo antes de iniciar.';
+      });
       return;
     }
 
-    // 1. Upload do documento
     await _viewModel.uploadDocumentCommand.execute(_selectedFile!);
-
     if (!_viewModel.uploadDocumentCommand.completed) return;
 
-    // 2. Extrair dados do PDF
     await _viewModel.extractPdfCommand.execute(_selectedFile!);
-
     if (_viewModel.extractPdfCommand.completed) {
-      setState(() {
-        _selectedFile = null;
-      });
+      setState(() => _selectedFile = null);
     }
   }
 
   Future<void> _saveAllAnalyses() async {
     final result = await _viewModel.saveAllExtractedAnalyses();
-
     if (!mounted) return;
 
     if (result is Ok<int>) {
-      setState(() {});
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${result.value} análise(s) salva(s) com sucesso!'),
-          backgroundColor: Colors.green,
-        ),
-      );
+      setState(() {
+        _inlineError = null;
+        _inlineNotice = '${result.value} análise(s) salva(s) com sucesso.';
+      });
     } else if (result is Error<int>) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao salvar: ${result.error}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _inlineNotice = null;
+        _inlineError = 'Não foi possível salvar as análises. ${result.error}';
+      });
     }
+  }
+
+  Future<void> _discardExtractedAnalyses() async {
+    final confirmed = await AnaSoilConfirmDialog.show(
+      context,
+      title: 'Descartar amostras extraídas?',
+      message:
+          'As amostras desta revisão serão removidas. O documento continuará importado para uma nova extração.',
+      confirmLabel: 'Descartar',
+      destructive: true,
+    );
+    if (!confirmed || !mounted) return;
+
+    _viewModel.clearExtractedAnalyses();
+    setState(() {
+      _inlineNotice = null;
+      _inlineError = null;
+    });
   }
 
   @override
@@ -186,7 +187,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
         _viewModel.intakeState.step == AnalysisIntakeStep.complete;
 
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppTheme.baseGray50,
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -198,38 +199,56 @@ class _AnalysisPageState extends State<AnalysisPage> {
               style: TextStyle(
                 fontSize: 24,
                 fontWeight: FontWeight.bold,
-                color: Colors.black87,
+                color: AppTheme.baseGray900,
               ),
             ),
-            const SizedBox(height: 32),
+            const SizedBox(height: 16),
+            AnalysisWorkflowPanel(step: _viewModel.intakeState.step),
+            if (_inlineError != null) ...[
+              const SizedBox(height: 12),
+              AnaSoilInlineMessage(
+                message: _inlineError!,
+                tone: AnaSoilStatusTone.danger,
+                icon: Icons.error_outline,
+              ),
+            ] else if (_inlineNotice != null) ...[
+              const SizedBox(height: 12),
+              AnaSoilInlineMessage(
+                message: _inlineNotice!,
+                tone: AnaSoilStatusTone.success,
+                icon: Icons.check_circle_outline,
+              ),
+            ],
+            const SizedBox(height: 24),
 
-            // Card de importar documento ou arquivo selecionado
             if (!hasCompletedImport &&
                 _selectedFile == null &&
                 !hasExtractedData)
-              _buildImportCard()
+              AnalysisImportCard(onTap: _pickDocument)
             else if (!hasCompletedImport &&
                 _selectedFile != null &&
                 !hasExtractedData)
-              _buildSelectedFileCard(),
+              SelectedPdfCard(
+                fileName: _viewModel.selectedFileName ?? 'documento.pdf',
+                canRemove: !_viewModel.uploadDocumentCommand.running,
+                onRemove: _removeSelection,
+              ),
 
             if (!hasCompletedImport && !hasExtractedData) ...[
               const SizedBox(height: 32),
-
-              // Botão Iniciar
               SizedBox(
                 width: double.infinity,
                 height: 56,
                 child: ElevatedButton(
                   onPressed: isProcessing ? null : _startAnalysis,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
-                    foregroundColor: Colors.white,
+                    backgroundColor: AppTheme.primaryGreen,
+                    foregroundColor: AppTheme.baseWhite,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(AnaSoilRadius.md),
                     ),
-                    disabledBackgroundColor: Colors.green[300],
+                    disabledBackgroundColor: AppTheme.primaryGreenLight,
                   ),
                   child: isProcessing
                       ? Row(
@@ -239,7 +258,7 @@ class _AnalysisPageState extends State<AnalysisPage> {
                               height: 24,
                               width: 24,
                               child: CircularProgressIndicator(
-                                color: Colors.white,
+                                color: AppTheme.baseWhite,
                                 strokeWidth: 2.5,
                               ),
                             ),
@@ -264,28 +283,30 @@ class _AnalysisPageState extends State<AnalysisPage> {
               ),
             ],
 
-            if (hasCompletedImport) ...[_buildSaveSuccessCard()],
+            if (hasCompletedImport) ...[
+              AnalysisSaveSuccessCard(
+                savedAnalyses: _viewModel.lastSavedAnalyses,
+                onImportAnother: _importAnother,
+                onNavigateToHistory: widget.onNavigateToHistory,
+              ),
+            ],
 
-            // Resultados da extração
             if (hasExtractedData) ...[
-              _buildExtractedDataSection(),
+              ExtractedAnalysisReviewSection(
+                analyses: _viewModel.extractedAnalyses,
+              ),
               const SizedBox(height: 24),
-
-              // Botões de ação
               Row(
                 children: [
                   Expanded(
                     child: OutlinedButton(
-                      onPressed: () {
-                        _viewModel.clearExtractedAnalyses();
-                        setState(() {});
-                      },
+                      onPressed: _discardExtractedAnalyses,
                       style: OutlinedButton.styleFrom(
-                        foregroundColor: Colors.grey[700],
-                        side: BorderSide(color: Colors.grey[400]!),
+                        foregroundColor: AppTheme.baseGray600,
+                        side: const BorderSide(color: AppTheme.baseGray400),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AnaSoilRadius.md),
                         ),
                       ),
                       child: const Text(
@@ -306,12 +327,12 @@ class _AnalysisPageState extends State<AnalysisPage> {
                           ? null
                           : _saveAllAnalyses,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: AppTheme.baseWhite,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(AnaSoilRadius.md),
                         ),
                       ),
                       child: const Text(
@@ -333,672 +354,4 @@ class _AnalysisPageState extends State<AnalysisPage> {
       ),
     );
   }
-
-  Widget _buildSaveSuccessCard() {
-    final savedAnalyses = _viewModel.lastSavedAnalyses;
-    final count = savedAnalyses.length;
-    final hasSingleAnalysis = count == 1;
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.green[200]!),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.green[700], size: 24),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  count == 0 ? 'Análises salvas' : '$count análise(s) salva(s)',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            hasSingleAnalysis
-                ? 'A análise já está disponível para consulta.'
-                : 'As análises já estão disponíveis no histórico.',
-            style: TextStyle(fontSize: 14, color: Colors.grey[700]),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: () {
-                    _viewModel.clearSelection();
-                    setState(() {
-                      _selectedFile = null;
-                    });
-                  },
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.grey[700],
-                    side: BorderSide(color: Colors.grey[400]!),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: const Text('Importar outro'),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: hasSingleAnalysis
-                      ? () => context.pushNamed(
-                          'analysis-detail',
-                          extra: savedAnalyses.first,
-                        )
-                      : widget.onNavigateToHistory,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green[700],
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                  ),
-                  child: Text(
-                    hasSingleAnalysis ? 'Ver análise' : 'Ver histórico',
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildImportCard() {
-    return GestureDetector(
-      onTap: _pickDocument,
-      child: CustomPaint(
-        painter: DashedBorderPainter(
-          color: Colors.grey[400]!,
-          strokeWidth: 2,
-          dashWidth: 8,
-          dashSpace: 4,
-        ),
-        child: Container(
-          width: double.infinity,
-          padding: const EdgeInsets.all(40),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  color: Colors.green[700],
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Icon(
-                  Icons.upload_file,
-                  color: Colors.white,
-                  size: 48,
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              const Text(
-                'Importar Documento',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-
-              Text(
-                '*Formatos Suportados: .pdf',
-                style: TextStyle(fontSize: 13, color: Colors.red[400]),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSelectedFileCard() {
-    final fileName = _viewModel.selectedFileName ?? 'documento.pdf';
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green[700]!, width: 2),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.red[50],
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(Icons.picture_as_pdf, color: Colors.red[700], size: 32),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  fileName,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'PDF selecionado',
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-              ],
-            ),
-          ),
-          IconButton(
-            onPressed: _viewModel.uploadDocumentCommand.running
-                ? null
-                : _removeSelection,
-            icon: Icon(Icons.close, color: Colors.grey[600]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildExtractedDataSection() {
-    final analyses = _viewModel.extractedAnalyses;
-
-    // Pega infos do documento da primeira análise (são iguais para todas)
-    final firstAnalysis = analyses.isNotEmpty ? analyses.first : null;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Infos do documento
-        if (firstAnalysis != null &&
-            (firstAnalysis.requester != null ||
-                firstAnalysis.stakeholder != null ||
-                firstAnalysis.dataEntrada != null ||
-                firstAnalysis.material != null))
-          _buildDocumentInfoCard(firstAnalysis),
-
-        if (firstAnalysis != null &&
-            (firstAnalysis.requester != null ||
-                firstAnalysis.stakeholder != null ||
-                firstAnalysis.dataEntrada != null ||
-                firstAnalysis.material != null))
-          const SizedBox(height: 16),
-
-        Row(
-          children: [
-            Icon(Icons.check_circle, color: Colors.green[700], size: 24),
-            const SizedBox(width: 8),
-            Text(
-              '${analyses.length} amostra(s) extraída(s)',
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: Colors.black87,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-
-        // Lista de amostras extraídas
-        ...analyses.asMap().entries.map(
-          (entry) => _buildAnalysisCard(entry.value, entry.key),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildDocumentInfoCard(SoilAnalysis analysis) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.primaryGreenSoft,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.description,
-                color: AppTheme.primaryGreen,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Informações do Documento',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.primaryGreenDark,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          if (analysis.requester != null)
-            _buildDocInfoRow('Solicitante', analysis.requester!),
-          if (analysis.stakeholder != null)
-            _buildDocInfoRow('Interessado', analysis.stakeholder!),
-          if (analysis.dataEntrada != null)
-            _buildDocInfoRow('Data de Entrada', analysis.dataEntrada!),
-          if (analysis.material != null)
-            _buildDocInfoRow('Material', analysis.material!),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildDocInfoRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 13,
-                color: AppTheme.primaryGreenDark,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnalysisCard(SoilAnalysis analysis, int index) {
-    final classifications = SoilParameterClassifier.classifyAll(analysis);
-
-    // Todos os parâmetros avaliados
-    final allParams = [
-      ('M.O.', analysis.organicMatter),
-      ('pH', analysis.phCacl2),
-      ('Al³⁺', analysis.al3Plus),
-      ('Ca²⁺', analysis.ca2Plus),
-      ('Mg²⁺', analysis.mg2Plus),
-      ('K⁺', analysis.kPlus),
-      ('CTC efetiva', analysis.ctcEfetiva),
-      ('CTC pH 7,0', analysis.ctcPh7),
-      ('V%', analysis.vPercent),
-      ('PST', analysis.pst),
-      ('Sat. Al', analysis.mPercent),
-    ];
-    final missingParams = allParams
-        .where((p) => p.$2 == null)
-        .map((p) => p.$1)
-        .toList();
-
-    return Card(
-      margin: const EdgeInsets.only(bottom: 12),
-      elevation: 0,
-      color: Colors.white,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(color: Colors.grey[200]!),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.pushNamed('analysis-detail', extra: analysis),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: Colors.green[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      'Amostra ${index + 1}',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.green[800],
-                      ),
-                    ),
-                  ),
-                  const Spacer(),
-                  Text(
-                    analysis.labNumber.isNotEmpty ? analysis.labNumber : 'N/A',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: Colors.grey[600],
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Icon(Icons.chevron_right, color: Colors.grey[400], size: 20),
-                ],
-              ),
-              const SizedBox(height: 12),
-
-              // Fazenda e DMLab
-              _buildDataRow(
-                'Fazenda',
-                analysis.propertyName.isNotEmpty
-                    ? analysis.propertyName
-                    : 'N/A',
-              ),
-              _buildDataRow(
-                'Nº DMLab',
-                analysis.labNumber.isNotEmpty ? analysis.labNumber : 'N/A',
-              ),
-
-              const Divider(height: 20),
-
-              // Legenda de classificação
-              _buildLegend(),
-              const SizedBox(height: 12),
-
-              // Parâmetros da Análise
-              const Text(
-                'Parâmetros da Análise',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  ...classifications.map((c) => _buildClassifiedChip(c)),
-                  ...missingParams.map((label) => _buildNaChip(label)),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Color _levelColor(SoilLevel level) {
-    switch (level) {
-      case SoilLevel.low:
-        return const Color(0xFFE53935); // vermelho
-      case SoilLevel.medium:
-        return const Color(0xFFFFA726); // laranja
-      case SoilLevel.high:
-        return const Color(0xFF43A047); // verde
-    }
-  }
-
-  Color _levelBgColor(SoilLevel level) {
-    switch (level) {
-      case SoilLevel.low:
-        return const Color(0xFFFFEBEE);
-      case SoilLevel.medium:
-        return const Color(0xFFFFF3E0);
-      case SoilLevel.high:
-        return const Color(0xFFE8F5E9);
-    }
-  }
-
-  Widget _buildLegend() {
-    return Row(
-      children: [
-        _buildLegendItem(SoilLevel.low, 'Baixo'),
-        const SizedBox(width: 12),
-        _buildLegendItem(SoilLevel.medium, 'Médio'),
-        const SizedBox(width: 12),
-        _buildLegendItem(SoilLevel.high, 'Alto'),
-      ],
-    );
-  }
-
-  Widget _buildLegendItem(SoilLevel level, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: _levelColor(level),
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ),
-        const SizedBox(width: 4),
-        Text(text, style: TextStyle(fontSize: 11, color: Colors.grey[600])),
-      ],
-    );
-  }
-
-  Widget _buildClassifiedChip(SoilClassification classification) {
-    final color = _levelColor(classification.level);
-    final bgColor = _levelBgColor(classification.level);
-    final valueStr =
-        classification.value == classification.value.roundToDouble()
-        ? classification.value.toStringAsFixed(0)
-        : classification.value.toStringAsFixed(
-            classification.value < 1 ? 2 : 1,
-          );
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: bgColor,
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: color.withValues(alpha: 0.4)),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          RichText(
-            text: TextSpan(
-              children: [
-                TextSpan(
-                  text: '${classification.label}: ',
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: Colors.grey[700],
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-                TextSpan(
-                  text: valueStr,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: color,
-                    fontFamily: 'Poppins',
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 6),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            decoration: BoxDecoration(
-              color: color.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(4),
-            ),
-            child: Text(
-              classification.levelText,
-              style: TextStyle(
-                fontSize: 9,
-                fontWeight: FontWeight.w700,
-                color: color,
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNaChip(String label) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: Colors.grey[100],
-        borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: Colors.grey[300]!),
-      ),
-      child: RichText(
-        text: TextSpan(
-          children: [
-            TextSpan(
-              text: '$label: ',
-              style: TextStyle(
-                fontSize: 12,
-                color: Colors.grey[500],
-                fontFamily: 'Poppins',
-              ),
-            ),
-            TextSpan(
-              text: 'N/A',
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: Colors.grey[400],
-                fontFamily: 'Poppins',
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildDataRow(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 4),
-      child: Row(
-        children: [
-          Text(
-            '$label: ',
-            style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: Colors.black87,
-              ),
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Custom painter para criar borda tracejada
-class DashedBorderPainter extends CustomPainter {
-  final Color color;
-  final double strokeWidth;
-  final double dashWidth;
-  final double dashSpace;
-
-  DashedBorderPainter({
-    required this.color,
-    this.strokeWidth = 2,
-    this.dashWidth = 8,
-    this.dashSpace = 4,
-  });
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = color
-      ..strokeWidth = strokeWidth
-      ..style = PaintingStyle.stroke;
-
-    final path = Path()
-      ..addRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromLTWH(0, 0, size.width, size.height),
-          const Radius.circular(16),
-        ),
-      );
-
-    _drawDashedPath(canvas, path, paint);
-  }
-
-  void _drawDashedPath(Canvas canvas, Path path, Paint paint) {
-    final pathMetrics = path.computeMetrics();
-    for (final metric in pathMetrics) {
-      double distance = 0;
-      while (distance < metric.length) {
-        final segment = metric.extractPath(distance, distance + dashWidth);
-        canvas.drawPath(segment, paint);
-        distance += dashWidth + dashSpace;
-      }
-    }
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

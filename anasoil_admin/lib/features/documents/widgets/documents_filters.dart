@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class DocumentsFilters extends StatelessWidget {
   final String searchText;
@@ -36,11 +36,7 @@ class DocumentsFilters extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                PhosphorIcons.funnel(),
-                color: AppTheme.baseGray600,
-                size: 20,
-              ),
+              Icon(Symbols.filter_list, color: AppTheme.baseGray600, size: 20),
               const SizedBox(width: 8),
               const Text(
                 'Filtros',
@@ -54,7 +50,7 @@ class DocumentsFilters extends StatelessWidget {
               if (hasActiveFilters)
                 TextButton.icon(
                   onPressed: onClearFilters,
-                  icon: Icon(PhosphorIcons.x(), size: 16),
+                  icon: Icon(Symbols.close, size: 16),
                   label: const Text('Limpar'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppTheme.secondaryRed,
@@ -67,7 +63,7 @@ class DocumentsFilters extends StatelessWidget {
             initialValue: searchText,
             decoration: InputDecoration(
               labelText: 'Pesquisar por nome do arquivo',
-              prefixIcon: Icon(PhosphorIcons.magnifyingGlass()),
+              prefixIcon: Icon(Symbols.search),
               border: const OutlineInputBorder(),
             ),
             onChanged: onSearchChanged,
@@ -81,7 +77,7 @@ class DocumentsFilters extends StatelessWidget {
                   Chip(
                     label: Text('Arquivo: "$searchText"'),
                     onDeleted: () => onSearchChanged(''),
-                    deleteIcon: Icon(PhosphorIcons.x(), size: 16),
+                    deleteIcon: Icon(Symbols.close, size: 16),
                     backgroundColor: AppTheme.baseGray100,
                   ),
               ],

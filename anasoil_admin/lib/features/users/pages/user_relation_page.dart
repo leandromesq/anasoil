@@ -4,7 +4,7 @@ import 'package:anasoil_admin/features/users/viewmodels/user_relation_viewmodel.
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class UserRelationPage extends StatefulWidget {
   final String userId;
@@ -168,7 +168,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
               const Spacer(),
               ElevatedButton.icon(
                 onPressed: () => _showAddConsultorDialog(agricultor),
-                icon: Icon(PhosphorIcons.plus()),
+                icon: Icon(Symbols.add),
                 label: const Text('Adicionar'),
               ),
             ],
@@ -203,7 +203,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
               const Spacer(),
               ElevatedButton.icon(
                 onPressed: () => _showAddAgricultorDialog(consultor),
-                icon: Icon(PhosphorIcons.plus()),
+                icon: Icon(Symbols.add),
                 label: const Text('Adicionar'),
               ),
             ],
@@ -248,7 +248,7 @@ class _UserRelationPageState extends State<UserRelationPage> {
             title: Text(user.name),
             subtitle: Text(user.email),
             trailing: IconButton(
-              icon: Icon(PhosphorIcons.minusCircle()),
+              icon: Icon(Symbols.remove_circle),
               color: Colors.red,
               onPressed: () =>
                   _showRemoveConfirmation(user, () => onRemove(user.id)),
@@ -478,11 +478,11 @@ class _UserRelationPageState extends State<UserRelationPage> {
   IconData _getRoleIcon(String role) {
     switch (UserRole.parse(role)) {
       case UserRole.admin:
-        return PhosphorIcons.shieldCheck();
+        return Symbols.admin_panel_settings;
       case UserRole.consultant:
-        return PhosphorIcons.userCircle();
+        return Symbols.account_circle;
       case UserRole.farmer:
-        return PhosphorIcons.plant();
+        return Symbols.eco;
     }
   }
 

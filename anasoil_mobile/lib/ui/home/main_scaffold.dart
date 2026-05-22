@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import '../../core/dependency_injection.dart';
@@ -67,26 +68,32 @@ class _MainScaffoldState extends State<MainScaffold> {
       body: _pages[_selectedIndex],
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppTheme.baseWhite,
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withAlpha(26),
-              blurRadius: 8,
+              color: Colors.black.withValues(alpha: 0.08),
+              blurRadius: AnaSoilElevation.subtleBlur,
               offset: const Offset(0, -2),
             ),
           ],
         ),
         child: SafeArea(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(
+              horizontal: AnaSoilSpacing.lg,
+              vertical: AnaSoilSpacing.md,
+            ),
             child: GNav(
               gap: 8,
-              activeColor: Colors.white,
+              activeColor: AppTheme.baseWhite,
               iconSize: 24,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AnaSoilSpacing.xl,
+                vertical: AnaSoilSpacing.md,
+              ),
               duration: const Duration(milliseconds: 400),
               tabBackgroundColor: AppTheme.primaryGreen,
-              color: Colors.grey[600],
+              color: AppTheme.baseGray600,
               tabs: const [
                 GButton(icon: Icons.home, text: 'Home'),
                 GButton(icon: Icons.analytics, text: 'Análise'),

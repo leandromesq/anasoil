@@ -5,9 +5,10 @@ import 'package:anasoil_admin/core/repositories/user_repository.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class DocumentDetailPage extends StatefulWidget {
@@ -76,28 +77,16 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
   }
 
   Future<void> _deleteDocument() async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir Documento'),
-        content: Text('Deseja realmente excluir "${_document?.fileName}"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Excluir',
-              style: TextStyle(color: AppTheme.secondaryRed),
-            ),
-          ),
-        ],
-      ),
+    final confirmed = await AnaSoilConfirmDialog.show(
+      context,
+      title: 'Excluir documento?',
+      message:
+          'Deseja realmente excluir "${_document?.fileName}"? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      destructive: true,
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     try {
       await locator<DocumentRepository>().deleteDocument(widget.documentId);
@@ -127,38 +116,20 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
     if (_isLoading) {
       return const AppLayout(
         title: 'Documento',
-        body: Center(child: CircularProgressIndicator()),
+        body: AnaSoilLoadingState(message: 'Carregando documento...'),
       );
     }
 
     if (_error != null || _document == null) {
       return AppLayout(
         title: 'Documento',
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                PhosphorIcons.folder(),
-                size: 64,
-                color: AppTheme.baseGray400,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _error ?? 'Documento não encontrado',
-                style: TextStyle(
-                  fontSize: 18,
-                  color: AppTheme.baseGray500,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => context.go('/documents'),
-                child: const Text('Voltar para Documentos'),
-              ),
-            ],
-          ),
+        body: AnaSoilEmptyState(
+          icon: Symbols.folder,
+          title: _error ?? 'Documento não encontrado',
+          message:
+              'Volte para a lista de documentos e selecione outro registro.',
+          actionLabel: 'Voltar para Documentos',
+          onAction: () => context.go('/documents'),
         ),
       );
     }
@@ -170,11 +141,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
       actions: [
         TextButton.icon(
           onPressed: _deleteDocument,
-          icon: Icon(
-            PhosphorIcons.trash(),
-            size: 18,
-            color: AppTheme.secondaryRed,
-          ),
+          icon: Icon(Symbols.delete, size: 18, color: AppTheme.secondaryRed),
           label: Text(
             'Excluir',
             style: TextStyle(color: AppTheme.secondaryRed),
@@ -203,7 +170,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Icon(
-                              PhosphorIcons.filePdf(),
+                              Symbols.picture_as_pdf,
                               color: AppTheme.primaryGreen,
                               size: 32,
                             ),
@@ -245,7 +212,7 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
                         width: double.infinity,
                         child: ElevatedButton.icon(
                           onPressed: _openPdf,
-                          icon: Icon(PhosphorIcons.eye()),
+                          icon: Icon(Symbols.visibility),
                           label: const Text('Visualizar PDF'),
                         ),
                       ),

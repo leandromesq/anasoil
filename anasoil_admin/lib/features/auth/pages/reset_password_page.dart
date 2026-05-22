@@ -4,7 +4,7 @@ import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/shared/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   const ResetPasswordPage({super.key});
@@ -130,7 +130,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
           child: Row(
             children: [
               Icon(
-                PhosphorIcons.checkCircle(),
+                Symbols.check_circle,
                 color: AppTheme.primaryGreen,
                 size: 16,
               ),
@@ -200,7 +200,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               child: Row(
                 children: [
                   Icon(
-                    PhosphorIcons.warningCircle(),
+                    Symbols.warning,
                     color: AppTheme.secondaryRedDark,
                     size: 16,
                   ),

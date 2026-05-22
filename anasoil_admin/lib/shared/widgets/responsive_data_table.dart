@@ -1,4 +1,5 @@
 import 'package:anasoil_admin/core/theme/app_theme.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 
 /// Reusable responsive data table that handles:
@@ -37,53 +38,32 @@ class ResponsiveDataTable extends StatelessWidget {
     this.onSort,
     this.onRefresh,
     this.isRefreshing = false,
-    this.mobileBreakpoint = 700,
+    this.mobileBreakpoint = AnaSoilBreakpoints.mobile,
   });
 
   @override
   Widget build(BuildContext context) {
     if (!tableReady || isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return const AnaSoilLoadingState(message: 'Carregando registros...');
     }
 
     if (rows.isEmpty) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            emptyIcon ??
-                Icon(
-                  Icons.inbox_outlined,
-                  size: 64,
-                  color: AppTheme.baseGray400,
-                ),
-            const SizedBox(height: 16),
-            Text(
-              emptyMessage,
-              style: const TextStyle(
-                fontSize: 18,
-                color: AppTheme.baseGray500,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
+      return AnaSoilEmptyState(
+        icon: emptyIcon is Icon
+            ? (emptyIcon as Icon).icon ?? Icons.inbox_outlined
+            : Icons.inbox_outlined,
+        title: emptyMessage,
+        message: 'Ajuste os filtros ou atualize a lista para buscar novamente.',
+        actionLabel: onRefresh == null ? null : 'Atualizar',
+        onAction: onRefresh,
       );
     }
 
-    return Container(
+    return AnaSoilSurface(
       width: double.infinity,
-      decoration: BoxDecoration(
-        color: AppTheme.baseWhite,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+      padding: EdgeInsets.zero,
+      radius: AnaSoilRadius.md,
+      elevated: true,
       child: Column(
         children: [
           _buildHeader(context),
@@ -111,12 +91,12 @@ class ResponsiveDataTable extends StatelessWidget {
 
   Widget _buildHeader(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AnaSoilSpacing.xl),
       decoration: const BoxDecoration(
         color: AppTheme.baseGray50,
         borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(12),
-          topRight: Radius.circular(12),
+          topLeft: Radius.circular(AnaSoilRadius.md),
+          topRight: Radius.circular(AnaSoilRadius.md),
         ),
       ),
       child: Row(
@@ -125,7 +105,7 @@ class ResponsiveDataTable extends StatelessWidget {
           Row(
             children: [
               Icon(titleIcon, size: 20, color: AppTheme.baseGray600),
-              const SizedBox(width: 8),
+              const SizedBox(width: AnaSoilSpacing.sm),
               Text(
                 '$title (${rows.length})',
                 style: const TextStyle(

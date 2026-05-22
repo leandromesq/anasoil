@@ -1,3 +1,4 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 
 import '../../core/theme/app_theme.dart';
@@ -27,18 +28,22 @@ class AnalysisDetailPage extends StatelessWidget {
         surfaceTintColor: Colors.transparent,
       ),
       body: classifications.isEmpty
-          ? _buildEmptyState()
+          ? const AnaSoilEmptyState(
+              icon: Icons.science_outlined,
+              title: 'Nenhum parâmetro disponível',
+              message: 'Os dados desta análise ainda não foram classificados.',
+            )
           : SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AnaSoilSpacing.lg),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildHeaderCard(dateStr),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AnaSoilSpacing.lg),
                   _buildSummarySection(classifications),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AnaSoilSpacing.lg),
                   _buildRangeSection(classifications),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: AnaSoilSpacing.lg),
                   _buildParametersList(classifications),
                 ],
               ),
@@ -46,32 +51,10 @@ class AnalysisDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          const Icon(
-            Icons.science_outlined,
-            size: 72,
-            color: AppTheme.baseGray400,
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Nenhum parâmetro disponível',
-            style: TextStyle(
-              fontSize: 18,
-              color: AppTheme.baseGray600,
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   Widget _buildHeaderCard(String dateStr) {
-    return _sectionContainer(
+    return AnaSoilSurface(
+      width: double.infinity,
+      radius: AnaSoilRadius.md,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -89,7 +72,7 @@ class AnalysisDetailPage extends StatelessWidget {
                   size: 24,
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: AnaSoilSpacing.md),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -107,7 +90,7 @@ class AnalysisDetailPage extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       dateStr,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         color: AppTheme.baseGray600,
                       ),
@@ -118,7 +101,7 @@ class AnalysisDetailPage extends StatelessWidget {
             ],
           ),
           if (analysis.requester != null) ...[
-            const SizedBox(height: 12),
+            const SizedBox(height: AnaSoilSpacing.md),
             Row(
               children: [
                 Icon(Icons.business, size: 16, color: AppTheme.baseGray500),
@@ -126,30 +109,29 @@ class AnalysisDetailPage extends StatelessWidget {
                 Expanded(
                   child: Text(
                     analysis.requester!,
-                    style: TextStyle(fontSize: 13, color: AppTheme.baseGray600),
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.baseGray600,
+                    ),
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
               ],
             ),
           ],
-          const SizedBox(height: 12),
+          const SizedBox(height: AnaSoilSpacing.md),
           Wrap(
-            spacing: 8,
-            runSpacing: 8,
+            spacing: AnaSoilSpacing.sm,
+            runSpacing: AnaSoilSpacing.sm,
             children: [
-              _buildTag(
-                'Amostra ${analysis.labNumber}',
-                foreground: AppTheme.primaryGreenDark,
-                background: AppTheme.primaryGreenSoft,
-                border: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
+              AnaSoilStatusChip(
+                label: 'Amostra ${analysis.labNumber}',
+                tone: AnaSoilStatusTone.success,
               ),
               if (analysis.depthCm != null)
-                _buildTag(
-                  '${analysis.depthCm!.toStringAsFixed(0)} cm',
-                  foreground: AppTheme.baseGray600,
-                  background: AppTheme.baseGray100,
-                  border: AppTheme.baseGray200,
+                AnaSoilStatusChip(
+                  label: '${analysis.depthCm!.toStringAsFixed(0)} cm',
+                  tone: AnaSoilStatusTone.neutral,
                 ),
             ],
           ),
@@ -165,7 +147,9 @@ class AnalysisDetailPage extends StatelessWidget {
         .length;
     final alto = classifications.where((c) => c.level == SoilLevel.high).length;
 
-    return _sectionContainer(
+    return AnaSoilSurface(
+      width: double.infinity,
+      radius: AnaSoilRadius.md,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -177,7 +161,7 @@ class AnalysisDetailPage extends StatelessWidget {
               color: AppTheme.baseGray900,
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: AnaSoilSpacing.md),
           Row(
             children: [
               Expanded(
@@ -189,7 +173,7 @@ class AnalysisDetailPage extends StatelessWidget {
                   border: AppTheme.secondaryRed.withValues(alpha: 0.18),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AnaSoilSpacing.sm),
               Expanded(
                 child: _buildSummaryItem(
                   'Médio',
@@ -199,7 +183,7 @@ class AnalysisDetailPage extends StatelessWidget {
                   border: AppTheme.warningAmber.withValues(alpha: 0.2),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: AnaSoilSpacing.sm),
               Expanded(
                 child: _buildSummaryItem(
                   'Alto',
@@ -224,7 +208,7 @@ class AnalysisDetailPage extends StatelessWidget {
     required Color border,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+      padding: const EdgeInsets.symmetric(vertical: AnaSoilSpacing.md),
       decoration: BoxDecoration(
         color: background,
         borderRadius: BorderRadius.circular(10),
@@ -248,7 +232,9 @@ class AnalysisDetailPage extends StatelessWidget {
   }
 
   Widget _buildRangeSection(List<SoilClassification> classifications) {
-    return _sectionContainer(
+    return AnaSoilSurface(
+      width: double.infinity,
+      radius: AnaSoilRadius.md,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -260,12 +246,12 @@ class AnalysisDetailPage extends StatelessWidget {
               color: AppTheme.baseGray900,
             ),
           ),
-          const SizedBox(height: 4),
-          Text(
+          const SizedBox(height: AnaSoilSpacing.xs),
+          const Text(
             'Cada parâmetro usa a própria faixa de referência.',
             style: TextStyle(fontSize: 12, color: AppTheme.baseGray600),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AnaSoilSpacing.lg),
           ...classifications.map(_buildRangeRow),
         ],
       ),
@@ -307,7 +293,7 @@ class AnalysisDetailPage extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AnaSoilSpacing.sm),
           LayoutBuilder(
             builder: (context, constraints) {
               final markerLeft = (constraints.maxWidth - 14) * markerPosition;
@@ -339,7 +325,10 @@ class AnalysisDetailPage extends StatelessWidget {
                         decoration: BoxDecoration(
                           color: color,
                           shape: BoxShape.circle,
-                          border: Border.all(color: Colors.white, width: 2),
+                          border: Border.all(
+                            color: AppTheme.baseWhite,
+                            width: 2,
+                          ),
                           boxShadow: [
                             BoxShadow(
                               color: Colors.black.withAlpha(35),
@@ -356,17 +345,20 @@ class AnalysisDetailPage extends StatelessWidget {
           ),
           Row(
             children: [
-              Text(
+              const Text(
                 'Baixo',
                 style: TextStyle(fontSize: 11, color: AppTheme.baseGray600),
               ),
               const Spacer(),
               Text(
                 '${_formatNumber(classification.lowThreshold)}–${_formatNumber(classification.highThreshold)}$unitStr',
-                style: TextStyle(fontSize: 11, color: AppTheme.baseGray600),
+                style: const TextStyle(
+                  fontSize: 11,
+                  color: AppTheme.baseGray600,
+                ),
               ),
               const Spacer(),
-              Text(
+              const Text(
                 'Alto',
                 style: TextStyle(fontSize: 11, color: AppTheme.baseGray600),
               ),
@@ -403,7 +395,7 @@ class AnalysisDetailPage extends StatelessWidget {
             color: AppTheme.baseGray900,
           ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: AnaSoilSpacing.md),
         if (baixo.isNotEmpty) _buildParameterGroup('Baixo', baixo),
         if (medio.isNotEmpty) _buildParameterGroup('Médio', medio),
         if (alto.isNotEmpty) _buildParameterGroup('Alto', alto),
@@ -419,17 +411,20 @@ class AnalysisDetailPage extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.only(bottom: 8, top: 4),
+          padding: const EdgeInsets.only(
+            bottom: AnaSoilSpacing.sm,
+            top: AnaSoilSpacing.xs,
+          ),
           child: Text(
             title,
-            style: TextStyle(
+            style: const TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w600,
               color: AppTheme.baseGray600,
             ),
           ),
         ),
-        ...classifications.map((c) => _buildParameterCard(c)),
+        ...classifications.map(_buildParameterCard),
       ],
     );
   }
@@ -441,11 +436,11 @@ class AnalysisDetailPage extends StatelessWidget {
         : '';
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: AnaSoilSpacing.sm),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
+        color: AppTheme.baseWhite,
+        borderRadius: BorderRadius.circular(AnaSoilRadius.md),
         border: Border.all(color: AppTheme.baseGray200),
       ),
       child: Row(
@@ -458,7 +453,7 @@ class AnalysisDetailPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AnaSoilSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,7 +469,10 @@ class AnalysisDetailPage extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   'Referência média: ${_formatNumber(classification.lowThreshold)}–${_formatNumber(classification.highThreshold)}$unitStr',
-                  style: TextStyle(fontSize: 11, color: AppTheme.baseGray500),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.baseGray500,
+                  ),
                 ),
               ],
             ),
@@ -513,69 +511,30 @@ class AnalysisDetailPage extends StatelessWidget {
     );
   }
 
-  Widget _sectionContainer({required Widget child}) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.baseGray200),
-      ),
-      child: child,
-    );
-  }
-
-  Widget _buildTag(
-    String text, {
-    required Color foreground,
-    required Color background,
-    required Color border,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: border),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: foreground,
-        ),
-      ),
-    );
-  }
-
   double _markerPosition(SoilClassification classification) {
     final low = classification.lowThreshold;
     final high = classification.highThreshold;
     final value = classification.value;
-    final middleRange = high - low;
-    final min = low - middleRange;
-    final max = high + middleRange;
-
-    if (max <= min) return 0.5;
-    return ((value - min) / (max - min)).clamp(0.0, 1.0);
-  }
-
-  String _formatNumber(double value) {
-    if (value == value.roundToDouble()) return value.toStringAsFixed(0);
-    if (value.abs() < 1) return value.toStringAsFixed(2);
-    return value.toStringAsFixed(1);
+    if (high <= low) return value < low ? 0.0 : 1.0;
+    final position = (value - low) / (high - low);
+    return position.clamp(0.0, 1.0);
   }
 
   Color _colorForLevel(SoilLevel level) {
     switch (level) {
       case SoilLevel.low:
-        return const Color(0xFFE53935);
+        return AnaSoilSemanticColors.soilLow;
       case SoilLevel.medium:
-        return const Color(0xFFFFA726);
+        return AnaSoilSemanticColors.soilMedium;
       case SoilLevel.high:
-        return const Color(0xFF43A047);
+        return AnaSoilSemanticColors.soilHigh;
     }
+  }
+
+  String _formatNumber(double value) {
+    if (value == value.roundToDouble()) {
+      return value.toStringAsFixed(0);
+    }
+    return value.toStringAsFixed(value < 1 ? 2 : 1);
   }
 }

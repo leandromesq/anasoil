@@ -658,55 +658,7 @@ graph TD
     A3 --> UC06
 ```
 
----
-
-## 5. Diagrama de Componentes
-
-O sistema é composto por clientes Flutter e serviços Firebase. O pacote
-compartilhado `anasoil_shared` provê contratos de domínio para ambas as
-aplicações.
-
-```mermaid
-graph TD
-    subgraph "Clientes"
-        Mobile["AnaSoil Mobile\n(Flutter/Dart)"]
-        Admin["AnaSoil Admin\n(Flutter Web)"]
-    end
-
-    subgraph "Camada Compartilhada"
-        Shared["anasoil_shared\n(ParameterClassifier,\nFirestoreSchema,\nCommand, Result,\nThemeTokens)"]
-    end
-
-    subgraph "Firebase"
-        Auth["Firebase\nAuthentication"]
-        Firestore["Cloud\nFirestore"]
-        Storage["Firebase\nStorage"]
-        Identity["Identity Toolkit\nREST API"]
-    end
-
-    subgraph "Externo"
-        Email["Serviço de\nE-mail"]
-        PDF["Motor de Extração\nSyncfusion PDF"]
-    end
-
-    Mobile --> Auth
-    Mobile --> Firestore
-    Mobile --> Storage
-    Mobile --> Shared
-    Mobile --> PDF
-
-    Admin --> Auth
-    Admin --> Firestore
-    Admin --> Shared
-    Admin --> Identity
-
-    Auth --> Email
-    Identity --> Auth
-```
-
----
-
-## 6. Diagrama de Implantação
+## 5. Diagrama de Implantação
 
 O AnaSoil é implantado em dispositivos Android, navegadores web e serviços
 Firebase hospedados na Google Cloud Platform.
@@ -737,9 +689,9 @@ graph TD
 
 ---
 
-## 7. Diagramas de Estado
+## 6. Diagramas de Estado
 
-### 7.1 Ciclo de Vida do Usuário
+### 6.1 Ciclo de Vida do Usuário
 
 Usuários são criados pela plataforma administrativa e transitam entre os
 estados ativo e inativo por decisão do administrador.
@@ -760,7 +712,7 @@ stateDiagram-v2
     end note
 ```
 
-### 7.2 Upload Flow (Máquina de Estados)
+### 6.2 Upload Flow (Máquina de Estados)
 
 O fluxo de importação e extração no aplicativo móvel é governado por uma
 máquina de estados com nove passos, implementada no módulo `UploadFlow`.
@@ -792,54 +744,3 @@ stateDiagram-v2
 
     failed --> idle : Reiniciar fluxo
 ```
-
----
-
-## 8. Workflow TO BE (Fluxo Digital)
-
-O fluxo proposto substitui a transcrição manual por um processo digital
-integrado com Firebase.
-
-```mermaid
-flowchart TD
-    A([Usuário autenticado]) --> B[Acessa Análise > Nova]
-    B --> C[Seleciona arquivo PDF]
-    C --> D{PDF válido?}
-    D -->|Não| E[Exibe erro de formato]
-    E --> C
-    D -->|Sim| F[Upload para Firebase Storage]
-    F --> G[Grava metadados no Firestore]
-    G --> H[Extrai texto do PDF<br/>Syncfusion]
-    H --> I[Interpreta amostras DMLab]
-    I --> J[Classifica parâmetros<br/>ParameterClassifier]
-    J --> K[Exibe preview com<br/>cards de classificação]
-    K --> L{Usuário decide}
-    L -->|Descartar| B
-    L -->|Salvar| M[Persiste análises<br/>no Firestore]
-    M --> N{Quantas análises?}
-    N -->|1 análise| O[Botão: Ver análise]
-    N -->|N análises| P[Botão: Ver histórico]
-    O --> Q[AnalysisDetailPage]
-    P --> R[HistoryPage]
-```
-
----
-
-## 9. Visualização dos Parâmetros (Atualizado)
-
-A tela de detalhe da análise **não utiliza mais gráfico de barras com
-FL Chart**. Desde a refatoração de maio/2026, a visualização é composta por:
-
-- **Resumo**: contagem de parâmetros classificados (Baixo, Médio, Alto).
-- **Faixas dos parâmetros**: barras horizontais por parâmetro, cada uma
-  usando a própria faixa de referência, com marcador posicionado no valor
-  medido.
-- **Detalhamento**: cards agrupados por nível de classificação, com valor,
-  unidade, faixa de referência e indicação Baixo/Médio/Alto.
-
-A classificação é feita pelo módulo compartilhado `ParameterClassifier`
-do pacote `anasoil_shared`, consumido por ambas as aplicações.
-
-A dependência `fl_chart` permanece no `pubspec.yaml` mas não é mais
-utilizada na página de detalhe da análise. Caso nenhuma outra tela a
-referencie, pode ser removida em limpeza futura.

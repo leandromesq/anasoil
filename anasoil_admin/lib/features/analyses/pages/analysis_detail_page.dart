@@ -8,7 +8,7 @@ import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class AnalysisDetailPage extends StatefulWidget {
   final String analysisId;
@@ -72,28 +72,16 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
         ? _analysis!.propertyName
         : _analysis?.labNumber ?? 'Análise';
 
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir Análise'),
-        content: Text('Deseja realmente excluir "$displayName"?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text(
-              'Excluir',
-              style: TextStyle(color: AppTheme.secondaryRed),
-            ),
-          ),
-        ],
-      ),
+    final confirmed = await AnaSoilConfirmDialog.show(
+      context,
+      title: 'Excluir análise?',
+      message:
+          'Deseja realmente excluir "$displayName"? Esta ação não pode ser desfeita.',
+      confirmLabel: 'Excluir',
+      destructive: true,
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     try {
       await locator<AnalysisRepository>().deleteAnalysis(widget.analysisId);
@@ -123,38 +111,19 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
     if (_isLoading) {
       return const AppLayout(
         title: 'Análise',
-        body: Center(child: CircularProgressIndicator()),
+        body: AnaSoilLoadingState(message: 'Carregando análise...'),
       );
     }
 
     if (_error != null || _analysis == null) {
       return AppLayout(
         title: 'Análise',
-        body: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(
-                PhosphorIcons.chartLine(),
-                size: 64,
-                color: AppTheme.baseGray400,
-              ),
-              const SizedBox(height: 16),
-              Text(
-                _error ?? 'Análise não encontrada',
-                style: const TextStyle(
-                  fontSize: 18,
-                  color: AppTheme.baseGray500,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: () => context.go('/analyses'),
-                child: const Text('Voltar para Análises'),
-              ),
-            ],
-          ),
+        body: AnaSoilEmptyState(
+          icon: Symbols.monitoring,
+          title: _error ?? 'Análise não encontrada',
+          message: 'Volte para a lista de análises e selecione outro registro.',
+          actionLabel: 'Voltar para Análises',
+          onAction: () => context.go('/analyses'),
         ),
       );
     }
@@ -167,11 +136,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
       actions: [
         TextButton.icon(
           onPressed: _deleteAnalysis,
-          icon: Icon(
-            PhosphorIcons.trash(),
-            size: 18,
-            color: AppTheme.secondaryRed,
-          ),
+          icon: Icon(Symbols.delete, size: 18, color: AppTheme.secondaryRed),
           label: const Text(
             'Excluir',
             style: TextStyle(color: AppTheme.secondaryRed),
@@ -219,7 +184,7 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
-                    PhosphorIcons.plant(),
+                    Symbols.eco,
                     color: AppTheme.primaryGreen,
                     size: 32,
                   ),
@@ -268,22 +233,52 @@ class _AnalysisDetailPageState extends State<AnalysisDetailPage> {
             const SizedBox(height: 24),
             const Divider(),
             const SizedBox(height: 16),
-            _buildInfoRow('Proprietário', _getUserName(analysis.userId)),
-            _buildInfoRow(
-              'Data da Análise',
-              _formatDate(analysis.analysisDate),
-            ),
-            if (analysis.requester != null)
-              _buildInfoRow('Solicitante', analysis.requester!),
-            if (analysis.stakeholder != null)
-              _buildInfoRow('Interessado', analysis.stakeholder!),
-            if (analysis.dataEntrada != null)
-              _buildInfoRow('Data Entrada', analysis.dataEntrada!),
-            if (analysis.material != null)
-              _buildInfoRow('Material', analysis.material!),
+            _buildHeaderInfoGrid(analysis),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildHeaderInfoGrid(SoilAnalysisModel analysis) {
+    final items = <({String label, String value})>[
+      (label: 'Proprietário', value: _getUserName(analysis.userId)),
+      (label: 'Data da Análise', value: _formatDate(analysis.analysisDate)),
+      if (analysis.requester != null)
+        (label: 'Solicitante', value: analysis.requester!),
+      if (analysis.stakeholder != null)
+        (label: 'Interessado', value: analysis.stakeholder!),
+      if (analysis.dataEntrada != null)
+        (label: 'Data Entrada', value: analysis.dataEntrada!),
+      if (analysis.material != null)
+        (label: 'Material', value: analysis.material!),
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final useTwoColumns = constraints.maxWidth >= 720;
+
+        if (!useTwoColumns) {
+          return Column(
+            children: items
+                .map((item) => _buildInfoRow(item.label, item.value))
+                .toList(),
+          );
+        }
+
+        return Wrap(
+          spacing: 32,
+          runSpacing: 4,
+          children: items
+              .map(
+                (item) => SizedBox(
+                  width: (constraints.maxWidth - 32) / 2,
+                  child: _buildInfoRow(item.label, item.value),
+                ),
+              )
+              .toList(),
+        );
+      },
     );
   }
 

@@ -50,14 +50,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(result.error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
     } else if (result is Ok) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Senha alterada com sucesso'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.primaryGreen,
         ),
       );
       context.pop();
@@ -67,7 +67,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.baseWhite,
       appBar: AppBar(title: const Text('Alterar Senha')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(24),
@@ -81,13 +81,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 child: Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.green[50],
+                    color: AppTheme.primaryGreenSoft,
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
                     Icons.lock_outline,
                     size: 60,
-                    color: Colors.green[700],
+                    color: AppTheme.primaryGreen,
                   ),
                 ),
               ),
@@ -100,14 +100,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey[800],
+                  color: AppTheme.baseGray900,
                 ),
               ),
               const SizedBox(height: 8),
               Text(
                 'Digite sua senha atual e escolha uma nova senha segura',
                 textAlign: TextAlign.center,
-                style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                style: TextStyle(fontSize: 14, color: AppTheme.baseGray600),
               ),
               const SizedBox(height: 32),
 
@@ -265,7 +265,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     onPressed: running ? null : _handleChangePassword,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryGreen,
-                      foregroundColor: Colors.white,
+                      foregroundColor: AppTheme.baseWhite,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       minimumSize: const Size.fromHeight(50),
                     ),
@@ -276,7 +276,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
                               valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
+                                AppTheme.baseWhite,
                               ),
                             ),
                           )
@@ -308,7 +308,10 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
             color: AppTheme.primaryGreen,
           ),
           const SizedBox(width: 8),
-          Text(text, style: TextStyle(fontSize: 12, color: Colors.grey[700])),
+          Text(
+            text,
+            style: TextStyle(fontSize: 12, color: AppTheme.baseGray600),
+          ),
         ],
       ),
     );

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/result.dart';
 import 'auth_viewmodel.dart';
@@ -36,7 +37,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Instruções enviadas para seu e-mail'),
-          backgroundColor: Colors.green,
+          backgroundColor: AppTheme.primaryGreen,
         ),
       );
       context.go('/login');
@@ -45,7 +46,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
     }
@@ -54,11 +55,11 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.baseWhite,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
-        iconTheme: IconThemeData(color: Colors.grey[800]),
+        iconTheme: IconThemeData(color: AppTheme.baseGray900),
       ),
       body: SafeArea(
         child: Padding(
@@ -69,7 +70,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Ícone
-                Icon(Icons.lock_reset, size: 80, color: Colors.green[700]),
+                Icon(Icons.lock_reset, size: 80, color: AppTheme.primaryGreen),
                 const SizedBox(height: 24),
 
                 // Título
@@ -79,14 +80,14 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   style: TextStyle(
                     fontSize: 24,
                     fontWeight: FontWeight.bold,
-                    color: Colors.grey[800],
+                    color: AppTheme.baseGray900,
                   ),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'Digite seu e-mail e enviaremos instruções para redefinir sua senha',
                   textAlign: TextAlign.center,
-                  style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                  style: TextStyle(fontSize: 14, color: AppTheme.baseGray600),
                 ),
                 const SizedBox(height: 48),
 
@@ -125,8 +126,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     return ElevatedButton(
                       onPressed: isLoading ? null : _handleResetPassword,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green[700],
-                        foregroundColor: Colors.white,
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: AppTheme.baseWhite,
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
@@ -138,7 +139,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                               width: 20,
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: Colors.white,
+                                color: AppTheme.baseWhite,
                               ),
                             )
                           : const Text(

@@ -3,7 +3,7 @@ import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/documents/viewmodels/document_list_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 import '../../../core/service_locator.dart';
 
@@ -42,7 +42,7 @@ class DocumentsDataTable extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(PhosphorIcons.folder(), size: 64, color: AppTheme.baseGray400),
+            Icon(Symbols.folder, size: 64, color: AppTheme.baseGray400),
             const SizedBox(height: 16),
             Text(
               'Nenhum documento encontrado',
@@ -86,11 +86,7 @@ class DocumentsDataTable extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      PhosphorIcons.folder(),
-                      size: 20,
-                      color: AppTheme.baseGray600,
-                    ),
+                    Icon(Symbols.folder, size: 20, color: AppTheme.baseGray600),
                     const SizedBox(width: 8),
                     Text(
                       'Documentos (${documents.length})',
@@ -119,7 +115,7 @@ class DocumentsDataTable extends StatelessWidget {
                       );
                     }
                     return IconButton(
-                      icon: Icon(PhosphorIcons.arrowClockwise()),
+                      icon: Icon(Symbols.refresh),
                       onPressed: viewModel.fetchDocumentsCommand.execute,
                       tooltip: 'Atualizar',
                     );
@@ -201,7 +197,7 @@ class _MobileList extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Icon(
-                          PhosphorIcons.filePdf(),
+                          Symbols.picture_as_pdf,
                           color: AppTheme.primaryGreen,
                           size: 18,
                         ),
@@ -455,7 +451,7 @@ class _DesktopTable extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(
-                    PhosphorIcons.filePdf(),
+                    Symbols.picture_as_pdf,
                     color: AppTheme.primaryGreen,
                     size: 18,
                   ),
@@ -511,7 +507,7 @@ class _DesktopTable extends StatelessWidget {
               children: [
                 IconButton(
                   onPressed: () => context.go('/document/${doc.id}'),
-                  icon: Icon(PhosphorIcons.eye(), size: 18),
+                  icon: Icon(Symbols.visibility, size: 18),
                   color: AppTheme.primaryGreen,
                   tooltip: 'Visualizar',
                   style: IconButton.styleFrom(
@@ -521,7 +517,7 @@ class _DesktopTable extends StatelessWidget {
                 ),
                 IconButton(
                   onPressed: () => onDelete(doc),
-                  icon: Icon(PhosphorIcons.trash(), size: 18),
+                  icon: Icon(Symbols.delete, size: 18),
                   color: AppTheme.secondaryRed,
                   tooltip: 'Excluir',
                   style: IconButton.styleFrom(

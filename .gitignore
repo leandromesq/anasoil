@@ -8,6 +8,13 @@
 .history
 final_report/
 
+# Generated/docs artifacts
+docs/AnaSoil AS-IS/
+docs/astah/
+docs/diagrams/
+docs/hackolade/
+docs/workflow_to_be.bpmn
+
 
 
 # Flutter repo-specific

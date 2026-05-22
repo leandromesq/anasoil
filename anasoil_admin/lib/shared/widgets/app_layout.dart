@@ -2,12 +2,13 @@ import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/shared/widgets/app_logo.dart';
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 /// Breakpoint below which the layout switches to mobile (drawer + bottom nav)
-const double _kMobileBreakpoint = 800;
+const double _kMobileBreakpoint = AnaSoilBreakpoints.tablet;
 
 class AppShell extends StatelessWidget {
   final Widget child;
@@ -60,7 +61,7 @@ class _MobileScaffold extends StatelessWidget {
         ),
         leading: Builder(
           builder: (context) => IconButton(
-            icon: Icon(PhosphorIcons.list(), color: AppTheme.baseGray600),
+            icon: Icon(Symbols.menu, color: AppTheme.baseGray600),
             onPressed: () => Scaffold.of(context).openDrawer(),
           ),
         ),
@@ -102,7 +103,7 @@ class _AppDrawer extends StatelessWidget {
             decoration: const BoxDecoration(color: AppTheme.primaryGreen),
             child: Row(
               children: [
-                const AppLogo(size: 48),
+                const AppLogo(size: 48, tone: AppLogoTone.white),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Column(
@@ -131,13 +132,13 @@ class _AppDrawer extends StatelessWidget {
             ),
           ),
           _DrawerItem(
-            icon: PhosphorIcons.users(),
+            icon: Symbols.group,
             title: 'Usuários',
             isActive: currentRoute.startsWith('/user'),
             route: '/users',
           ),
           _DrawerItem(
-            icon: PhosphorIcons.chartLine(),
+            icon: Symbols.monitoring,
             title: 'Análises',
             isActive:
                 currentRoute.startsWith('/analysis') ||
@@ -145,7 +146,7 @@ class _AppDrawer extends StatelessWidget {
             route: '/analyses',
           ),
           _DrawerItem(
-            icon: PhosphorIcons.folder(),
+            icon: Symbols.folder,
             title: 'Documentos',
             isActive:
                 currentRoute.startsWith('/document') ||
@@ -153,7 +154,7 @@ class _AppDrawer extends StatelessWidget {
             route: '/documents',
           ),
           _DrawerItem(
-            icon: PhosphorIcons.gear(),
+            icon: Symbols.settings,
             title: 'Configurações',
             isActive: currentRoute == '/settings',
             route: '/settings',
@@ -164,11 +165,7 @@ class _AppDrawer extends StatelessWidget {
             leading: CircleAvatar(
               radius: 16,
               backgroundColor: AppTheme.primaryGreen,
-              child: Icon(
-                PhosphorIcons.user(),
-                size: 18,
-                color: AppTheme.baseWhite,
-              ),
+              child: Icon(Symbols.person, size: 18, color: AppTheme.baseWhite),
             ),
             title: const Text(
               'Administrador',
@@ -180,7 +177,7 @@ class _AppDrawer extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
             trailing: IconButton(
-              icon: Icon(PhosphorIcons.signOut(), color: AppTheme.baseGray500),
+              icon: Icon(Symbols.logout, color: AppTheme.baseGray500),
               onPressed: () async {
                 Navigator.pop(context);
                 await session.signOut();
@@ -296,13 +293,13 @@ class _AppSidebar extends StatelessWidget {
               padding: const EdgeInsets.symmetric(vertical: 8),
               children: [
                 _SidebarItem(
-                  icon: PhosphorIcons.users(),
+                  icon: Symbols.group,
                   title: 'Usuários',
                   isActive: currentRoute.startsWith('/user'),
                   route: '/users',
                 ),
                 _SidebarItem(
-                  icon: PhosphorIcons.chartLine(),
+                  icon: Symbols.monitoring,
                   title: 'Análises',
                   isActive:
                       currentRoute == '/analyses' ||
@@ -310,7 +307,7 @@ class _AppSidebar extends StatelessWidget {
                   route: '/analyses',
                 ),
                 _SidebarItem(
-                  icon: PhosphorIcons.folder(),
+                  icon: Symbols.folder,
                   title: 'Documentos',
                   isActive:
                       currentRoute == '/documents' ||
@@ -318,7 +315,7 @@ class _AppSidebar extends StatelessWidget {
                   route: '/documents',
                 ),
                 _SidebarItem(
-                  icon: PhosphorIcons.gear(),
+                  icon: Symbols.settings,
                   title: 'Configurações',
                   isActive: currentRoute == '/settings',
                   route: '/settings',
@@ -328,11 +325,11 @@ class _AppSidebar extends StatelessWidget {
           ),
 
           Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.all(12),
+            margin: const EdgeInsets.all(AnaSoilSpacing.lg),
+            padding: const EdgeInsets.all(AnaSoilSpacing.md),
             decoration: BoxDecoration(
               color: AppTheme.baseGray100,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
             ),
             child: Row(
               children: [
@@ -340,7 +337,7 @@ class _AppSidebar extends StatelessWidget {
                   radius: 16,
                   backgroundColor: AppTheme.primaryGreen,
                   child: Icon(
-                    PhosphorIcons.user(),
+                    Symbols.person,
                     size: 18,
                     color: AppTheme.baseWhite,
                   ),
@@ -371,7 +368,7 @@ class _AppSidebar extends StatelessWidget {
                 ),
                 IconButton(
                   icon: Icon(
-                    PhosphorIcons.signOut(),
+                    Symbols.logout,
                     size: 18,
                     color: AppTheme.baseGray500,
                   ),
@@ -409,14 +406,17 @@ class _SidebarItem extends StatelessWidget {
     final iconColor = isActive ? AppTheme.primaryGreen : AppTheme.baseGray500;
 
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AnaSoilSpacing.md,
+        vertical: 2,
+      ),
       child: Material(
         color: isActive
             ? AppTheme.primaryGreenLight.withValues(alpha: 0.12)
             : Colors.transparent,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
         child: InkWell(
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
           mouseCursor: isActive
               ? SystemMouseCursors.basic
               : SystemMouseCursors.click,
@@ -518,7 +518,7 @@ class AppNavbar extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            if (actions != null) ...actions!,
+            ...?actions,
           ],
         ),
       ),

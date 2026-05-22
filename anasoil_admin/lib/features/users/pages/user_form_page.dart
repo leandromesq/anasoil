@@ -6,7 +6,7 @@ import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class UserFormPage extends StatefulWidget {
   final String? userId;
@@ -128,9 +128,7 @@ class _UserFormPageState extends State<UserFormPage> {
                     Row(
                       children: [
                         Icon(
-                          isEditing
-                              ? PhosphorIcons.pencilSimple()
-                              : PhosphorIcons.userPlus(),
+                          isEditing ? Symbols.edit : Symbols.person_add,
                           color: AppTheme.primaryGreen,
                           size: 24,
                         ),
@@ -153,7 +151,7 @@ class _UserFormPageState extends State<UserFormPage> {
                       controller: _nameController,
                       decoration: InputDecoration(
                         labelText: 'Nome completo',
-                        prefixIcon: Icon(PhosphorIcons.user()),
+                        prefixIcon: Icon(Symbols.person),
                       ),
                       validator: (value) => (value == null || value.isEmpty)
                           ? 'Campo obrigatório'
@@ -165,7 +163,7 @@ class _UserFormPageState extends State<UserFormPage> {
                       controller: _emailController,
                       decoration: InputDecoration(
                         labelText: 'E-mail',
-                        prefixIcon: Icon(PhosphorIcons.envelope()),
+                        prefixIcon: Icon(Symbols.mail),
                       ),
                       keyboardType: TextInputType.emailAddress,
                       validator: (value) {
@@ -185,7 +183,7 @@ class _UserFormPageState extends State<UserFormPage> {
                       initialValue: _selectedRole,
                       decoration: InputDecoration(
                         labelText: 'Função',
-                        prefixIcon: Icon(PhosphorIcons.briefcase()),
+                        prefixIcon: Icon(Symbols.work),
                       ),
                       items: UserRole.assignable
                           .map(
@@ -220,9 +218,7 @@ class _UserFormPageState extends State<UserFormPage> {
                         child: Row(
                           children: [
                             Icon(
-                              _isActive
-                                  ? PhosphorIcons.checkCircle()
-                                  : PhosphorIcons.xCircle(),
+                              _isActive ? Symbols.check_circle : Symbols.cancel,
                               color: _isActive
                                   ? AppTheme.primaryGreen
                                   : AppTheme.secondaryRed,

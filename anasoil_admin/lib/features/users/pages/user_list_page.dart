@@ -7,7 +7,7 @@ import 'package:anasoil_admin/shared/widgets/deferred_table.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class UserListPage extends StatefulWidget {
   final UserListViewModel viewModel;
@@ -142,7 +142,7 @@ class _UserListPageState extends State<UserListPage> {
       actions: [
         ElevatedButton.icon(
           onPressed: () => context.go('/user/add'),
-          icon: Icon(PhosphorIcons.plus(), size: 18),
+          icon: Icon(Symbols.add, size: 18),
           label: const Text('Novo Usuário'),
           style: ElevatedButton.styleFrom(
             backgroundColor: AppTheme.primaryGreen,

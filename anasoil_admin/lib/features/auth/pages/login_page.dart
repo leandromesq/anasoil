@@ -4,7 +4,7 @@ import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/shared/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -165,8 +165,8 @@ class _LoginPageState extends State<LoginPage> {
                             suffixIcon: IconButton(
                               icon: Icon(
                                 _obscurePassword
-                                    ? PhosphorIcons.eye()
-                                    : PhosphorIcons.eyeSlash(),
+                                    ? Symbols.visibility
+                                    : Symbols.visibility_off,
                                 color: AppTheme.baseGray500,
                                 size: 20,
                               ),
@@ -218,7 +218,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: Row(
                               children: [
                                 Icon(
-                                  PhosphorIcons.warningCircle(),
+                                  Symbols.warning,
                                   color: AppTheme.secondaryRedDark,
                                   size: 16,
                                 ),

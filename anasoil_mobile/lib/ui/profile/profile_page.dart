@@ -1,9 +1,12 @@
 import 'dart:io';
+
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
+
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/user_profile.dart';
-import '../../utils/result.dart';
 import 'profile_viewmodel.dart';
 import '../auth/auth_viewmodel.dart';
 
@@ -38,23 +41,25 @@ class _ProfilePageState extends State<ProfilePage> {
   Future<void> _showAvatarOptions(UserProfile profile) async {
     await showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AnaSoilRadius.lg),
+        ),
       ),
       builder: (context) => SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const SizedBox(height: 8),
+            const SizedBox(height: AnaSoilSpacing.sm),
             Container(
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.grey[300],
+                color: AppTheme.baseGray300,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: AnaSoilSpacing.lg),
             ListTile(
               leading: const Icon(Icons.camera_alt_outlined),
               title: const Text('Tirar foto'),
@@ -73,17 +78,20 @@ class _ProfilePageState extends State<ProfilePage> {
             ),
             if (profile.avatarUrl != null)
               ListTile(
-                leading: Icon(Icons.delete_outline, color: Colors.red[700]),
-                title: Text(
+                leading: const Icon(
+                  Icons.delete_outline,
+                  color: AppTheme.secondaryRed,
+                ),
+                title: const Text(
                   'Remover foto',
-                  style: TextStyle(color: Colors.red[700]),
+                  style: TextStyle(color: AppTheme.secondaryRed),
                 ),
                 onTap: () {
                   Navigator.pop(context);
                   _removeAvatar();
                 },
               ),
-            const SizedBox(height: 8),
+            const SizedBox(height: AnaSoilSpacing.sm),
           ],
         ),
       ),
@@ -101,7 +109,6 @@ class _ProfilePageState extends State<ProfilePage> {
     if (picked == null || !mounted) return;
 
     await widget.viewModel.updateAvatarCommand.execute(File(picked.path));
-
     if (!mounted) return;
 
     final result = widget.viewModel.updateAvatarCommand.result;
@@ -109,7 +116,7 @@ class _ProfilePageState extends State<ProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text((result as Error).error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
     }
@@ -117,7 +124,6 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _removeAvatar() async {
     await widget.viewModel.removeAvatarCommand.execute();
-
     if (!mounted) return;
 
     final result = widget.viewModel.removeAvatarCommand.result;
@@ -125,26 +131,46 @@ class _ProfilePageState extends State<ProfilePage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text((result as Error).error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
+    }
+  }
+
+  Future<void> _logout() async {
+    final confirmed = await AnaSoilConfirmDialog.show(
+      context,
+      title: 'Sair da conta?',
+      message: 'Você precisará entrar novamente para acessar o AnaSoil.',
+      confirmLabel: 'Sair',
+      destructive: true,
+    );
+
+    if (!confirmed || !mounted) return;
+    await widget.authViewModel.logoutCommand.execute();
+    if (mounted) {
+      context.go('/login');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppTheme.baseGray50,
       body: ListenableBuilder(
         listenable: widget.viewModel,
         builder: (context, _) {
           if (widget.viewModel.loadProfileCommand.running) {
-            return const Center(child: CircularProgressIndicator());
+            return const AnaSoilLoadingState(message: 'Carregando perfil...');
           }
 
           final profile = widget.viewModel.profile;
           if (profile == null) {
-            return const Center(child: Text('Erro ao carregar perfil'));
+            return const AnaSoilEmptyState(
+              icon: Icons.person_off,
+              title: 'Perfil não disponível',
+              message: 'Entre novamente para acessar seu perfil.',
+            );
           }
 
           return _buildProfileContent(profile);
@@ -155,18 +181,18 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Widget _buildProfileContent(UserProfile profile) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AnaSoilSpacing.lg),
       child: Column(
         children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: AnaSoilSpacing.lg),
           _buildAvatarSection(profile),
-          const SizedBox(height: 32),
+          const SizedBox(height: AnaSoilSpacing.xxl),
           _buildInfoCard(profile),
-          const SizedBox(height: 16),
+          const SizedBox(height: AnaSoilSpacing.lg),
           _buildChangePasswordButton(),
-          const SizedBox(height: 16),
+          const SizedBox(height: AnaSoilSpacing.lg),
           _buildLogoutButton(),
-          const SizedBox(height: 32),
+          const SizedBox(height: AnaSoilSpacing.xxl),
         ],
       ),
     );
@@ -184,17 +210,21 @@ class _ProfilePageState extends State<ProfilePage> {
         children: [
           CircleAvatar(
             radius: 60,
-            backgroundColor: Colors.green[100],
+            backgroundColor: AppTheme.primaryGreenSoft,
             child: CircleAvatar(
               radius: 56,
-              backgroundColor: Colors.green[700],
+              backgroundColor: AppTheme.primaryGreen,
               backgroundImage: profile.avatarUrl != null
                   ? NetworkImage(profile.avatarUrl!)
                   : null,
               child: isUploading
-                  ? const CircularProgressIndicator(color: Colors.white)
+                  ? const CircularProgressIndicator(color: AppTheme.baseWhite)
                   : profile.avatarUrl == null
-                  ? const Icon(Icons.person, size: 50, color: Colors.white)
+                  ? const Icon(
+                      Icons.person,
+                      size: 50,
+                      color: AppTheme.baseWhite,
+                    )
                   : null,
             ),
           ),
@@ -202,16 +232,16 @@ class _ProfilePageState extends State<ProfilePage> {
             bottom: 0,
             right: 0,
             child: Container(
-              padding: const EdgeInsets.all(8),
+              padding: const EdgeInsets.all(AnaSoilSpacing.sm),
               decoration: BoxDecoration(
-                color: Colors.green[700],
+                color: AppTheme.primaryGreen,
                 shape: BoxShape.circle,
-                border: Border.all(color: Colors.white, width: 2),
+                border: Border.all(color: AppTheme.baseWhite, width: 2),
               ),
               child: const Icon(
                 Icons.camera_alt,
                 size: 18,
-                color: Colors.white,
+                color: AppTheme.baseWhite,
               ),
             ),
           ),
@@ -221,18 +251,10 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildInfoCard(UserProfile profile) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withAlpha(13),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
+    return AnaSoilSurface(
+      radius: AnaSoilRadius.lg,
+      padding: EdgeInsets.zero,
+      elevated: true,
       child: Column(
         children: [
           _buildInfoItem(
@@ -277,25 +299,25 @@ class _ProfilePageState extends State<ProfilePage> {
                 children: [
                   Text(
                     label,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 12,
-                      color: Colors.grey[600],
+                      color: AppTheme.baseGray600,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: AnaSoilSpacing.xs),
                   Text(
                     value,
                     style: const TextStyle(
                       fontSize: 16,
-                      color: Colors.black87,
+                      color: AppTheme.baseGray900,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
               ),
             ),
-            if (icon != null) Icon(icon, color: Colors.grey[400], size: 20),
+            if (icon != null) Icon(icon, color: AppTheme.baseGray400, size: 20),
           ],
         ),
       ),
@@ -303,138 +325,118 @@ class _ProfilePageState extends State<ProfilePage> {
   }
 
   Widget _buildChangePasswordButton() {
-    return InkWell(
-      onTap: () => context.push('/profile/change-password'),
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(13),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.green[50],
-                borderRadius: BorderRadius.circular(10),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: () => context.push('/profile/change-password'),
+        borderRadius: BorderRadius.circular(AnaSoilRadius.lg),
+        child: AnaSoilSurface(
+          radius: AnaSoilRadius.lg,
+          elevated: true,
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryGreenSoft,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.lock_outline,
+                  color: AppTheme.primaryGreen,
+                  size: 24,
+                ),
               ),
-              child: Icon(
-                Icons.lock_outline,
-                color: Colors.green[700],
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Alterar Senha',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.black87,
+              const SizedBox(width: AnaSoilSpacing.lg),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Alterar Senha',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Altere a senha da sua conta',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
+                    SizedBox(height: 2),
+                    Text(
+                      'Altere a senha da sua conta',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.baseGray600,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
-          ],
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: AppTheme.baseGray400,
+                size: 16,
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildLogoutButton() {
-    return InkWell(
-      onTap: () async {
-        final confirm = await showDialog<bool>(
-          context: context,
-          builder: (context) => AlertDialog(
-            title: const Text('Sair da Conta'),
-            content: const Text('Deseja realmente sair da sua conta?'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.pop(context, false),
-                child: const Text('Cancelar'),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _logout,
+        borderRadius: BorderRadius.circular(AnaSoilRadius.lg),
+        child: AnaSoilSurface(
+          radius: AnaSoilRadius.lg,
+          borderColor: AppTheme.secondaryRed.withValues(alpha: 0.25),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: AppTheme.secondaryRedLight,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(
+                  Icons.logout,
+                  color: AppTheme.secondaryRed,
+                  size: 24,
+                ),
               ),
-              TextButton(
-                onPressed: () => Navigator.pop(context, true),
-                child: Text('Sair', style: TextStyle(color: Colors.red[700])),
+              const SizedBox(width: AnaSoilSpacing.lg),
+              const Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sair da Conta',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.baseGray900,
+                      ),
+                    ),
+                    SizedBox(height: 2),
+                    Text(
+                      'Desconectar do AnaSoil',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.baseGray600,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(
+                Icons.arrow_forward_ios,
+                color: AppTheme.baseGray400,
+                size: 16,
               ),
             ],
           ),
-        );
-
-        if (confirm == true && mounted) {
-          await widget.authViewModel.logoutCommand.execute();
-          if (mounted) {
-            context.go('/login');
-          }
-        }
-      },
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.red[200]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(13),
-              blurRadius: 10,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Row(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: Colors.red[50],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Icon(Icons.logout, color: Colors.red[700], size: 24),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Sair da Conta',
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.red[700],
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    'Desconectar da sua conta',
-                    style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.arrow_forward_ios, color: Colors.grey[400], size: 16),
-          ],
         ),
       ),
     );

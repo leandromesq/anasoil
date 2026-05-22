@@ -1,7 +1,7 @@
 import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class UsersFilters extends StatelessWidget {
   final String searchText;
@@ -48,11 +48,7 @@ class UsersFilters extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                PhosphorIcons.funnel(),
-                color: AppTheme.baseGray600,
-                size: 20,
-              ),
+              Icon(Symbols.filter_list, color: AppTheme.baseGray600, size: 20),
               const SizedBox(width: 8),
               const Text(
                 'Filtros',
@@ -66,7 +62,7 @@ class UsersFilters extends StatelessWidget {
               if (hasActiveFilters)
                 TextButton.icon(
                   onPressed: onClearFilters,
-                  icon: Icon(PhosphorIcons.x(), size: 16),
+                  icon: Icon(Symbols.close, size: 16),
                   label: const Text('Limpar'),
                   style: TextButton.styleFrom(
                     foregroundColor: AppTheme.secondaryRed,
@@ -84,7 +80,7 @@ class UsersFilters extends StatelessWidget {
                 initialValue: searchText,
                 decoration: InputDecoration(
                   labelText: 'Pesquisar por nome ou email',
-                  prefixIcon: Icon(PhosphorIcons.magnifyingGlass()),
+                  prefixIcon: Icon(Symbols.search),
                   border: const OutlineInputBorder(),
                 ),
                 onChanged: onSearchChanged,
@@ -95,7 +91,7 @@ class UsersFilters extends StatelessWidget {
                 initialValue: statusFilter,
                 decoration: InputDecoration(
                   labelText: 'Status',
-                  prefixIcon: Icon(PhosphorIcons.toggleLeft()),
+                  prefixIcon: Icon(Symbols.toggle_off),
                   border: const OutlineInputBorder(),
                 ),
                 items: [
@@ -105,7 +101,7 @@ class UsersFilters extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          PhosphorIcons.checkCircle(),
+                          Symbols.check_circle,
                           color: AppTheme.primaryGreen,
                           size: 16,
                         ),
@@ -119,7 +115,7 @@ class UsersFilters extends StatelessWidget {
                     child: Row(
                       children: [
                         Icon(
-                          PhosphorIcons.xCircle(),
+                          Symbols.cancel,
                           color: AppTheme.secondaryRed,
                           size: 16,
                         ),
@@ -137,7 +133,7 @@ class UsersFilters extends StatelessWidget {
                 initialValue: roleFilter,
                 decoration: InputDecoration(
                   labelText: 'Função',
-                  prefixIcon: Icon(PhosphorIcons.briefcase()),
+                  prefixIcon: Icon(Symbols.work),
                   border: const OutlineInputBorder(),
                 ),
                 items: [
@@ -196,7 +192,7 @@ class UsersFilters extends StatelessWidget {
                   Chip(
                     label: Text('Nome: "$searchText"'),
                     onDeleted: () => onSearchChanged(''),
-                    deleteIcon: Icon(PhosphorIcons.x(), size: 16),
+                    deleteIcon: Icon(Symbols.close, size: 16),
                     backgroundColor: AppTheme.baseGray100,
                   ),
                 if (statusFilter != 'todos')
@@ -205,14 +201,14 @@ class UsersFilters extends StatelessWidget {
                       'Status: ${_getStatusDisplayName(statusFilter)}',
                     ),
                     onDeleted: () => onStatusFilterChanged('todos'),
-                    deleteIcon: Icon(PhosphorIcons.x(), size: 16),
+                    deleteIcon: Icon(Symbols.close, size: 16),
                     backgroundColor: AppTheme.baseGray100,
                   ),
                 if (roleFilter != 'todos')
                   Chip(
                     label: Text('Função: ${_getRoleDisplayName(roleFilter)}'),
                     onDeleted: () => onRoleFilterChanged('todos'),
-                    deleteIcon: Icon(PhosphorIcons.x(), size: 16),
+                    deleteIcon: Icon(Symbols.close, size: 16),
                     backgroundColor: AppTheme.baseGray100,
                   ),
               ],
@@ -242,11 +238,11 @@ class UsersFilters extends StatelessWidget {
   IconData _getRoleIcon(UserRole role) {
     switch (role) {
       case UserRole.admin:
-        return PhosphorIcons.shieldCheck();
+        return Symbols.admin_panel_settings;
       case UserRole.consultant:
-        return PhosphorIcons.userCircle();
+        return Symbols.account_circle;
       case UserRole.farmer:
-        return PhosphorIcons.plant();
+        return Symbols.eco;
     }
   }
 

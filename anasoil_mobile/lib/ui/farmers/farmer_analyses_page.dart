@@ -1,10 +1,11 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../core/dependency_injection.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/user.dart';
 import '../../domain/models/soil_analysis.dart';
-import '../../utils/result.dart';
 import 'farmers_viewmodel.dart';
 
 /// Página de histórico de análises de um agricultor específico
@@ -36,7 +37,6 @@ class _FarmerAnalysesPageState extends State<FarmerAnalysesPage> {
     });
 
     final result = await _viewModel.loadFarmerAnalyses(widget.farmer.id);
-
     if (!mounted) return;
 
     setState(() {
@@ -50,11 +50,11 @@ class _FarmerAnalysesPageState extends State<FarmerAnalysesPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppTheme.baseGray50,
       appBar: AppBar(
         title: Text(widget.farmer.name),
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black87,
+        backgroundColor: AppTheme.baseWhite,
+        foregroundColor: AppTheme.baseGray900,
         elevation: 0,
         surfaceTintColor: Colors.transparent,
       ),
@@ -62,32 +62,49 @@ class _FarmerAnalysesPageState extends State<FarmerAnalysesPage> {
         listenable: _viewModel,
         builder: (context, _) {
           if (_isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const AnaSoilLoadingState(message: 'Carregando análises...');
           }
 
           if (_error != null) {
-            return _buildErrorState();
+            return AnaSoilEmptyState(
+              icon: Icons.error_outline,
+              title: 'Erro ao carregar análises',
+              message: 'Verifique a conexão e tente buscar novamente.',
+              actionLabel: 'Tentar novamente',
+              onAction: _loadAnalyses,
+            );
           }
 
           final analyses = _viewModel.farmerAnalyses;
-
           if (analyses.isEmpty) {
-            return _buildEmptyState();
+            return const AnaSoilEmptyState(
+              icon: Icons.history,
+              title: 'Nenhuma análise encontrada',
+              message:
+                  'Este agricultor ainda não possui análises de solo registradas.',
+            );
           }
 
           return RefreshIndicator(
             onRefresh: _loadAnalyses,
-            color: Colors.green[700],
+            color: AppTheme.primaryGreen,
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(AnaSoilSpacing.lg),
               itemCount: analyses.length + 1,
               itemBuilder: (context, index) {
                 if (index == 0) {
-                  return _buildFarmerHeader();
+                  return _FarmerHeader(farmer: widget.farmer);
                 }
+                final analysisIndex = index - 1;
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildAnalysisCard(analyses[index - 1]),
+                  padding: const EdgeInsets.only(bottom: AnaSoilSpacing.md),
+                  child: _FarmerAnalysisCard(
+                    analysis: analyses[analysisIndex],
+                    onTap: () => context.push(
+                      '/analysis/detail',
+                      extra: analyses[analysisIndex],
+                    ),
+                  ),
                 );
               },
             ),
@@ -96,229 +113,185 @@ class _FarmerAnalysesPageState extends State<FarmerAnalysesPage> {
       ),
     );
   }
+}
 
-  Widget _buildFarmerHeader() {
-    final farmer = widget.farmer;
+class _FarmerHeader extends StatelessWidget {
+  final User farmer;
+
+  const _FarmerHeader({required this.farmer});
+
+  @override
+  Widget build(BuildContext context) {
     final hasAvatar = farmer.avatarUrl != null && farmer.avatarUrl!.isNotEmpty;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.green[50],
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.green[200]!),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            radius: 28,
-            backgroundColor: Colors.green[100],
-            backgroundImage: hasAvatar ? NetworkImage(farmer.avatarUrl!) : null,
-            child: !hasAvatar
-                ? Icon(Icons.person, color: Colors.green[700], size: 32)
-                : null,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  farmer.name,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  farmer.email,
-                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
-                ),
-                if (farmer.phone != null && farmer.phone!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AnaSoilSpacing.lg),
+      child: AnaSoilSurface(
+        padding: const EdgeInsets.all(AnaSoilSpacing.lg),
+        radius: AnaSoilRadius.lg,
+        backgroundColor: AppTheme.primaryGreenSoft,
+        borderColor: AppTheme.primaryGreenLight.withValues(alpha: 0.25),
+        child: Row(
+          children: [
+            CircleAvatar(
+              radius: 28,
+              backgroundColor: AppTheme.primaryGreenLight,
+              backgroundImage: hasAvatar
+                  ? NetworkImage(farmer.avatarUrl!)
+                  : null,
+              child: !hasAvatar
+                  ? const Icon(
+                      Icons.person,
+                      color: AppTheme.baseWhite,
+                      size: 32,
+                    )
+                  : null,
+            ),
+            const SizedBox(width: AnaSoilSpacing.lg),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
                   Text(
-                    farmer.phone!,
-                    style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+                    farmer.name,
+                    style: const TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                      color: AppTheme.baseGray900,
+                    ),
                   ),
+                  const SizedBox(height: AnaSoilSpacing.xs),
+                  Text(
+                    farmer.email,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.baseGray600,
+                    ),
+                  ),
+                  if (farmer.phone != null && farmer.phone!.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      farmer.phone!,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        color: AppTheme.baseGray500,
+                      ),
+                    ),
+                  ],
                 ],
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.history, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Nenhuma análise encontrada',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Este agricultor ainda não possui análises',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildErrorState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 64, color: Colors.red[300]),
-          const SizedBox(height: 16),
-          Text(
-            'Erro ao carregar análises',
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.grey[700],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: _loadAnalyses,
-            icon: const Icon(Icons.refresh),
-            label: const Text('Tentar novamente'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.green[700],
-              foregroundColor: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildAnalysisCard(SoilAnalysis analysis) {
-    final d = analysis.analysisDate;
-    final dateStr =
-        '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-
-    return GestureDetector(
-      onTap: () => context.push('/analysis/detail', extra: analysis),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[200]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(8),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
+              ),
             ),
           ],
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(Icons.grass, color: Colors.green[700], size: 24),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        analysis.propertyName.isNotEmpty
-                            ? analysis.propertyName
-                            : 'Análise ${analysis.labNumber}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        dateStr,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            if (analysis.requester != null) ...[
-              const SizedBox(height: 10),
+      ),
+    );
+  }
+}
+
+class _FarmerAnalysisCard extends StatelessWidget {
+  final SoilAnalysis analysis;
+  final VoidCallback onTap;
+
+  const _FarmerAnalysisCard({required this.analysis, required this.onTap});
+
+  String get _dateStr {
+    final d = analysis.analysisDate;
+    return '${d.day.toString().padLeft(2, '0')}/'
+        '${d.month.toString().padLeft(2, '0')}/'
+        '${d.year}';
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(AnaSoilRadius.lg),
+        child: AnaSoilSurface(
+          padding: const EdgeInsets.all(AnaSoilSpacing.lg),
+          radius: AnaSoilRadius.lg,
+          elevated: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Icon(Icons.business, size: 16, color: Colors.grey[500]),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      analysis.requester!,
-                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
-                      overflow: TextOverflow.ellipsis,
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreenSoft,
+                      borderRadius: BorderRadius.circular(10),
                     ),
+                    child: const Icon(
+                      Icons.grass,
+                      color: AppTheme.primaryGreen,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: AnaSoilSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          analysis.propertyName.isNotEmpty
+                              ? analysis.propertyName
+                              : 'Análise ${analysis.labNumber}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.baseGray900,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          _dateStr,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.baseGray600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    color: AppTheme.baseGray400,
+                    size: 16,
                   ),
                 ],
               ),
-            ],
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                _buildTag(
-                  'Amostra ${analysis.labNumber}',
-                  foreground: AppTheme.primaryGreenDark,
-                  background: AppTheme.primaryGreenSoft,
-                  border: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
+              if (analysis.requester != null) ...[
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.business,
+                      size: 14,
+                      color: AppTheme.baseGray500,
+                    ),
+                    const SizedBox(width: AnaSoilSpacing.xs),
+                    Expanded(
+                      child: Text(
+                        analysis.requester!,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: AppTheme.baseGray600,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildTag(
-    String text, {
-    required Color foreground,
-    required Color background,
-    required Color border,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: border),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: foreground,
+              const SizedBox(height: 8),
+              AnaSoilStatusChip(
+                label: 'Amostra ${analysis.labNumber}',
+                tone: AnaSoilStatusTone.success,
+              ),
+            ],
+          ),
         ),
       ),
     );

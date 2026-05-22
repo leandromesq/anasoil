@@ -2,7 +2,7 @@ import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 const double _kTableBreakpoint = 800;
 
@@ -43,7 +43,7 @@ class UsersDataTable extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(PhosphorIcons.users(), size: 64, color: AppTheme.baseGray400),
+            Icon(Symbols.group, size: 64, color: AppTheme.baseGray400),
             const SizedBox(height: 16),
             Text(
               'Nenhum usuário encontrado',
@@ -92,11 +92,7 @@ class UsersDataTable extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Icon(
-                      PhosphorIcons.users(),
-                      size: 20,
-                      color: AppTheme.baseGray600,
-                    ),
+                    Icon(Symbols.group, size: 20, color: AppTheme.baseGray600),
                     const SizedBox(width: 8),
                     Text(
                       'Usuários (${users.length})',
@@ -122,7 +118,7 @@ class UsersDataTable extends StatelessWidget {
                   )
                 else
                   IconButton(
-                    icon: Icon(PhosphorIcons.arrowClockwise()),
+                    icon: Icon(Symbols.refresh),
                     onPressed: onRefresh,
                     tooltip: 'Atualizar',
                   ),
@@ -284,13 +280,13 @@ class _MobileList extends StatelessWidget {
                         if (user.userRole.canManageRelations)
                           IconButton(
                             onPressed: () => onManageRelations(user),
-                            icon: Icon(PhosphorIcons.link(), size: 20),
+                            icon: Icon(Symbols.link, size: 20),
                             color: AppTheme.baseGray600,
                             tooltip: 'Relações',
                           ),
                         IconButton(
                           onPressed: () => onEdit(user),
-                          icon: Icon(PhosphorIcons.pencilSimple(), size: 20),
+                          icon: Icon(Symbols.edit, size: 20),
                           color: AppTheme.primaryGreen,
                           tooltip: 'Editar',
                         ),
@@ -320,11 +316,11 @@ class _MobileList extends StatelessWidget {
   IconData _getRoleIcon(String role) {
     switch (UserRole.parse(role)) {
       case UserRole.admin:
-        return PhosphorIcons.shieldCheck();
+        return Symbols.admin_panel_settings;
       case UserRole.consultant:
-        return PhosphorIcons.userCircle();
+        return Symbols.account_circle;
       case UserRole.farmer:
-        return PhosphorIcons.plant();
+        return Symbols.eco;
     }
   }
 
@@ -591,7 +587,7 @@ class _DesktopTable extends StatelessWidget {
                 if (user.userRole.canManageRelations)
                   IconButton(
                     onPressed: () => onManageRelations(user),
-                    icon: Icon(PhosphorIcons.link(), size: 18),
+                    icon: Icon(Symbols.link, size: 18),
                     color: AppTheme.baseGray600,
                     tooltip: 'Gerenciar Relações',
                     style: IconButton.styleFrom(
@@ -601,7 +597,7 @@ class _DesktopTable extends StatelessWidget {
                   ),
                 IconButton(
                   onPressed: () => onEdit(user),
-                  icon: Icon(PhosphorIcons.pencilSimple(), size: 18),
+                  icon: Icon(Symbols.edit, size: 18),
                   color: AppTheme.primaryGreen,
                   tooltip: 'Editar',
                   style: IconButton.styleFrom(
@@ -631,11 +627,11 @@ class _DesktopTable extends StatelessWidget {
   IconData _getRoleIcon(String role) {
     switch (UserRole.parse(role)) {
       case UserRole.admin:
-        return PhosphorIcons.shieldCheck();
+        return Symbols.admin_panel_settings;
       case UserRole.consultant:
-        return PhosphorIcons.userCircle();
+        return Symbols.account_circle;
       case UserRole.farmer:
-        return PhosphorIcons.plant();
+        return Symbols.eco;
     }
   }
 

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/theme/app_theme.dart';
 import '../../domain/models/login_credentials.dart';
 import '../shared/app_logo.dart';
 import '../../utils/result.dart';
@@ -46,7 +47,7 @@ class _LoginPageState extends State<LoginPage> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(error.error.toString()),
-          backgroundColor: Colors.red,
+          backgroundColor: AppTheme.secondaryRed,
         ),
       );
     } else if (result is Ok) {
@@ -58,7 +59,7 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
+      backgroundColor: AppTheme.baseWhite,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -80,14 +81,14 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
-                      color: Colors.grey[800],
+                      color: AppTheme.baseGray900,
                     ),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'Entre na sua conta AnaSoil',
                     textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                    style: TextStyle(fontSize: 14, color: AppTheme.baseGray600),
                   ),
                   const SizedBox(height: 48),
 
@@ -174,8 +175,8 @@ class _LoginPageState extends State<LoginPage> {
                       return ElevatedButton(
                         onPressed: isLoading ? null : _handleLogin,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.green[700],
-                          foregroundColor: Colors.white,
+                          backgroundColor: AppTheme.primaryGreen,
+                          foregroundColor: AppTheme.baseWhite,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
@@ -187,7 +188,7 @@ class _LoginPageState extends State<LoginPage> {
                                 width: 20,
                                 child: CircularProgressIndicator(
                                   strokeWidth: 2,
-                                  color: Colors.white,
+                                  color: AppTheme.baseWhite,
                                 ),
                               )
                             : const Text(

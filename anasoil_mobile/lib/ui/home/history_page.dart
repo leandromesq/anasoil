@@ -1,9 +1,10 @@
+import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+
 import '../../core/dependency_injection.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/soil_analysis.dart';
-import '../../utils/result.dart';
 import 'analysis_viewmodel.dart';
 
 /// Página de histórico de análises
@@ -17,6 +18,8 @@ class HistoryPage extends StatefulWidget {
 class _HistoryPageState extends State<HistoryPage> {
   late final AnalysisViewModel _viewModel;
   bool _isLoading = false;
+  String? _inlineMessage;
+  AnaSoilStatusTone _inlineTone = AnaSoilStatusTone.neutral;
 
   @override
   void initState() {
@@ -32,79 +35,91 @@ class _HistoryPageState extends State<HistoryPage> {
   }
 
   Future<void> _deleteAnalysis(SoilAnalysis analysis) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Excluir Análise'),
-        content: Text(
-          'Deseja realmente excluir a análise '
-          '${analysis.propertyName.isNotEmpty ? analysis.propertyName : analysis.labNumber}?',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: Text('Excluir', style: TextStyle(color: Colors.red[700])),
-          ),
-        ],
-      ),
+    final displayName = analysis.propertyName.isNotEmpty
+        ? analysis.propertyName
+        : analysis.labNumber;
+    final confirmed = await AnaSoilConfirmDialog.show(
+      context,
+      title: 'Excluir análise?',
+      message: 'Deseja realmente excluir a análise "$displayName"?',
+      confirmLabel: 'Excluir',
+      destructive: true,
     );
 
-    if (confirmed != true || !mounted) return;
+    if (!confirmed || !mounted) return;
 
     final deleteResult = await _viewModel.deleteAnalysis(analysis.id);
-
     if (!mounted) return;
 
     if (deleteResult is Ok) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Análise excluída'),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-        ),
-      );
+      setState(() {
+        _inlineTone = AnaSoilStatusTone.success;
+        _inlineMessage = 'Análise excluída.';
+      });
       _loadAnalyses();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erro ao excluir: ${(deleteResult as Error).error}'),
-          backgroundColor: Colors.red,
-        ),
-      );
+      setState(() {
+        _inlineTone = AnaSoilStatusTone.danger;
+        _inlineMessage = 'Erro ao excluir: ${(deleteResult as Error).error}';
+      });
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.grey[50],
+      backgroundColor: AppTheme.baseGray50,
       body: ListenableBuilder(
         listenable: _viewModel,
         builder: (context, _) {
           if (_isLoading) {
-            return const Center(child: CircularProgressIndicator());
+            return const AnaSoilLoadingState(message: 'Carregando análises...');
           }
 
           final analyses = _viewModel.savedAnalyses;
 
           if (analyses.isEmpty) {
-            return _buildEmptyState();
+            return const AnaSoilEmptyState(
+              icon: Icons.history,
+              title: 'Nenhuma análise encontrada',
+              message:
+                  'Importe um PDF na aba Análise para começar seu histórico.',
+            );
           }
 
           return RefreshIndicator(
             onRefresh: _loadAnalyses,
-            color: Colors.green[700],
+            color: AppTheme.primaryGreen,
             child: ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: analyses.length,
+              padding: const EdgeInsets.all(AnaSoilSpacing.lg),
+              itemCount: analyses.length + (_inlineMessage == null ? 0 : 1),
               itemBuilder: (context, index) {
+                if (_inlineMessage != null && index == 0) {
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: AnaSoilSpacing.md),
+                    child: AnaSoilInlineMessage(
+                      message: _inlineMessage!,
+                      icon: _inlineTone == AnaSoilStatusTone.danger
+                          ? Icons.error_outline
+                          : Icons.check_circle_outline,
+                      tone: _inlineTone,
+                    ),
+                  );
+                }
+
+                final analysisIndex = _inlineMessage == null
+                    ? index
+                    : index - 1;
                 return Padding(
-                  padding: const EdgeInsets.only(bottom: 12),
-                  child: _buildAnalysisCard(analyses[index]),
+                  padding: const EdgeInsets.only(bottom: AnaSoilSpacing.md),
+                  child: _AnalysisHistoryCard(
+                    analysis: analyses[analysisIndex],
+                    onOpen: () => context.push(
+                      '/analysis/detail',
+                      extra: analyses[analysisIndex],
+                    ),
+                    onDelete: () => _deleteAnalysis(analyses[analysisIndex]),
+                  ),
                 );
               },
             ),
@@ -113,167 +128,131 @@ class _HistoryPageState extends State<HistoryPage> {
       ),
     );
   }
+}
 
-  Widget _buildEmptyState() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.history, size: 80, color: Colors.grey[400]),
-          const SizedBox(height: 16),
-          Text(
-            'Nenhuma análise encontrada',
-            style: TextStyle(
-              fontSize: 18,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.w500,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Importe um PDF na aba Análise para começar',
-            style: TextStyle(fontSize: 14, color: Colors.grey[500]),
-          ),
-        ],
-      ),
-    );
-  }
+class _AnalysisHistoryCard extends StatelessWidget {
+  final SoilAnalysis analysis;
+  final VoidCallback onOpen;
+  final VoidCallback onDelete;
 
-  Widget _buildAnalysisCard(SoilAnalysis analysis) {
+  const _AnalysisHistoryCard({
+    required this.analysis,
+    required this.onOpen,
+    required this.onDelete,
+  });
+
+  String get _dateStr {
     final d = analysis.analysisDate;
-    final dateStr =
-        '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
+    return '${d.day.toString().padLeft(2, '0')}/'
+        '${d.month.toString().padLeft(2, '0')}/'
+        '${d.year}';
+  }
 
-    return GestureDetector(
-      onTap: () => context.push('/analysis/detail', extra: analysis),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.grey[200]!),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withAlpha(8),
-              blurRadius: 4,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.green[50],
-                    borderRadius: BorderRadius.circular(10),
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onOpen,
+        borderRadius: BorderRadius.circular(AnaSoilRadius.lg),
+        child: AnaSoilSurface(
+          padding: const EdgeInsets.all(AnaSoilSpacing.lg),
+          radius: AnaSoilRadius.lg,
+          elevated: true,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: AppTheme.primaryGreenSoft,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Icon(
+                      Icons.grass,
+                      color: AppTheme.primaryGreen,
+                      size: 24,
+                    ),
                   ),
-                  child: Icon(Icons.grass, color: Colors.green[700], size: 24),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        analysis.propertyName.isNotEmpty
-                            ? analysis.propertyName
-                            : 'Análise ${analysis.labNumber}',
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.black87,
+                  const SizedBox(width: AnaSoilSpacing.md),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          analysis.propertyName.isNotEmpty
+                              ? analysis.propertyName
+                              : 'Análise ${analysis.labNumber}',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.baseGray900,
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        dateStr,
-                        style: TextStyle(fontSize: 12, color: Colors.grey[600]),
-                      ),
-                    ],
+                        const SizedBox(height: 2),
+                        Text(
+                          _dateStr,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: AppTheme.baseGray600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                IconButton(
-                  icon: Icon(Icons.delete_outline, color: Colors.red[400]),
-                  padding: EdgeInsets.zero,
-                  constraints: const BoxConstraints(),
-                  onPressed: () => _deleteAnalysis(analysis),
-                ),
+                  IconButton(
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      color: AppTheme.secondaryRed,
+                    ),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                    onPressed: onDelete,
+                  ),
+                ],
+              ),
+              if (analysis.requester != null ||
+                  analysis.stakeholder != null) ...[
+                const SizedBox(height: 10),
+                if (analysis.requester != null)
+                  _InfoRow(Icons.business, analysis.requester!),
               ],
-            ),
-            // const SizedBox(height: 12),
-
-            // Info rows
-            // _buildInfoChips(analysis),
-
-            // Document info
-            if (analysis.requester != null || analysis.stakeholder != null) ...[
               const SizedBox(height: 10),
-              if (analysis.requester != null)
-                _buildInfoRow(Icons.business, analysis.requester!),
+              AnaSoilStatusChip(
+                label: 'Amostra ${analysis.labNumber}',
+                tone: AnaSoilStatusTone.success,
+              ),
             ],
-
-            const SizedBox(height: 10),
-
-            // Amostra
-            Row(
-              children: [
-                _buildTag(
-                  'Amostra ${analysis.labNumber}',
-                  foreground: AppTheme.primaryGreenDark,
-                  background: AppTheme.primaryGreenSoft,
-                  border: AppTheme.primaryGreenLight.withValues(alpha: 0.35),
-                ),
-              ],
-            ),
-          ],
+          ),
         ),
       ),
     );
   }
+}
 
-  Widget _buildInfoRow(IconData icon, String text) {
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String text;
+
+  const _InfoRow(this.icon, this.text);
+
+  @override
+  Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 16, color: Colors.grey[500]),
+        Icon(icon, size: 16, color: AppTheme.baseGray500),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(fontSize: 13, color: Colors.grey[700]),
+            style: const TextStyle(fontSize: 13, color: AppTheme.baseGray600),
             overflow: TextOverflow.ellipsis,
           ),
         ),
       ],
-    );
-  }
-
-  Widget _buildTag(
-    String text, {
-    required Color foreground,
-    required Color background,
-    required Color border,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(6),
-        border: Border.all(color: border),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w500,
-          color: foreground,
-        ),
-      ),
     );
   }
 }

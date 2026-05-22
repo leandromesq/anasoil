@@ -5,7 +5,7 @@ import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_admin/shared/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class SettingsPage extends StatelessWidget {
   const SettingsPage({super.key});
@@ -26,10 +26,7 @@ class SettingsPage extends StatelessWidget {
               _buildCard(
                 context,
                 child: ListTile(
-                  leading: Icon(
-                    PhosphorIcons.signOut(),
-                    color: AppTheme.secondaryRed,
-                  ),
+                  leading: Icon(Symbols.logout, color: AppTheme.secondaryRed),
                   title: const Text('Sair'),
                   subtitle: Text(
                     authService.currentUser?.email ?? '',
@@ -73,10 +70,7 @@ class SettingsPage extends StatelessWidget {
                 child: Column(
                   children: [
                     ListTile(
-                      leading: Icon(
-                        PhosphorIcons.info(),
-                        color: AppTheme.primaryGreen,
-                      ),
+                      leading: Icon(Symbols.info, color: AppTheme.primaryGreen),
                       title: Text('AnaSoil Admin'),
                       subtitle: Text('Versão 1.0.0'),
                     ),

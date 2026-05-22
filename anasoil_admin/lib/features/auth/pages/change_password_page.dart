@@ -4,7 +4,7 @@ import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/shared/widgets/app_logo.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:material_symbols_icons/symbols.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   final String oobCode;
@@ -195,7 +195,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           child: Row(
             children: [
               Icon(
-                PhosphorIcons.checkCircle(),
+                Symbols.check_circle,
                 color: AppTheme.primaryGreen,
                 size: 16,
               ),
@@ -233,11 +233,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           ),
           child: Row(
             children: [
-              Icon(
-                PhosphorIcons.warningCircle(),
-                color: AppTheme.secondaryRedDark,
-                size: 16,
-              ),
+              Icon(Symbols.warning, color: AppTheme.secondaryRedDark, size: 16),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -297,8 +293,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscurePassword
-                      ? PhosphorIcons.eye()
-                      : PhosphorIcons.eyeSlash(),
+                      ? Symbols.visibility
+                      : Symbols.visibility_off,
                   color: AppTheme.baseGray500,
                   size: 20,
                 ),
@@ -334,8 +330,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               suffixIcon: IconButton(
                 icon: Icon(
                   _obscureConfirmPassword
-                      ? PhosphorIcons.eye()
-                      : PhosphorIcons.eyeSlash(),
+                      ? Symbols.visibility
+                      : Symbols.visibility_off,
                   color: AppTheme.baseGray500,
                   size: 20,
                 ),
@@ -367,7 +363,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               child: Row(
                 children: [
                   Icon(
-                    PhosphorIcons.warningCircle(),
+                    Symbols.warning,
                     color: AppTheme.secondaryRedDark,
                     size: 16,
                   ),
