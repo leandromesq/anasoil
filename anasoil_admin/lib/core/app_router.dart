@@ -43,6 +43,21 @@ class AppRouter {
       if (session.shouldRedirectFromPublic && (isLoginRoute || isResetRoute)) {
         return '/users';
       }
+
+      if (session.isAuthenticated && session.isLoadingProfile) {
+        return null;
+      }
+
+      final route = state.uri.path;
+      if ((route == '/user/add' || route.startsWith('/user/edit/')) &&
+          !session.canManageData) {
+        return '/users';
+      }
+
+      if (route.endsWith('/relations') && !session.canManageRelations) {
+        return '/users';
+      }
+
       return null;
     },
     routes: [

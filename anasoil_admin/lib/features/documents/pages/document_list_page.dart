@@ -1,6 +1,7 @@
 import 'package:anasoil_admin/core/models/document_model.dart';
 import 'package:anasoil_admin/core/repositories/user_repository.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/documents/viewmodels/document_list_viewmodel.dart';
 import 'package:anasoil_admin/features/documents/widgets/documents_data_table.dart';
@@ -128,71 +129,79 @@ class _DocumentListPageState extends State<DocumentListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AppLayout(
-      title: 'Documentos',
-      body: Column(
-        children: [
-          DocumentsFilters(
-            searchText: searchQuery ?? '',
-            onSearchChanged: (value) {
-              setState(() {
-                searchQuery = value.isEmpty ? null : value;
-              });
-            },
-            onClearFilters: () {
-              setState(() {
-                searchQuery = null;
-              });
-            },
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: ListenableBuilder(
-              listenable: Listenable.merge([
-                widget.viewModel,
-                widget.viewModel.fetchDocumentsCommand,
-                widget.viewModel.deleteDocumentCommand,
-              ]),
-              builder: (context, _) {
-                return DeferredTable(
-                  onReady: widget.viewModel.documents.isEmpty
-                      ? () => widget.viewModel.fetchDocumentsCommand.execute()
-                      : null,
-                  builder: () {
-                    final isLoading =
-                        widget
-                            .viewModel
-                            .fetchDocumentsCommand
-                            .value
-                            .isRunning &&
-                        widget.viewModel.documents.isEmpty;
+    final session = locator<AdminSession>();
 
-                    final filtered = _applyFilters(widget.viewModel.documents);
-
-                    return DocumentsDataTable(
-                      documents: filtered,
-                      userNames: _buildUserNameMap(),
-                      isLoading: isLoading,
-                      sortColumn: sortColumn,
-                      sortAscending: sortAscending,
-                      onSort: (columnIndex) {
-                        setState(() {
-                          if (sortColumn == columnIndex) {
-                            sortAscending = !sortAscending;
-                          } else {
-                            sortColumn = columnIndex;
-                            sortAscending = true;
-                          }
-                        });
-                      },
-                      onDelete: _handleDelete,
-                    );
-                  },
-                );
+    return ListenableBuilder(
+      listenable: session,
+      builder: (context, _) => AppLayout(
+        title: 'Documentos',
+        body: Column(
+          children: [
+            DocumentsFilters(
+              searchText: searchQuery ?? '',
+              onSearchChanged: (value) {
+                setState(() {
+                  searchQuery = value.isEmpty ? null : value;
+                });
+              },
+              onClearFilters: () {
+                setState(() {
+                  searchQuery = null;
+                });
               },
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Expanded(
+              child: ListenableBuilder(
+                listenable: Listenable.merge([
+                  widget.viewModel,
+                  widget.viewModel.fetchDocumentsCommand,
+                  widget.viewModel.deleteDocumentCommand,
+                ]),
+                builder: (context, _) {
+                  return DeferredTable(
+                    onReady: widget.viewModel.documents.isEmpty
+                        ? () => widget.viewModel.fetchDocumentsCommand.execute()
+                        : null,
+                    builder: () {
+                      final isLoading =
+                          widget
+                              .viewModel
+                              .fetchDocumentsCommand
+                              .value
+                              .isRunning &&
+                          widget.viewModel.documents.isEmpty;
+
+                      final filtered = _applyFilters(
+                        widget.viewModel.documents,
+                      );
+
+                      return DocumentsDataTable(
+                        documents: filtered,
+                        userNames: _buildUserNameMap(),
+                        isLoading: isLoading,
+                        sortColumn: sortColumn,
+                        sortAscending: sortAscending,
+                        onSort: (columnIndex) {
+                          setState(() {
+                            if (sortColumn == columnIndex) {
+                              sortAscending = !sortAscending;
+                            } else {
+                              sortColumn = columnIndex;
+                              sortAscending = true;
+                            }
+                          });
+                        },
+                        canDelete: session.canManageData,
+                        onDelete: session.canManageData ? _handleDelete : null,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

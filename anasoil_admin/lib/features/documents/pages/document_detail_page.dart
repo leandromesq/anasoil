@@ -3,6 +3,7 @@ import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/repositories/document_repository.dart';
 import 'package:anasoil_admin/core/repositories/user_repository.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
@@ -129,22 +130,29 @@ class _DocumentDetailPageState extends State<DocumentDetailPage> {
     }
 
     final doc = _document!;
+    final canDelete = locator<AdminSession>().canManageData;
 
     return AppLayout(
       title: 'Documento',
       backRoute: '/documents',
       backTooltip: 'Voltar para Documentos',
-      actions: [
-        TextButton.icon(
-          onPressed: _deleteDocument,
-          icon: Icon(Symbols.delete, size: 18, color: AppTheme.secondaryRed),
-          label: Text(
-            'Excluir',
-            style: TextStyle(color: AppTheme.secondaryRed),
-          ),
-        ),
-        const SizedBox(width: 8),
-      ],
+      actions: canDelete
+          ? [
+              TextButton.icon(
+                onPressed: _deleteDocument,
+                icon: Icon(
+                  Symbols.delete,
+                  size: 18,
+                  color: AppTheme.secondaryRed,
+                ),
+                label: Text(
+                  'Excluir',
+                  style: TextStyle(color: AppTheme.secondaryRed),
+                ),
+              ),
+              const SizedBox(width: 8),
+            ]
+          : null,
       body: Center(
         child: ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 800),

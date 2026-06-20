@@ -13,7 +13,8 @@ const double _kTableBreakpoint = 700;
 class DocumentsDataTable extends StatelessWidget {
   final List<DocumentModel> documents;
   final Map<String, String> userNames;
-  final Function(DocumentModel) onDelete;
+  final Function(DocumentModel)? onDelete;
+  final bool canDelete;
   final bool isLoading;
   final int? sortColumn;
   final bool sortAscending;
@@ -23,7 +24,8 @@ class DocumentsDataTable extends StatelessWidget {
     super.key,
     required this.documents,
     required this.userNames,
-    required this.onDelete,
+    required this.canDelete,
+    this.onDelete,
     this.isLoading = false,
     this.sortColumn,
     this.sortAscending = true,
@@ -133,12 +135,14 @@ class DocumentsDataTable extends StatelessWidget {
                   return _MobileList(
                     documents: documents,
                     userNames: userNames,
+                    canDelete: canDelete,
                     onDelete: onDelete,
                   );
                 }
                 return _DesktopTable(
                   documents: documents,
                   userNames: userNames,
+                  canDelete: canDelete,
                   onDelete: onDelete,
                   sortColumn: sortColumn,
                   sortAscending: sortAscending,
@@ -160,12 +164,14 @@ class DocumentsDataTable extends StatelessWidget {
 class _MobileList extends StatelessWidget {
   final List<DocumentModel> documents;
   final Map<String, String> userNames;
-  final Function(DocumentModel) onDelete;
+  final Function(DocumentModel)? onDelete;
+  final bool canDelete;
 
   const _MobileList({
     required this.documents,
     required this.userNames,
-    required this.onDelete,
+    required this.canDelete,
+    this.onDelete,
   });
 
   @override
@@ -218,8 +224,8 @@ class _MobileList extends StatelessWidget {
                         onSelected: (value) {
                           if (value == 'view') {
                             context.go('/document/${doc.id}');
-                          } else if (value == 'delete') {
-                            onDelete(doc);
+                          } else if (value == 'delete' && onDelete != null) {
+                            onDelete!(doc);
                           }
                         },
                         itemBuilder: (context) => [
@@ -233,19 +239,24 @@ class _MobileList extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const PopupMenuItem(
-                            value: 'delete',
-                            child: Row(
-                              children: [
-                                Icon(Icons.delete, size: 18, color: Colors.red),
-                                SizedBox(width: 8),
-                                Text(
-                                  'Excluir',
-                                  style: TextStyle(color: Colors.red),
-                                ),
-                              ],
+                          if (canDelete)
+                            const PopupMenuItem(
+                              value: 'delete',
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    Icons.delete,
+                                    size: 18,
+                                    color: Colors.red,
+                                  ),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Excluir',
+                                    style: TextStyle(color: Colors.red),
+                                  ),
+                                ],
+                              ),
                             ),
-                          ),
                         ],
                       ),
                     ],
@@ -302,7 +313,8 @@ class _MobileList extends StatelessWidget {
 class _DesktopTable extends StatelessWidget {
   final List<DocumentModel> documents;
   final Map<String, String> userNames;
-  final Function(DocumentModel) onDelete;
+  final Function(DocumentModel)? onDelete;
+  final bool canDelete;
   final int? sortColumn;
   final bool sortAscending;
   final Function(int)? onSort;
@@ -310,7 +322,8 @@ class _DesktopTable extends StatelessWidget {
   const _DesktopTable({
     required this.documents,
     required this.userNames,
-    required this.onDelete,
+    required this.canDelete,
+    this.onDelete,
     this.sortColumn,
     this.sortAscending = true,
     this.onSort,
@@ -515,16 +528,17 @@ class _DesktopTable extends StatelessWidget {
                     padding: EdgeInsets.zero,
                   ),
                 ),
-                IconButton(
-                  onPressed: () => onDelete(doc),
-                  icon: Icon(Symbols.delete, size: 18),
-                  color: AppTheme.secondaryRed,
-                  tooltip: 'Excluir',
-                  style: IconButton.styleFrom(
-                    minimumSize: const Size(32, 32),
-                    padding: EdgeInsets.zero,
+                if (canDelete && onDelete != null)
+                  IconButton(
+                    onPressed: () => onDelete!(doc),
+                    icon: Icon(Symbols.delete, size: 18),
+                    color: AppTheme.secondaryRed,
+                    tooltip: 'Excluir',
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(32, 32),
+                      padding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

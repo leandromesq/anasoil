@@ -1,11 +1,13 @@
 import 'package:anasoil_admin/core/models/document_model.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
 import 'package:flutter/material.dart';
 
 class DocumentRepository extends ChangeNotifier {
   final FirestoreService _firestoreService;
+  final AdminSession _session;
 
-  DocumentRepository(this._firestoreService);
+  DocumentRepository(this._firestoreService, this._session);
 
   List<DocumentModel> _documents = [];
   List<DocumentModel> get documents => List.unmodifiable(_documents);
@@ -17,6 +19,8 @@ class DocumentRepository extends ChangeNotifier {
   }
 
   Future<void> deleteDocument(String documentId) async {
+    _session.ensureCanManageData();
+
     await _firestoreService.deleteDocument(documentId);
     _documents.removeWhere((document) => document.id == documentId);
     notifyListeners();

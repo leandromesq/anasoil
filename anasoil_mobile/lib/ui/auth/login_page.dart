@@ -4,7 +4,6 @@ import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/login_credentials.dart';
 import '../shared/app_logo.dart';
-import '../../utils/result.dart';
 import 'auth_viewmodel.dart';
 
 /// Tela de login

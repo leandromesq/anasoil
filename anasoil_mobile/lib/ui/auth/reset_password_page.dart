@@ -2,7 +2,6 @@ import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
 import '../../core/theme/app_theme.dart';
 import 'package:go_router/go_router.dart';
-import '../../utils/result.dart';
 import 'auth_viewmodel.dart';
 
 /// Tela de recuperação de senha

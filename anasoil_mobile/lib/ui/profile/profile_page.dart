@@ -262,7 +262,9 @@ class _ProfilePageState extends State<ProfilePage> {
           const Divider(height: 1),
           _buildInfoItem(
             label: 'Telefone',
-            value: profile.phone ?? 'Não informado',
+            value: profile.phone == null || profile.phone!.trim().isEmpty
+                ? 'Não informado'
+                : AnaSoilPhoneInputFormatter.format(profile.phone!),
             icon: Icons.edit_outlined,
             onTap: () => context.push('/profile/edit'),
           ),

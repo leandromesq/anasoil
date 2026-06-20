@@ -8,9 +8,11 @@ const double _kTableBreakpoint = 800;
 
 class UsersDataTable extends StatelessWidget {
   final List<UserModel> users;
-  final Function(UserModel) onEdit;
-  final Function(UserModel, bool) onStatusChanged;
-  final Function(UserModel) onManageRelations;
+  final Function(UserModel)? onEdit;
+  final Function(UserModel, bool)? onStatusChanged;
+  final Function(UserModel)? onManageRelations;
+  final bool canManageData;
+  final bool canManageRelations;
   final bool isLoading;
   final int? sortColumn;
   final bool sortAscending;
@@ -21,9 +23,11 @@ class UsersDataTable extends StatelessWidget {
   const UsersDataTable({
     super.key,
     required this.users,
-    required this.onEdit,
-    required this.onStatusChanged,
-    required this.onManageRelations,
+    required this.canManageData,
+    required this.canManageRelations,
+    this.onEdit,
+    this.onStatusChanged,
+    this.onManageRelations,
     this.isLoading = false,
     this.sortColumn,
     this.sortAscending = true,
@@ -133,6 +137,8 @@ class UsersDataTable extends StatelessWidget {
                 if (isMobile) {
                   return _MobileList(
                     users: users,
+                    canManageData: canManageData,
+                    canManageRelations: canManageRelations,
                     onEdit: onEdit,
                     onStatusChanged: onStatusChanged,
                     onManageRelations: onManageRelations,
@@ -140,6 +146,8 @@ class UsersDataTable extends StatelessWidget {
                 }
                 return _DesktopTable(
                   users: users,
+                  canManageData: canManageData,
+                  canManageRelations: canManageRelations,
                   onEdit: onEdit,
                   onStatusChanged: onStatusChanged,
                   onManageRelations: onManageRelations,
@@ -162,15 +170,19 @@ class UsersDataTable extends StatelessWidget {
 
 class _MobileList extends StatelessWidget {
   final List<UserModel> users;
-  final Function(UserModel) onEdit;
-  final Function(UserModel, bool) onStatusChanged;
-  final Function(UserModel) onManageRelations;
+  final Function(UserModel)? onEdit;
+  final Function(UserModel, bool)? onStatusChanged;
+  final Function(UserModel)? onManageRelations;
+  final bool canManageData;
+  final bool canManageRelations;
 
   const _MobileList({
     required this.users,
-    required this.onEdit,
-    required this.onStatusChanged,
-    required this.onManageRelations,
+    required this.canManageData,
+    required this.canManageRelations,
+    this.onEdit,
+    this.onStatusChanged,
+    this.onManageRelations,
   });
 
   @override
@@ -271,7 +283,9 @@ class _MobileList extends StatelessWidget {
                         ),
                         Switch(
                           value: user.active,
-                          onChanged: (value) => onStatusChanged(user, value),
+                          onChanged: canManageData && onStatusChanged != null
+                              ? (value) => onStatusChanged!(user, value)
+                              : null,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                         ),
@@ -279,19 +293,22 @@ class _MobileList extends StatelessWidget {
                     ),
                     Row(
                       children: [
-                        if (user.userRole.canManageRelations)
+                        if (canManageRelations &&
+                            user.userRole.canManageRelations &&
+                            onManageRelations != null)
                           IconButton(
-                            onPressed: () => onManageRelations(user),
+                            onPressed: () => onManageRelations!(user),
                             icon: Icon(Symbols.link, size: 20),
                             color: AppTheme.baseGray600,
                             tooltip: 'Relações',
                           ),
-                        IconButton(
-                          onPressed: () => onEdit(user),
-                          icon: Icon(Symbols.edit, size: 20),
-                          color: AppTheme.primaryGreen,
-                          tooltip: 'Editar',
-                        ),
+                        if (canManageData && onEdit != null)
+                          IconButton(
+                            onPressed: () => onEdit!(user),
+                            icon: Icon(Symbols.edit, size: 20),
+                            color: AppTheme.primaryGreen,
+                            tooltip: 'Editar',
+                          ),
                       ],
                     ),
                   ],
@@ -335,18 +352,22 @@ class _MobileList extends StatelessWidget {
 
 class _DesktopTable extends StatelessWidget {
   final List<UserModel> users;
-  final Function(UserModel) onEdit;
-  final Function(UserModel, bool) onStatusChanged;
-  final Function(UserModel) onManageRelations;
+  final Function(UserModel)? onEdit;
+  final Function(UserModel, bool)? onStatusChanged;
+  final Function(UserModel)? onManageRelations;
+  final bool canManageData;
+  final bool canManageRelations;
   final int? sortColumn;
   final bool sortAscending;
   final Function(int)? onSort;
 
   const _DesktopTable({
     required this.users,
-    required this.onEdit,
-    required this.onStatusChanged,
-    required this.onManageRelations,
+    required this.canManageData,
+    required this.canManageRelations,
+    this.onEdit,
+    this.onStatusChanged,
+    this.onManageRelations,
     this.sortColumn,
     this.sortAscending = true,
     this.onSort,
@@ -560,7 +581,9 @@ class _DesktopTable extends StatelessWidget {
                 ),
                 Switch(
                   value: user.active,
-                  onChanged: (value) => onStatusChanged(user, value),
+                  onChanged: canManageData && onStatusChanged != null
+                      ? (value) => onStatusChanged!(user, value)
+                      : null,
                   activeThumbColor: AppTheme.primaryGreen,
                   inactiveThumbColor: AppTheme.baseGray400,
                   inactiveTrackColor: AppTheme.baseGray200,
@@ -587,9 +610,11 @@ class _DesktopTable extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                if (user.userRole.canManageRelations)
+                if (canManageRelations &&
+                    user.userRole.canManageRelations &&
+                    onManageRelations != null)
                   IconButton(
-                    onPressed: () => onManageRelations(user),
+                    onPressed: () => onManageRelations!(user),
                     icon: Icon(Symbols.link, size: 18),
                     color: AppTheme.baseGray600,
                     tooltip: 'Gerenciar Relações',
@@ -598,16 +623,17 @@ class _DesktopTable extends StatelessWidget {
                       padding: EdgeInsets.zero,
                     ),
                   ),
-                IconButton(
-                  onPressed: () => onEdit(user),
-                  icon: Icon(Symbols.edit, size: 18),
-                  color: AppTheme.primaryGreen,
-                  tooltip: 'Editar',
-                  style: IconButton.styleFrom(
-                    minimumSize: const Size(32, 32),
-                    padding: EdgeInsets.zero,
+                if (canManageData && onEdit != null)
+                  IconButton(
+                    onPressed: () => onEdit!(user),
+                    icon: Icon(Symbols.edit, size: 18),
+                    color: AppTheme.primaryGreen,
+                    tooltip: 'Editar',
+                    style: IconButton.styleFrom(
+                      minimumSize: const Size(32, 32),
+                      padding: EdgeInsets.zero,
+                    ),
                   ),
-                ),
               ],
             ),
           ),

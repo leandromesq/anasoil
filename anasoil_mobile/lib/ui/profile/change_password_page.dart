@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/password_update_data.dart';
-import '../../utils/result.dart';
 import 'profile_viewmodel.dart';
 
 /// Tela de alteração de senha

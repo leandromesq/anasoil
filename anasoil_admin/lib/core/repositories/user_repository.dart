@@ -1,5 +1,6 @@
 import 'package:anasoil_admin/core/auth/user_auth_gateway.dart';
 import 'package:anasoil_admin/core/models/user_model.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/stores/user_store.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
@@ -12,8 +13,9 @@ import 'package:flutter/material.dart';
 class UserRepository extends ChangeNotifier {
   final UserStore _userStore;
   final UserAuthGateway _authGateway;
+  final AdminSession _session;
 
-  UserRepository(this._userStore, this._authGateway);
+  UserRepository(this._userStore, this._authGateway, this._session);
 
   List<UserModel> _users = [];
   List<UserModel> get users => List.unmodifiable(_users);
@@ -32,6 +34,10 @@ class UserRepository extends ChangeNotifier {
     return _userStore.getUserById(userId).first;
   }
 
+  Future<UserModel?> getUserByEmail(String email) {
+    return _userStore.getUserByEmail(email);
+  }
+
   Future<List<UserModel>> getAllUsers() async {
     _users = await _userStore.getAllUsers();
     notifyListeners();
@@ -39,6 +45,8 @@ class UserRepository extends ChangeNotifier {
   }
 
   Future<void> saveUser(UserModel user) async {
+    _session.ensureCanManageData();
+
     final normalizedUser = user.copyWith(email: _normalizeEmail(user.email));
 
     if (normalizedUser.id.isEmpty) {
@@ -58,12 +66,16 @@ class UserRepository extends ChangeNotifier {
   }
 
   Future<void> deleteUser(String userId) async {
+    _session.ensureCanManageData();
+
     await _ensureCanDeactivateUser(userId);
     await _userStore.deleteUser(userId);
     await getUsers();
   }
 
   Future<void> updateUserStatus(String userId, bool active) async {
+    _session.ensureCanManageData();
+
     if (!active) {
       await _ensureCanDeactivateUser(userId);
     }
@@ -76,6 +88,8 @@ class UserRepository extends ChangeNotifier {
     String farmerId,
     String consultantId,
   ) async {
+    _session.ensureCanManageRelations(consultantId: consultantId);
+
     final farmer = await _userStore.getUser(farmerId);
     final consultant = await _userStore.getUser(consultantId);
     _ensureRelationRoles(farmer, consultant);
@@ -88,6 +102,8 @@ class UserRepository extends ChangeNotifier {
     String farmerId,
     String consultantId,
   ) async {
+    _session.ensureCanManageRelations(consultantId: consultantId);
+
     final farmer = await _userStore.getUser(farmerId);
     final consultant = await _userStore.getUser(consultantId);
     _ensureRelationRoles(farmer, consultant);
@@ -102,12 +118,17 @@ class UserRepository extends ChangeNotifier {
         .where(
           (user) =>
               user.userRole == UserRole.consultant &&
-              farmer.consultorIds.contains(user.id),
+              farmer.consultorIds.contains(user.id) &&
+              _isRelationConsultantVisibleToCurrentUser(user.id),
         )
         .toList();
   }
 
   Future<List<UserModel>> getLinkedFarmers(UserModel consultant) async {
+    if (!_isRelationConsultantVisibleToCurrentUser(consultant.id)) {
+      return [];
+    }
+
     final allUsers = await getAllUsers();
     return allUsers
         .where(
@@ -125,12 +146,17 @@ class UserRepository extends ChangeNotifier {
           (user) =>
               user.userRole == UserRole.consultant &&
               user.active &&
-              !farmer.consultorIds.contains(user.id),
+              !farmer.consultorIds.contains(user.id) &&
+              _isRelationConsultantVisibleToCurrentUser(user.id),
         )
         .toList();
   }
 
   Future<List<UserModel>> getAvailableFarmers(UserModel consultant) async {
+    if (!_isRelationConsultantVisibleToCurrentUser(consultant.id)) {
+      return [];
+    }
+
     final allUsers = await getAllUsers();
     return allUsers
         .where(
@@ -202,6 +228,11 @@ class UserRepository extends ChangeNotifier {
         consultant.userRole != UserRole.consultant) {
       throw Exception('Vínculo deve ser entre Agricultor e Consultor.');
     }
+  }
+
+  bool _isRelationConsultantVisibleToCurrentUser(String consultantId) {
+    if (_session.currentUserRole != UserRole.consultant) return true;
+    return _session.currentUserProfile?.id == consultantId;
   }
 
   Future<int> _activeAdminCount() async {

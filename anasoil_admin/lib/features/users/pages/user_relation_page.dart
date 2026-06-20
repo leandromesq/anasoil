@@ -1,9 +1,12 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
+import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_relation_viewmodel.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
 
 class UserRelationPage extends StatefulWidget {
@@ -30,6 +33,22 @@ class _UserRelationPageState extends State<UserRelationPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!locator<AdminSession>().canManageRelations) {
+      return AppLayout(
+        title: 'Gerenciar Relações',
+        backRoute: '/users',
+        backTooltip: 'Voltar para Usuários',
+        body: AnaSoilEmptyState(
+          icon: Symbols.lock,
+          title: 'Sem permissão',
+          message:
+              'Apenas administradores e consultores podem alterar relações consultor-agricultor.',
+          actionLabel: 'Voltar para Usuários',
+          onAction: () => context.go('/users'),
+        ),
+      );
+    }
+
     return AppLayout(
       title: 'Gerenciar Relações',
       backRoute: '/users',

@@ -1,6 +1,7 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_form_viewmodel.dart';
 import 'package:anasoil_admin/shared/widgets/app_layout.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
@@ -22,6 +23,7 @@ class _UserFormPageState extends State<UserFormPage> {
 
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
+  final _phoneController = TextEditingController();
   String _selectedRole = UserRole.farmer.firestoreValue;
   bool _isActive = true;
 
@@ -44,6 +46,9 @@ class _UserFormPageState extends State<UserFormPage> {
       final user = _viewModel.editingUser!;
       _nameController.text = user.name;
       _emailController.text = user.email;
+      _phoneController.text = AnaSoilPhoneInputFormatter.format(
+        user.phone ?? '',
+      );
       setState(() {
         _selectedRole = user.userRole.firestoreValue;
         _isActive = user.active;
@@ -57,10 +62,19 @@ class _UserFormPageState extends State<UserFormPage> {
     _viewModel.dispose();
     _nameController.dispose();
     _emailController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
   void _onSave() async {
+    if (!locator<AdminSession>().canManageData) {
+      AnaSoilToast.error(
+        context,
+        'Apenas administradores podem editar usuários.',
+      );
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       final userToSave = UserModel(
         id: widget.userId ?? '',
@@ -68,7 +82,13 @@ class _UserFormPageState extends State<UserFormPage> {
         email: _emailController.text,
         role: _selectedRole,
         active: _isActive,
+        phone: _phoneController.text.trim().isEmpty
+            ? null
+            : AnaSoilPhoneInputFormatter.digitsOnly(_phoneController.text),
+        avatarUrl: _viewModel.editingUser?.avatarUrl,
         createdAt: _viewModel.editingUser?.createdAt,
+        consultorIds: _viewModel.editingUser?.consultorIds ?? const [],
+        agricultorIds: _viewModel.editingUser?.agricultorIds ?? const [],
       );
 
       try {
@@ -95,6 +115,21 @@ class _UserFormPageState extends State<UserFormPage> {
 
   @override
   Widget build(BuildContext context) {
+    if (!locator<AdminSession>().canManageData) {
+      return AppLayout(
+        title: isEditing ? 'Editar Usuário' : 'Novo Usuário',
+        backRoute: '/users',
+        backTooltip: 'Voltar para Usuários',
+        body: AnaSoilEmptyState(
+          icon: Symbols.lock,
+          title: 'Sem permissão',
+          message: 'Apenas administradores podem criar ou editar usuários.',
+          actionLabel: 'Voltar para Usuários',
+          onAction: () => context.go('/users'),
+        ),
+      );
+    }
+
     return AppLayout(
       title: isEditing ? 'Editar Usuário' : 'Novo Usuário',
       backRoute: '/users',
@@ -165,6 +200,29 @@ class _UserFormPageState extends State<UserFormPage> {
                         final emailRegex = RegExp(r'^[^@]+@[^@]+\.[^@]+');
                         if (!emailRegex.hasMatch(value)) {
                           return 'Formato de e-mail incorreto';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20),
+
+                    TextFormField(
+                      controller: _phoneController,
+                      decoration: InputDecoration(
+                        labelText: 'Telefone',
+                        hintText: '(00) 00000-0000',
+                        prefixIcon: Icon(Symbols.phone),
+                      ),
+                      keyboardType: TextInputType.phone,
+                      inputFormatters: const [AnaSoilPhoneInputFormatter()],
+                      validator: (value) {
+                        if (value == null || value.trim().isEmpty) {
+                          return null;
+                        }
+                        if (!AnaSoilPhoneInputFormatter.hasCompleteLength(
+                          value,
+                        )) {
+                          return 'Telefone deve estar no formato (DDD) 99999-9999';
                         }
                         return null;
                       },

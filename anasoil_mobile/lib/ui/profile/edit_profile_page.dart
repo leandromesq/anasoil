@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../core/theme/app_theme.dart';
 import '../../domain/models/profile_update_data.dart';
-import '../../utils/result.dart';
 import 'profile_viewmodel.dart';
 
 /// Tela de edição de perfil
@@ -29,7 +28,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
     super.initState();
     final profile = widget.viewModel.profile;
     _nameController = TextEditingController(text: profile?.name ?? '');
-    _phoneController = TextEditingController(text: profile?.phone ?? '');
+    _phoneController = TextEditingController(
+      text: AnaSoilPhoneInputFormatter.format(profile?.phone ?? ''),
+    );
   }
 
   @override
@@ -138,7 +139,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       name: _nameController.text.trim(),
       phone: _phoneController.text.trim().isEmpty
           ? null
-          : _phoneController.text.trim(),
+          : AnaSoilPhoneInputFormatter.digitsOnly(_phoneController.text),
     );
 
     await widget.viewModel.updateProfileCommand.execute(data);
@@ -274,6 +275,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               TextFormField(
                 controller: _phoneController,
                 keyboardType: TextInputType.phone,
+                inputFormatters: const [AnaSoilPhoneInputFormatter()],
                 onTapOutside: (event) => FocusScope.of(context).unfocus(),
                 decoration: const InputDecoration(
                   labelText: 'Telefone',
@@ -282,9 +284,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 ),
                 validator: (value) {
                   if (value != null && value.trim().isNotEmpty) {
-                    final cleanPhone = value.replaceAll(RegExp(r'[^\d]'), '');
-                    if (cleanPhone.length < 10) {
-                      return 'Telefone inválido';
+                    if (!AnaSoilPhoneInputFormatter.hasCompleteLength(value)) {
+                      return 'Telefone deve estar no formato (DDD) 99999-9999';
                     }
                   }
                   return null;

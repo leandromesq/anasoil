@@ -1,6 +1,7 @@
 import 'package:anasoil_admin/core/models/soil_analysis_model.dart';
 import 'package:anasoil_admin/core/repositories/user_repository.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_admin/features/analyses/viewmodels/analysis_list_viewmodel.dart';
 import 'package:anasoil_admin/features/analyses/widgets/analyses_data_table.dart';
@@ -134,67 +135,77 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AppLayout(
-      title: 'Análises',
-      body: Column(
-        children: [
-          AnalysesFilters(
-            searchText: searchQuery ?? '',
-            onSearchChanged: (value) {
-              setState(() {
-                searchQuery = value.isEmpty ? null : value;
-              });
-            },
-            onClearFilters: () {
-              setState(() {
-                searchQuery = null;
-              });
-            },
-          ),
-          const SizedBox(height: 24),
-          Expanded(
-            child: ListenableBuilder(
-              listenable: Listenable.merge([
-                widget.viewModel,
-                widget.viewModel.fetchAnalysesCommand,
-                widget.viewModel.deleteAnalysisCommand,
-              ]),
-              builder: (context, _) {
-                return DeferredTable(
-                  onReady: widget.viewModel.analyses.isEmpty
-                      ? () => widget.viewModel.fetchAnalysesCommand.execute()
-                      : null,
-                  builder: () {
-                    final isLoading =
-                        widget.viewModel.fetchAnalysesCommand.value.isRunning &&
-                        widget.viewModel.analyses.isEmpty;
+    final session = locator<AdminSession>();
 
-                    final filtered = _applyFilters(widget.viewModel.analyses);
-
-                    return AnalysesDataTable(
-                      analyses: filtered,
-                      userNames: _buildUserNameMap(),
-                      isLoading: isLoading,
-                      sortColumn: sortColumn,
-                      sortAscending: sortAscending,
-                      onSort: (columnIndex) {
-                        setState(() {
-                          if (sortColumn == columnIndex) {
-                            sortAscending = !sortAscending;
-                          } else {
-                            sortColumn = columnIndex;
-                            sortAscending = true;
-                          }
-                        });
-                      },
-                      onDelete: _handleDelete,
-                    );
-                  },
-                );
+    return ListenableBuilder(
+      listenable: session,
+      builder: (context, _) => AppLayout(
+        title: 'Análises',
+        body: Column(
+          children: [
+            AnalysesFilters(
+              searchText: searchQuery ?? '',
+              onSearchChanged: (value) {
+                setState(() {
+                  searchQuery = value.isEmpty ? null : value;
+                });
+              },
+              onClearFilters: () {
+                setState(() {
+                  searchQuery = null;
+                });
               },
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Expanded(
+              child: ListenableBuilder(
+                listenable: Listenable.merge([
+                  widget.viewModel,
+                  widget.viewModel.fetchAnalysesCommand,
+                  widget.viewModel.deleteAnalysisCommand,
+                ]),
+                builder: (context, _) {
+                  return DeferredTable(
+                    onReady: widget.viewModel.analyses.isEmpty
+                        ? () => widget.viewModel.fetchAnalysesCommand.execute()
+                        : null,
+                    builder: () {
+                      final isLoading =
+                          widget
+                              .viewModel
+                              .fetchAnalysesCommand
+                              .value
+                              .isRunning &&
+                          widget.viewModel.analyses.isEmpty;
+
+                      final filtered = _applyFilters(widget.viewModel.analyses);
+
+                      return AnalysesDataTable(
+                        analyses: filtered,
+                        userNames: _buildUserNameMap(),
+                        isLoading: isLoading,
+                        sortColumn: sortColumn,
+                        sortAscending: sortAscending,
+                        onSort: (columnIndex) {
+                          setState(() {
+                            if (sortColumn == columnIndex) {
+                              sortAscending = !sortAscending;
+                            } else {
+                              sortColumn = columnIndex;
+                              sortAscending = true;
+                            }
+                          });
+                        },
+                        canDelete: session.canManageData,
+                        onDelete: session.canManageData ? _handleDelete : null,
+                      );
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

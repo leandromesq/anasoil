@@ -23,22 +23,34 @@ void setupLocator() {
   // SERVICES
   locator.registerLazySingleton(() => AuthService());
   locator.registerLazySingleton<UserAuthGateway>(() => locator<AuthService>());
-  locator.registerLazySingleton(() => AdminSession(locator<AuthService>()));
-  locator.registerLazySingleton(() => FirestoreService());
   locator.registerLazySingleton<UserStore>(() => FirestoreUserStore());
+  locator.registerLazySingleton(
+    () => AdminSession(locator<AuthService>(), locator<UserStore>()),
+  );
+  locator.registerLazySingleton(() => FirestoreService());
 
   // THEME
   locator.registerLazySingleton(() => ThemeProvider());
 
   // REPOSITORIES
   locator.registerLazySingleton(
-    () => UserRepository(locator<UserStore>(), locator<UserAuthGateway>()),
+    () => UserRepository(
+      locator<UserStore>(),
+      locator<UserAuthGateway>(),
+      locator<AdminSession>(),
+    ),
   );
   locator.registerLazySingleton(
-    () => DocumentRepository(locator<FirestoreService>()),
+    () => DocumentRepository(
+      locator<FirestoreService>(),
+      locator<AdminSession>(),
+    ),
   );
   locator.registerLazySingleton(
-    () => AnalysisRepository(locator<FirestoreService>()),
+    () => AnalysisRepository(
+      locator<FirestoreService>(),
+      locator<AdminSession>(),
+    ),
   );
 
   // VIEWMODELS

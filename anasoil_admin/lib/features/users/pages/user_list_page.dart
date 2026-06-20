@@ -1,4 +1,6 @@
 import 'package:anasoil_admin/core/models/user_model.dart';
+import 'package:anasoil_admin/core/service_locator.dart';
+import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/features/users/viewmodels/user_list_viewmodel.dart';
 import 'package:anasoil_admin/features/users/widgets/users_data_table.dart';
 import 'package:anasoil_admin/features/users/widgets/users_filters.dart';
@@ -128,99 +130,126 @@ class _UserListPageState extends State<UserListPage> {
 
   @override
   Widget build(BuildContext context) {
-    return AppLayout(
-      title: 'Usuários',
-      actions: [
-        ElevatedButton.icon(
-          onPressed: () => context.go('/user/add'),
-          icon: Icon(Symbols.add, size: 18),
-          label: const Text('Novo Usuário'),
-          style: ElevatedButton.styleFrom(
-            backgroundColor: AppTheme.primaryGreen,
-            foregroundColor: AppTheme.baseWhite,
-          ),
-        ),
-      ],
-      body: Column(
-        children: [
-          UsersFilters(
-            searchText: searchQuery ?? '',
-            statusFilter: statusFilter ?? 'todos',
-            roleFilter: roleFilter ?? 'todos',
-            onSearchChanged: (value) {
-              setState(() {
-                searchQuery = value.isEmpty ? null : value;
-              });
-            },
-            onStatusFilterChanged: (value) {
-              setState(() {
-                statusFilter = value;
-              });
-            },
-            onRoleFilterChanged: (value) {
-              setState(() {
-                roleFilter = value;
-              });
-            },
-            onClearFilters: () {
-              setState(() {
-                searchQuery = null;
-                statusFilter = null;
-                roleFilter = null;
-              });
-            },
-          ),
-          const SizedBox(height: 24),
+    final session = locator<AdminSession>();
 
-          Expanded(
-            child: ListenableBuilder(
-              listenable: Listenable.merge([
-                widget.viewModel,
-                widget.viewModel.fetchUsersCommand,
-                widget.viewModel.deleteUserCommand,
-              ]),
-              builder: (context, _) {
-                return DeferredTable(
-                  onReady: widget.viewModel.users.isEmpty
-                      ? () => widget.viewModel.fetchUsersCommand.execute()
-                      : null,
-                  builder: () {
-                    final isLoading =
-                        widget.viewModel.fetchUsersCommand.value.isRunning &&
-                        widget.viewModel.users.isEmpty;
+    return ListenableBuilder(
+      listenable: session,
+      builder: (context, _) {
+        final canManageData = session.canManageData;
+        final canManageRelations = session.canManageRelations;
 
-                    final filteredUsers = _applyFilters(widget.viewModel.users);
+        return AppLayout(
+          title: 'Usuários',
+          actions: canManageData
+              ? [
+                  ElevatedButton.icon(
+                    onPressed: () => context.go('/user/add'),
+                    icon: Icon(Symbols.add, size: 18),
+                    label: const Text('Novo Usuário'),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppTheme.primaryGreen,
+                      foregroundColor: AppTheme.baseWhite,
+                    ),
+                  ),
+                ]
+              : null,
+          body: Column(
+            children: [
+              UsersFilters(
+                searchText: searchQuery ?? '',
+                statusFilter: statusFilter ?? 'todos',
+                roleFilter: roleFilter ?? 'todos',
+                onSearchChanged: (value) {
+                  setState(() {
+                    searchQuery = value.isEmpty ? null : value;
+                  });
+                },
+                onStatusFilterChanged: (value) {
+                  setState(() {
+                    statusFilter = value;
+                  });
+                },
+                onRoleFilterChanged: (value) {
+                  setState(() {
+                    roleFilter = value;
+                  });
+                },
+                onClearFilters: () {
+                  setState(() {
+                    searchQuery = null;
+                    statusFilter = null;
+                    roleFilter = null;
+                  });
+                },
+              ),
+              const SizedBox(height: 24),
 
-                    return UsersDataTable(
-                      users: filteredUsers,
-                      isLoading: isLoading,
-                      sortColumn: sortColumn,
-                      sortAscending: sortAscending,
-                      onSort: (columnIndex) {
-                        setState(() {
-                          if (sortColumn == columnIndex) {
-                            sortAscending = !sortAscending;
-                          } else {
-                            sortColumn = columnIndex;
-                            sortAscending = true;
-                          }
-                        });
+              Expanded(
+                child: ListenableBuilder(
+                  listenable: Listenable.merge([
+                    widget.viewModel,
+                    widget.viewModel.fetchUsersCommand,
+                    widget.viewModel.deleteUserCommand,
+                  ]),
+                  builder: (context, _) {
+                    return DeferredTable(
+                      onReady: widget.viewModel.users.isEmpty
+                          ? () => widget.viewModel.fetchUsersCommand.execute()
+                          : null,
+                      builder: () {
+                        final isLoading =
+                            widget
+                                .viewModel
+                                .fetchUsersCommand
+                                .value
+                                .isRunning &&
+                            widget.viewModel.users.isEmpty;
+
+                        final filteredUsers = _applyFilters(
+                          widget.viewModel.users,
+                        );
+
+                        return UsersDataTable(
+                          users: filteredUsers,
+                          isLoading: isLoading,
+                          sortColumn: sortColumn,
+                          sortAscending: sortAscending,
+                          onSort: (columnIndex) {
+                            setState(() {
+                              if (sortColumn == columnIndex) {
+                                sortAscending = !sortAscending;
+                              } else {
+                                sortColumn = columnIndex;
+                                sortAscending = true;
+                              }
+                            });
+                          },
+                          canManageData: canManageData,
+                          canManageRelations: canManageRelations,
+                          onEdit: canManageData
+                              ? (user) => context.go('/user/edit/${user.id}')
+                              : null,
+                          onStatusChanged: canManageData
+                              ? (user, newStatus) =>
+                                    _handleStatusChange(user, newStatus)
+                              : null,
+                          onManageRelations: canManageRelations
+                              ? (user) =>
+                                    context.go('/user/${user.id}/relations')
+                              : null,
+                          onRefresh: widget.viewModel.fetchUsersCommand.execute,
+                          isRefreshing:
+                              widget.viewModel.fetchUsersCommand.running,
+                        );
                       },
-                      onEdit: (user) => context.go('/user/edit/${user.id}'),
-                      onStatusChanged: (user, newStatus) =>
-                          _handleStatusChange(user, newStatus),
-                      onManageRelations: (user) =>
-                          context.go('/user/${user.id}/relations'),
-                      onRefresh: widget.viewModel.fetchUsersCommand.execute,
-                      isRefreshing: widget.viewModel.fetchUsersCommand.running,
                     );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

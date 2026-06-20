@@ -182,7 +182,7 @@ class _FarmerCard extends StatelessWidget {
                     if (farmer.phone != null && farmer.phone!.isNotEmpty) ...[
                       const SizedBox(height: 2),
                       Text(
-                        farmer.phone!,
+                        AnaSoilPhoneInputFormatter.format(farmer.phone!),
                         style: const TextStyle(
                           fontSize: 12,
                           color: AppTheme.baseGray500,

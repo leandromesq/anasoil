@@ -1,3 +1,5 @@
+import 'package:anasoil_admin/core/models/user_model.dart';
+import 'package:anasoil_admin/core/repositories/user_repository.dart';
 import 'package:anasoil_admin/core/service_locator.dart';
 import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
@@ -161,35 +163,108 @@ class _AppDrawer extends StatelessWidget {
           ),
           const Spacer(),
           const Divider(),
-          ListTile(
-            leading: CircleAvatar(
-              radius: 16,
-              backgroundColor: AppTheme.primaryGreen,
-              child: Icon(Symbols.person, size: 18, color: AppTheme.baseWhite),
-            ),
-            title: const Text(
-              'Administrador',
-              style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
-            ),
-            subtitle: Text(
-              userEmail,
-              style: const TextStyle(fontSize: 12),
-              overflow: TextOverflow.ellipsis,
-            ),
-            trailing: IconButton(
-              icon: Icon(Symbols.logout, color: AppTheme.baseGray500),
-              onPressed: () async {
-                Navigator.pop(context);
-                await session.signOut();
-                if (context.mounted) context.go('/login');
-              },
-            ),
+          _AdminAccountLoader(
+            email: userEmail,
+            builder: (context, user) {
+              return ListTile(
+                leading: _AdminAvatar(radius: 16, avatarUrl: user?.avatarUrl),
+                title: Text(
+                  _adminDisplayName(user),
+                  style: const TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                subtitle: Text(
+                  userEmail,
+                  style: const TextStyle(fontSize: 12),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                trailing: IconButton(
+                  icon: Icon(Symbols.logout, color: AppTheme.baseGray500),
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await session.signOut();
+                    if (context.mounted) context.go('/login');
+                  },
+                ),
+              );
+            },
           ),
           const SizedBox(height: 16),
         ],
       ),
     );
   }
+}
+
+class _AdminAccountLoader extends StatefulWidget {
+  final String email;
+  final Widget Function(BuildContext context, UserModel? user) builder;
+
+  const _AdminAccountLoader({required this.email, required this.builder});
+
+  @override
+  State<_AdminAccountLoader> createState() => _AdminAccountLoaderState();
+}
+
+class _AdminAccountLoaderState extends State<_AdminAccountLoader> {
+  late Future<UserModel?> _userFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _userFuture = _loadUser(widget.email);
+  }
+
+  @override
+  void didUpdateWidget(covariant _AdminAccountLoader oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.email != widget.email) {
+      _userFuture = _loadUser(widget.email);
+    }
+  }
+
+  Future<UserModel?> _loadUser(String email) {
+    if (email.isEmpty) return Future.value(null);
+    return locator<UserRepository>().getUserByEmail(email);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<UserModel?>(
+      future: _userFuture,
+      builder: (context, snapshot) => widget.builder(context, snapshot.data),
+    );
+  }
+}
+
+class _AdminAvatar extends StatelessWidget {
+  final double radius;
+  final String? avatarUrl;
+
+  const _AdminAvatar({required this.radius, required this.avatarUrl});
+
+  @override
+  Widget build(BuildContext context) {
+    final normalizedAvatarUrl = avatarUrl?.trim();
+    final hasAvatar =
+        normalizedAvatarUrl != null && normalizedAvatarUrl.isNotEmpty;
+
+    return CircleAvatar(
+      radius: radius,
+      backgroundColor: AppTheme.primaryGreen,
+      foregroundImage: hasAvatar ? NetworkImage(normalizedAvatarUrl) : null,
+      onForegroundImageError: hasAvatar ? (_, _) {} : null,
+      child: Icon(Symbols.person, size: radius + 2, color: AppTheme.baseWhite),
+    );
+  }
+}
+
+String _adminDisplayName(UserModel? user) {
+  final name = user?.name.trim();
+  if (name != null && name.isNotEmpty) return name;
+  return 'Administrador';
 }
 
 class _DrawerItem extends StatelessWidget {
@@ -324,62 +399,60 @@ class _AppSidebar extends StatelessWidget {
             ),
           ),
 
-          Container(
-            margin: const EdgeInsets.all(AnaSoilSpacing.lg),
-            padding: const EdgeInsets.all(AnaSoilSpacing.md),
-            decoration: BoxDecoration(
-              color: AppTheme.baseGray100,
-              borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
-            ),
-            child: Row(
-              children: [
-                CircleAvatar(
-                  radius: 16,
-                  backgroundColor: AppTheme.primaryGreen,
-                  child: Icon(
-                    Symbols.person,
-                    size: 18,
-                    color: AppTheme.baseWhite,
-                  ),
+          _AdminAccountLoader(
+            email: userEmail,
+            builder: (context, user) {
+              return Container(
+                margin: const EdgeInsets.all(AnaSoilSpacing.lg),
+                padding: const EdgeInsets.all(AnaSoilSpacing.md),
+                decoration: BoxDecoration(
+                  color: AppTheme.baseGray100,
+                  borderRadius: BorderRadius.circular(AnaSoilRadius.sm),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'Administrador',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w600,
-                          color: AppTheme.baseGray900,
-                        ),
+                child: Row(
+                  children: [
+                    _AdminAvatar(radius: 16, avatarUrl: user?.avatarUrl),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            _adminDisplayName(user),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              color: AppTheme.baseGray900,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                          Text(
+                            userEmail,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              color: AppTheme.baseGray500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
                       ),
-                      Text(
-                        userEmail,
-                        style: const TextStyle(
-                          fontSize: 10,
-                          color: AppTheme.baseGray500,
-                        ),
-                        overflow: TextOverflow.ellipsis,
+                    ),
+                    IconButton(
+                      icon: Icon(
+                        Symbols.logout,
+                        size: 18,
+                        color: AppTheme.baseGray500,
                       ),
-                    ],
-                  ),
+                      tooltip: 'Sair',
+                      onPressed: () async {
+                        await session.signOut();
+                        if (context.mounted) context.go('/login');
+                      },
+                    ),
+                  ],
                 ),
-                IconButton(
-                  icon: Icon(
-                    Symbols.logout,
-                    size: 18,
-                    color: AppTheme.baseGray500,
-                  ),
-                  tooltip: 'Sair',
-                  onPressed: () async {
-                    await session.signOut();
-                    if (context.mounted) context.go('/login');
-                  },
-                ),
-              ],
-            ),
+              );
+            },
           ),
         ],
       ),
