@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anasoil_admin/core/models/document_model.dart';
 import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
@@ -10,12 +12,30 @@ class DocumentRepository extends ChangeNotifier {
   DocumentRepository(this._firestoreService, this._session);
 
   List<DocumentModel> _documents = [];
+  StreamSubscription<List<DocumentModel>>? _documentsSubscription;
+
   List<DocumentModel> get documents => List.unmodifiable(_documents);
 
   Future<List<DocumentModel>> getDocuments() async {
-    _documents = await _firestoreService.getDocuments().first;
-    notifyListeners();
-    return _documents;
+    final firstEmission = Completer<List<DocumentModel>>();
+
+    await _documentsSubscription?.cancel();
+    _documentsSubscription = _firestoreService.getDocuments().listen(
+      (documents) {
+        _documents = documents;
+        notifyListeners();
+        if (!firstEmission.isCompleted) {
+          firstEmission.complete(_documents);
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!firstEmission.isCompleted) {
+          firstEmission.completeError(error, stackTrace);
+        }
+      },
+    );
+
+    return firstEmission.future;
   }
 
   Future<void> deleteDocument(String documentId) async {
@@ -38,5 +58,11 @@ class DocumentRepository extends ChangeNotifier {
   void clear() {
     _documents = [];
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _documentsSubscription?.cancel();
+    super.dispose();
   }
 }

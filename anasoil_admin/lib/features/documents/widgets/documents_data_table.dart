@@ -1,12 +1,9 @@
 import 'package:anasoil_admin/core/models/document_model.dart';
 import 'package:anasoil_admin/core/theme/app_theme.dart';
 import 'package:anasoil_shared/anasoil_shared.dart';
-import 'package:anasoil_admin/features/documents/viewmodels/document_list_viewmodel.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:material_symbols_icons/symbols.dart';
-
-import '../../../core/service_locator.dart';
 
 const double _kTableBreakpoint = 700;
 
@@ -19,6 +16,8 @@ class DocumentsDataTable extends StatelessWidget {
   final int? sortColumn;
   final bool sortAscending;
   final Function(int)? onSort;
+  final VoidCallback? onRefresh;
+  final bool isRefreshing;
 
   const DocumentsDataTable({
     super.key,
@@ -30,12 +29,12 @@ class DocumentsDataTable extends StatelessWidget {
     this.sortColumn,
     this.sortAscending = true,
     this.onSort,
+    this.onRefresh,
+    this.isRefreshing = false,
   });
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = locator<DocumentListViewModel>();
-
     if (isLoading) {
       return const AnaSoilSkeletonTable();
     }
@@ -101,29 +100,24 @@ class DocumentsDataTable extends StatelessWidget {
                     ),
                   ],
                 ),
-                ListenableBuilder(
-                  listenable: viewModel.fetchDocumentsCommand,
-                  builder: (context, _) {
-                    if (viewModel.fetchDocumentsCommand.value.isRunning) {
-                      return Container(
-                        margin: const EdgeInsets.all(8),
-                        child: const SizedBox(
-                          width: 24,
-                          height: 24,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppTheme.baseGray600,
-                          ),
-                        ),
-                      );
-                    }
-                    return IconButton(
-                      icon: Icon(Symbols.refresh),
-                      onPressed: viewModel.fetchDocumentsCommand.execute,
-                      tooltip: 'Atualizar',
-                    );
-                  },
-                ),
+                if (isRefreshing)
+                  Container(
+                    margin: const EdgeInsets.all(8),
+                    child: const SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: AppTheme.baseGray600,
+                      ),
+                    ),
+                  )
+                else
+                  IconButton(
+                    icon: Icon(Symbols.refresh),
+                    onPressed: onRefresh,
+                    tooltip: 'Atualizar',
+                  ),
               ],
             ),
           ),

@@ -198,6 +198,10 @@ class _AnalysisListPageState extends State<AnalysisListPage> {
                         },
                         canDelete: session.canManageData,
                         onDelete: session.canManageData ? _handleDelete : null,
+                        onRefresh:
+                            widget.viewModel.fetchAnalysesCommand.execute,
+                        isRefreshing:
+                            widget.viewModel.fetchAnalysesCommand.running,
                       );
                     },
                   );

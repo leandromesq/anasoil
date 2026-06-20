@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anasoil_admin/core/auth/user_auth_gateway.dart';
 import 'package:anasoil_admin/core/models/user_model.dart';
 import 'package:anasoil_admin/core/services/admin_session.dart';
@@ -18,12 +20,30 @@ class UserRepository extends ChangeNotifier {
   UserRepository(this._userStore, this._authGateway, this._session);
 
   List<UserModel> _users = [];
+  StreamSubscription<List<UserModel>>? _usersSubscription;
+
   List<UserModel> get users => List.unmodifiable(_users);
 
   Future<List<UserModel>> getUsers() async {
-    _users = await _userStore.getUsers().first;
-    notifyListeners();
-    return _users;
+    final firstEmission = Completer<List<UserModel>>();
+
+    await _usersSubscription?.cancel();
+    _usersSubscription = _userStore.getUsers().listen(
+      (users) {
+        _users = users;
+        notifyListeners();
+        if (!firstEmission.isCompleted) {
+          firstEmission.complete(_users);
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!firstEmission.isCompleted) {
+          firstEmission.completeError(error, stackTrace);
+        }
+      },
+    );
+
+    return firstEmission.future;
   }
 
   Future<UserModel?> getUser(String userId) {
@@ -171,6 +191,12 @@ class UserRepository extends ChangeNotifier {
   void clearUsers() {
     _users = [];
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _usersSubscription?.cancel();
+    super.dispose();
   }
 
   Future<void> _ensureEmailIsAvailable(

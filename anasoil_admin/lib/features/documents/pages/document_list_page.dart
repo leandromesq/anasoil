@@ -194,6 +194,10 @@ class _DocumentListPageState extends State<DocumentListPage> {
                         },
                         canDelete: session.canManageData,
                         onDelete: session.canManageData ? _handleDelete : null,
+                        onRefresh:
+                            widget.viewModel.fetchDocumentsCommand.execute,
+                        isRefreshing:
+                            widget.viewModel.fetchDocumentsCommand.running,
                       );
                     },
                   );

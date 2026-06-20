@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:anasoil_admin/core/models/soil_analysis_model.dart';
 import 'package:anasoil_admin/core/services/admin_session.dart';
 import 'package:anasoil_admin/core/services/firestore_service.dart';
@@ -10,12 +12,30 @@ class AnalysisRepository extends ChangeNotifier {
   AnalysisRepository(this._firestoreService, this._session);
 
   List<SoilAnalysisModel> _analyses = [];
+  StreamSubscription<List<SoilAnalysisModel>>? _analysesSubscription;
+
   List<SoilAnalysisModel> get analyses => List.unmodifiable(_analyses);
 
   Future<List<SoilAnalysisModel>> getAnalyses() async {
-    _analyses = await _firestoreService.getAnalyses().first;
-    notifyListeners();
-    return _analyses;
+    final firstEmission = Completer<List<SoilAnalysisModel>>();
+
+    await _analysesSubscription?.cancel();
+    _analysesSubscription = _firestoreService.getAnalyses().listen(
+      (analyses) {
+        _analyses = analyses;
+        notifyListeners();
+        if (!firstEmission.isCompleted) {
+          firstEmission.complete(_analyses);
+        }
+      },
+      onError: (Object error, StackTrace stackTrace) {
+        if (!firstEmission.isCompleted) {
+          firstEmission.completeError(error, stackTrace);
+        }
+      },
+    );
+
+    return firstEmission.future;
   }
 
   Future<void> deleteAnalysis(String analysisId) async {
@@ -38,5 +58,11 @@ class AnalysisRepository extends ChangeNotifier {
   void clear() {
     _analyses = [];
     notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _analysesSubscription?.cancel();
+    super.dispose();
   }
 }
